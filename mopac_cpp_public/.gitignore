@@ -1,0 +1,26 @@
+# ---- MSVC build artifacts ----
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.idb
+*.log
+*.rsp
+*.res
+*.tlog/
+x64/
+
+# ---- local archives / third-party downloads (not part of the translation) ----
+_mopac_gh/
+
+# ---- scratch debug outputs ----
+_*.txt
+_*.out
+_*.tmp
+
+# ---- OS junk ----
+Thumbs.db
+Desktop.ini
+.DS_Store

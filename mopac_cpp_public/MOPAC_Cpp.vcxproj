@@ -1,0 +1,555 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectName>MOPAC_Cpp</ProjectName>
+    <ProjectGuid>{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)x64\Debug\</OutDir>
+    <IntDir>$(SolutionDir)x64\Debug\obj\</IntDir>
+    <TargetName>mopac</TargetName>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)x64\Release\</OutDir>
+    <IntDir>$(SolutionDir)x64\Release\obj\</IntDir>
+    <TargetName>mopac</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)Win32\Debug\</OutDir>
+    <IntDir>$(SolutionDir)Win32\Debug\obj\</IntDir>
+    <TargetName>mopac</TargetName>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)Win32\Release\</OutDir>
+    <IntDir>$(SolutionDir)Win32\Release\obj\</IntDir>
+    <TargetName>mopac</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>MOPAC_USE_MKL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/DEBUG %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>MOPAC_USE_MKL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>MOPAC_USE_MKL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="GetDateStamp.cpp" />
+    <ClCompile Include="H_bond_correction_EC_plus_ER.cpp" />
+    <ClCompile Include="H_bond_correction_EH_plus.cpp" />
+    <ClCompile Include="H_bond_correction_PM6_DH_Dispersion.cpp" />
+    <ClCompile Include="H_bond_correction_PM6_DH_type.cpp" />
+    <ClCompile Include="H_bond_correction_bits.cpp" />
+    <ClCompile Include="H_bonds4.cpp" />
+    <ClCompile Include="MOPAC_for_Windows.cpp" />
+    <ClCompile Include="MOZYME_C.cpp" />
+    <ClCompile Include="PM7_TS.cpp" />
+    <ClCompile Include="QuickWin_bits.cpp" />
+    <ClCompile Include="aababc.cpp" />
+    <ClCompile Include="aabacd.cpp" />
+    <ClCompile Include="aabbcd.cpp" />
+    <ClCompile Include="add_hydrogen_atoms.cpp" />
+    <ClCompile Include="add_more_interactions.cpp" />
+    <ClCompile Include="addhb.cpp" />
+    <ClCompile Include="adjvec.cpp" />
+    <ClCompile Include="afmm_mod.cpp" />
+    <ClCompile Include="alpb_and_xfac_am1.cpp" />
+    <ClCompile Include="alpb_and_xfac_mndo.cpp" />
+    <ClCompile Include="alpb_and_xfac_mndod.cpp" />
+    <ClCompile Include="alpb_and_xfac_pm3.cpp" />
+    <ClCompile Include="alpb_and_xfac_pm6.cpp" />
+    <ClCompile Include="alpb_and_xfac_pm7.cpp" />
+    <ClCompile Include="alpb_and_xfac_pm7_TS.cpp" />
+    <ClCompile Include="analyt.cpp" />
+    <ClCompile Include="analyt_C.cpp" />
+    <ClCompile Include="anavib.cpp" />
+    <ClCompile Include="atomrs.cpp" />
+    <ClCompile Include="axis.cpp" />
+    <ClCompile Include="babbbc.cpp" />
+    <ClCompile Include="babbcd.cpp" />
+    <ClCompile Include="bangle.cpp" />
+    <ClCompile Include="bfn.cpp" />
+    <ClCompile Include="big_swap.cpp" />
+    <ClCompile Include="blas1.cpp" />
+    <ClCompile Include="bldsym.cpp" />
+    <ClCompile Include="bonds.cpp" />
+    <ClCompile Include="bonds_for_MOZYME.cpp" />
+    <ClCompile Include="buildf.cpp" />
+    <ClCompile Include="calpar.cpp" />
+    <ClCompile Include="capcor.cpp" />
+    <ClCompile Include="ccrep.cpp" />
+    <ClCompile Include="chanel_C.cpp" />
+    <ClCompile Include="charmo.cpp" />
+    <ClCompile Include="charst.cpp" />
+    <ClCompile Include="charvi.cpp" />
+    <ClCompile Include="check.cpp" />
+    <ClCompile Include="chkion.cpp" />
+    <ClCompile Include="chklew.cpp" />
+    <ClCompile Include="chrge.cpp" />
+    <ClCompile Include="chrge_for_MOZYME.cpp" />
+    <ClCompile Include="ciosci.cpp" />
+    <ClCompile Include="cnvg.cpp" />
+    <ClCompile Include="cnvgz.cpp" />
+    <ClCompile Include="coe.cpp" />
+    <ClCompile Include="common_arrays_C.cpp" />
+    <ClCompile Include="compct.cpp" />
+    <ClCompile Include="compfg.cpp" />
+    <ClCompile Include="conref_C.cpp" />
+    <ClCompile Include="convert_storage.cpp" />
+    <ClCompile Include="copyc6.cpp" />
+    <ClCompile Include="copyc6_data.cpp" />
+    <ClCompile Include="cosmo.cpp" />
+    <ClCompile Include="cosmo_C.cpp" />
+    <ClCompile Include="dang.cpp" />
+    <ClCompile Include="datin.cpp" />
+    <ClCompile Include="dcart.cpp" />
+    <ClCompile Include="delsta.cpp" />
+    <ClCompile Include="den_in_out.cpp" />
+    <ClCompile Include="denrot.cpp" />
+    <ClCompile Include="denrot_for_MOZYME.cpp" />
+    <ClCompile Include="densit.cpp" />
+    <ClCompile Include="density_for_GPU.cpp" />
+    <ClCompile Include="density_for_MOZYME.cpp" />
+    <ClCompile Include="deri0.cpp" />
+    <ClCompile Include="deri1.cpp" />
+    <ClCompile Include="deri2.cpp" />
+    <ClCompile Include="deri21.cpp" />
+    <ClCompile Include="deri22.cpp" />
+    <ClCompile Include="deri23.cpp" />
+    <ClCompile Include="deritr.cpp" />
+    <ClCompile Include="deriv.cpp" />
+    <ClCompile Include="derivs_C.cpp" />
+    <ClCompile Include="dernvo.cpp" />
+    <ClCompile Include="dfield.cpp" />
+    <ClCompile Include="dfock2.cpp" />
+    <ClCompile Include="dfport.cpp" />
+    <ClCompile Include="dfpsav.cpp" />
+    <ClCompile Include="dftd3.cpp" />
+    <ClCompile Include="dftd3_bits.cpp" />
+    <ClCompile Include="dhc.cpp" />
+    <ClCompile Include="dhcore.cpp" />
+    <ClCompile Include="diag.cpp" />
+    <ClCompile Include="diag_for_GPU.cpp" />
+    <ClCompile Include="diagg.cpp" />
+    <ClCompile Include="diagg1.cpp" />
+    <ClCompile Include="diagg2.cpp" />
+    <ClCompile Include="diagi.cpp" />
+    <ClCompile Include="diat.cpp" />
+    <ClCompile Include="digit.cpp" />
+    <ClCompile Include="dihed.cpp" />
+    <ClCompile Include="dijkl1.cpp" />
+    <ClCompile Include="dijkl2.cpp" />
+    <ClCompile Include="dimens.cpp" />
+    <ClCompile Include="dipind.cpp" />
+    <ClCompile Include="dipole.cpp" />
+    <ClCompile Include="dipole_for_MOZYME.cpp" />
+    <ClCompile Include="disp_DnX.cpp" />
+    <ClCompile Include="dist2.cpp" />
+    <ClCompile Include="distance.cpp" />
+    <ClCompile Include="dofs.cpp" />
+    <ClCompile Include="dot.cpp" />
+    <ClCompile Include="drc.cpp" />
+    <ClCompile Include="drc_C.cpp" />
+    <ClCompile Include="drcout.cpp" />
+    <ClCompile Include="dtran2.cpp" />
+    <ClCompile Include="dtrans.cpp" />
+    <ClCompile Include="ef.cpp" />
+    <ClCompile Include="ef_C.cpp" />
+    <ClCompile Include="eigen.cpp" />
+    <ClCompile Include="eigenvectors_LAPACK.cpp" />
+    <ClCompile Include="eimp.cpp" />
+    <ClCompile Include="elemts_C.cpp" />
+    <ClCompile Include="empiri.cpp" />
+    <ClCompile Include="enpart.cpp" />
+    <ClCompile Include="esp.cpp" />
+    <ClCompile Include="esp_C.cpp" />
+    <ClCompile Include="esp_support.cpp" />
+    <ClCompile Include="esp_utilities.cpp" />
+    <ClCompile Include="euler_C.cpp" />
+    <ClCompile Include="exchng.cpp" />
+    <ClCompile Include="extvdw_for_MOZYME.cpp" />
+    <ClCompile Include="fdate.cpp" />
+    <ClCompile Include="fillij.cpp" />
+    <ClCompile Include="find_salt_bridges.cpp" />
+    <ClCompile Include="findn1.cpp" />
+    <ClCompile Include="finish.cpp" />
+    <ClCompile Include="flepo.cpp" />
+    <ClCompile Include="fmat.cpp" />
+    <ClCompile Include="fock1.cpp" />
+    <ClCompile Include="fock1_for_MOZYME.cpp" />
+    <ClCompile Include="fock2.cpp" />
+    <ClCompile Include="fock2z.cpp" />
+    <ClCompile Include="force.cpp" />
+    <ClCompile Include="formxy.cpp" />
+    <ClCompile Include="forsav.cpp" />
+    <ClCompile Include="frame.cpp" />
+    <ClCompile Include="freqcy.cpp" />
+    <ClCompile Include="funcon_C.cpp" />
+    <ClCompile Include="gdisp.cpp" />
+    <ClCompile Include="genun.cpp" />
+    <ClCompile Include="geo_diff.cpp" />
+    <ClCompile Include="geo_ref.cpp" />
+    <ClCompile Include="geochk.cpp" />
+    <ClCompile Include="geochk_small.cpp" />
+    <ClCompile Include="geochk_txtatm.cpp" />
+    <ClCompile Include="geout.cpp" />
+    <ClCompile Include="geoutg.cpp" />
+    <ClCompile Include="getdat.cpp" />
+    <ClCompile Include="getgeg.cpp" />
+    <ClCompile Include="getgeo.cpp" />
+    <ClCompile Include="getpdb.cpp" />
+    <ClCompile Include="getsym.cpp" />
+    <ClCompile Include="gettxt.cpp" />
+    <ClCompile Include="getval.cpp" />
+    <ClCompile Include="gmetry.cpp" />
+    <ClCompile Include="greek.cpp" />
+    <ClCompile Include="grid.cpp" />
+    <ClCompile Include="h1elec.cpp" />
+    <ClCompile Include="hbonds.cpp" />
+    <ClCompile Include="hcore.cpp" />
+    <ClCompile Include="hcore_for_MOZYME.cpp" />
+    <ClCompile Include="helect.cpp" />
+    <ClCompile Include="helecz.cpp" />
+    <ClCompile Include="hybrid.cpp" />
+    <ClCompile Include="ijbo.cpp" />
+    <ClCompile Include="ijkl.cpp" />
+    <ClCompile Include="init_filenames.cpp" />
+    <ClCompile Include="interp.cpp" />
+    <ClCompile Include="intfc.cpp" />
+    <ClCompile Include="ionout.cpp" />
+    <ClCompile Include="isitsc.cpp" />
+    <ClCompile Include="iter.cpp" />
+    <ClCompile Include="iter_C.cpp" />
+    <ClCompile Include="iter_for_MOZYME.cpp" />
+    <ClCompile Include="jab.cpp" />
+    <ClCompile Include="jab_for_MOZYME.cpp" />
+    <ClCompile Include="jcarin.cpp" />
+    <ClCompile Include="jdate.cpp" />
+    <ClCompile Include="journal_references_C.cpp" />
+    <ClCompile Include="kab.cpp" />
+    <ClCompile Include="kab_for_MOZYME.cpp" />
+    <ClCompile Include="lbfgs.cpp" />
+    <ClCompile Include="lbfgs_line_search.cpp" />
+    <ClCompile Include="lewis.cpp" />
+    <ClCompile Include="ligand.cpp" />
+    <ClCompile Include="linear_cosmo.cpp" />
+    <ClCompile Include="linmin.cpp" />
+    <ClCompile Include="linpack.cpp" />
+    <ClCompile Include="local.cpp" />
+    <ClCompile Include="local2.cpp" />
+    <ClCompile Include="local_for_MOZYME.cpp" />
+    <ClCompile Include="locmin.cpp" />
+    <ClCompile Include="lyse.cpp" />
+    <ClCompile Include="maksym.cpp" />
+    <ClCompile Include="makvec.cpp" />
+    <ClCompile Include="mamult.cpp" />
+    <ClCompile Include="maps_C.cpp" />
+    <ClCompile Include="mat33.cpp" />
+    <ClCompile Include="matou1.cpp" />
+    <ClCompile Include="matout.cpp" />
+    <ClCompile Include="mbonds.cpp" />
+    <ClCompile Include="md_C.cpp" />
+    <ClCompile Include="meci.cpp" />
+    <ClCompile Include="meci_C.cpp" />
+    <ClCompile Include="mecid.cpp" />
+    <ClCompile Include="mecih.cpp" />
+    <ClCompile Include="mecip.cpp" />
+    <ClCompile Include="memory_error.cpp" />
+    <ClCompile Include="minv.cpp" />
+    <ClCompile Include="mkl_bits.cpp" />
+    <ClCompile Include="mlmo.cpp" />
+    <ClCompile Include="mndod.cpp" />
+    <ClCompile Include="mod_atomradii.cpp" />
+    <ClCompile Include="mod_calls_cublas.cpp" />
+    <ClCompile Include="mod_gpu_info.cpp" />
+    <ClCompile Include="mod_vars_cuda.cpp" />
+    <ClCompile Include="modchg.cpp" />
+    <ClCompile Include="modgra.cpp" />
+    <ClCompile Include="moldat.cpp" />
+    <ClCompile Include="moldat_helpers.cpp" />
+    <ClCompile Include="molkst_C.cpp" />
+    <ClCompile Include="molmec_C.cpp" />
+    <ClCompile Include="molsymy.cpp" />
+    <ClCompile Include="molval.cpp" />
+    <ClCompile Include="mopac.cpp" />
+    <ClCompile Include="mopend.cpp" />
+    <ClCompile Include="mozy_integral_stubs.cpp" />
+    <ClCompile Include="mpcsyb.cpp" />
+    <ClCompile Include="mtxm.cpp" />
+    <ClCompile Include="mtxmc.cpp" />
+    <ClCompile Include="mullik.cpp" />
+    <ClCompile Include="mult.cpp" />
+    <ClCompile Include="mult33.cpp" />
+    <ClCompile Include="mult_symm_AB.cpp" />
+    <ClCompile Include="mxm.cpp" />
+    <ClCompile Include="mxmt.cpp" />
+    <ClCompile Include="mxv.cpp" />
+    <ClCompile Include="myword.cpp" />
+    <ClCompile Include="names.cpp" />
+    <ClCompile Include="new_esp.cpp" />
+    <ClCompile Include="newflg.cpp" />
+    <ClCompile Include="nllsq.cpp" />
+    <ClCompile Include="nuchar.cpp" />
+    <ClCompile Include="nxtmer.cpp" />
+    <ClCompile Include="osinv.cpp" />
+    <ClCompile Include="outer1.cpp" />
+    <ClCompile Include="outer2.cpp" />
+    <ClCompile Include="overlaps_C.cpp" />
+    <ClCompile Include="parameters_C.cpp" />
+    <ClCompile Include="parameters_for_AM1_C.cpp" />
+    <ClCompile Include="parameters_for_AM1_Sparkles_C.cpp" />
+    <ClCompile Include="parameters_for_PM3_C.cpp" />
+    <ClCompile Include="parameters_for_PM3_Sparkles_C.cpp" />
+    <ClCompile Include="parameters_for_PM6_C.cpp" />
+    <ClCompile Include="parameters_for_PM6_Sparkles_C.cpp" />
+    <ClCompile Include="parameters_for_PM7_C.cpp" />
+    <ClCompile Include="parameters_for_PM7_Sparkles_C.cpp" />
+    <ClCompile Include="parameters_for_PM7_TS_C.cpp" />
+    <ClCompile Include="parameters_for_RM1_C.cpp" />
+    <ClCompile Include="parameters_for_RM1_Sparkles_C.cpp" />
+    <ClCompile Include="parameters_for_mndo_C.cpp" />
+    <ClCompile Include="parameters_for_mndod_C.cpp" />
+    <ClCompile Include="parsav.cpp" />
+    <ClCompile Include="partxy.cpp" />
+    <ClCompile Include="pathk.cpp" />
+    <ClCompile Include="paths.cpp" />
+    <ClCompile Include="pdbout.cpp" />
+    <ClCompile Include="perm.cpp" />
+    <ClCompile Include="picopt.cpp" />
+    <ClCompile Include="pinout.cpp" />
+    <ClCompile Include="pmep.cpp" />
+    <ClCompile Include="pol_vol.cpp" />
+    <ClCompile Include="polar.cpp" />
+    <ClCompile Include="polar_C.cpp" />
+    <ClCompile Include="post_scf_corrections.cpp" />
+    <ClCompile Include="powsq.cpp" />
+    <ClCompile Include="prtdrc.cpp" />
+    <ClCompile Include="prtgra.cpp" />
+    <ClCompile Include="prtlmo.cpp" />
+    <ClCompile Include="prtpka.cpp" />
+    <ClCompile Include="prttim.cpp" />
+    <ClCompile Include="pulay.cpp" />
+    <ClCompile Include="pulay_for_gpu.cpp" />
+    <ClCompile Include="quadr.cpp" />
+    <ClCompile Include="rand_C.cpp" />
+    <ClCompile Include="react1.cpp" />
+    <ClCompile Include="reada.cpp" />
+    <ClCompile Include="readmo.cpp" />
+    <ClCompile Include="refer.cpp" />
+    <ClCompile Include="refkey_C.cpp" />
+    <ClCompile Include="reorth.cpp" />
+    <ClCompile Include="reseq.cpp" />
+    <ClCompile Include="resolv.cpp" />
+    <ClCompile Include="rotate.cpp" />
+    <ClCompile Include="rotate_C.cpp" />
+    <ClCompile Include="rotlmo.cpp" />
+    <ClCompile Include="rotmol.cpp" />
+    <ClCompile Include="rsp.cpp" />
+    <ClCompile Include="run_mopac.cpp" />
+    <ClCompile Include="run_mopac_deps_stubs.cpp" />
+    <ClCompile Include="scfcri.cpp" />
+    <ClCompile Include="schmib.cpp" />
+    <ClCompile Include="schmit.cpp" />
+    <ClCompile Include="second.cpp" />
+    <ClCompile Include="selmos.cpp" />
+    <ClCompile Include="set.cpp" />
+    <ClCompile Include="set_up_MOZYME_arrays.cpp" />
+    <ClCompile Include="set_up_RAPID.cpp" />
+    <ClCompile Include="set_up_dentate.cpp" />
+    <ClCompile Include="setup_mopac_arrays.cpp" />
+    <ClCompile Include="setupg.cpp" />
+    <ClCompile Include="setupk.cpp" />
+    <ClCompile Include="site.cpp" />
+    <ClCompile Include="solrot.cpp" />
+    <ClCompile Include="sort.cpp" />
+    <ClCompile Include="sp_two_electron.cpp" />
+    <ClCompile Include="sqrdc_sqrsl.cpp" />
+    <ClCompile Include="static_polarizability.cpp" />
+    <ClCompile Include="supdot.cpp" />
+    <ClCompile Include="superd.cpp" />
+    <ClCompile Include="swap.cpp" />
+    <ClCompile Include="switch.cpp" />
+    <ClCompile Include="symh.cpp" />
+    <ClCompile Include="symmetry_C.cpp" />
+    <ClCompile Include="symmetry_tables.cpp" />
+    <ClCompile Include="symoir.cpp" />
+    <ClCompile Include="symopr.cpp" />
+    <ClCompile Include="sympop.cpp" />
+    <ClCompile Include="symr.cpp" />
+    <ClCompile Include="symt.cpp" />
+    <ClCompile Include="symtry.cpp" />
+    <ClCompile Include="symtrz.cpp" />
+    <ClCompile Include="thermo.cpp" />
+    <ClCompile Include="tidy.cpp" />
+    <ClCompile Include="timer.cpp" />
+    <ClCompile Include="timout.cpp" />
+    <ClCompile Include="to_screen.cpp" />
+    <ClCompile Include="to_screen_C.cpp" />
+    <ClCompile Include="txtype.cpp" />
+    <ClCompile Include="upcase.cpp" />
+    <ClCompile Include="update.cpp" />
+    <ClCompile Include="values.cpp" />
+    <ClCompile Include="vecprt.cpp" />
+    <ClCompile Include="vecprt_for_MOZYME.cpp" />
+    <ClCompile Include="volume.cpp" />
+    <ClCompile Include="write_cell.cpp" />
+    <ClCompile Include="write_paras_used.cpp" />
+    <ClCompile Include="write_trajectory.cpp" />
+    <ClCompile Include="writmo.cpp" />
+    <ClCompile Include="wrt_diffs.cpp" />
+    <ClCompile Include="wrtkey.cpp" />
+    <ClCompile Include="wrttxt.cpp" />
+    <ClCompile Include="xxx.cpp" />
+    <ClCompile Include="xyzcry.cpp" />
+    <ClCompile Include="xyzint.cpp" />
+    <ClCompile Include="xyzint_stubs.cpp" />
+    <ClCompile Include="mndod_C.cpp" />
+    <ClCompile Include="polar_helpers.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
+
+
