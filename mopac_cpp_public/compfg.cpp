@@ -19,6 +19,7 @@ extern void to_point(double, double&, double&);
 #include "dihed.h"
 #include "mecip.h"
 #include "cosmo_C.h"
+#include "cosmo.h"
 #include "funcon_C.h"
 #include "gmetry.h"
 #include "hcore.h"
@@ -43,10 +44,7 @@ using namespace parameters_C;
 // Not-yet-ported kernels referenced by compfg (stubs in test driver; each is
 // flagged as a known gap until its own subsystem batch closes it).
 namespace {
-void cosini(bool) {}
 void ini_linear_cosmo() {}
-void coscav() {}
-void mkbmat() {}
 void coscavz(const std::vector<std::vector<double>>&, const std::vector<int>&) {}
 void hcore_for_MOZYME() {}
 void iter_for_MOZYME(double&) {}

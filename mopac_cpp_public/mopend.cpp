@@ -60,7 +60,7 @@ void summary(const std::string& txt, int ntxt) {
                 std::printf("%s\n", line.c_str());
             }
         }
-        std::string line = "* JOB ENDED NORMALY ";
+        std::string line = "* JOB ENDED NORMALLY";
         if ((int)line.size() < max_txt)
             line += std::string(max_txt - (int)line.size(), ' ');
         line[max_txt - 1] = '*';

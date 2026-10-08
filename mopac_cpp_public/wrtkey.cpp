@@ -9,12 +9,14 @@
 #include <string>
 
 #include "chanel_C.h"
+#include "cosmo_C.h"
 #include "meci_C.h"
 #include "molkst_C.h"
 #include "mopend.h"
 #include "reada.h"
 
 using namespace chanel_C;
+using namespace cosmo_C;
 using namespace molkst_C;
 
 // Printer groups (large keyword printers) — declared elsewhere / stubbed.
@@ -175,6 +177,42 @@ void wrtkey() {
     if (moperr) return;
     wrtwor(allkey);
     wrtout(allkey);
+    // F90 wrtkey.F90 SOLVATION KEYWORDS block: assign fepsi from EPS= / PKA
+    // (or the bare COSMO keyword -> EPS=999) and echo the EPS line.
+    if (has(keywrd, " EPS=") || has(keywrd, " PKA")) {
+        if (has(keywrd, "EPS=CRSDEF")) {
+            fepsi = 1.0;
+        } else {
+            double epsi;
+            if (has(keywrd, " PKA"))
+                epsi = 78.4;
+            else
+                epsi = reada(keywrd, (int)keywrd.find("EPS="));
+            std::printf(" *  EPS=%6.2f - USE ANDREAS KLAMT'S COSMO IMPLICIT SOLVATION MODEL\n", epsi);
+            fepsi = (epsi - 1.0) / (epsi + 0.5);
+            if (epsi < 1.0) {
+                std::printf(" *  \n");
+                std::printf(" *  The lower bound of a dielectric is 1.00 = vacuum\n");
+                std::printf(" *  Keywords: %s\n", keywrd.c_str());
+                std::printf(" *  \n");
+                mopend("Nonsense value of dielectric constant supplied");
+                return;
+            }
+        }
+    } else if (has(keywrd, " COSMO")) {
+        double epsi = 999.0;
+        std::printf(" *  EPS=%6.2f - USE ANDREAS KLAMT'S COSMO IMPLICIT SOLVATION MODEL\n", epsi);
+        fepsi = (epsi - 1.0) / (epsi + 0.5);
+    }
+    // F90 wrtkey.F90 752-758: NSPA default is 42 unless given explicitly.
+    if (has(keywrd, " NSPA")) {
+        size_t p = keywrd.find(" NSPA");
+        int i = (int)(reada(keywrd, (int)p) + 0.5);
+        std::printf(" *  NSPA=%5d\n", i);
+        nspa = i;
+    } else {
+        nspa = 42;
+    }
     // Fortran wrtkey L921-958: OUTPUT keyword controls the prt_* flags.
     // Without OUTPUT all print flags default to TRUE.
     if (has(keywrd, " OUTPUT")) {

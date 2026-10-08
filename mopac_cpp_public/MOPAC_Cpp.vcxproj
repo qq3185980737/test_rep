@@ -544,6 +544,7 @@
     <ClCompile Include="xyzcry.cpp" />
     <ClCompile Include="xyzint.cpp" />
     <ClCompile Include="xyzint_stubs.cpp" />
+    <ClCompile Include="md_driver.cpp" />
     <ClCompile Include="mndod_C.cpp" />
     <ClCompile Include="polar_helpers.cpp" />
     <ClCompile Include="main.cpp" />

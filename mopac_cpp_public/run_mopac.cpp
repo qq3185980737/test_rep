@@ -49,6 +49,7 @@
 #include "grid.h"
 #include "lbfgs.h"
 #include "maps_C.h"
+#include "md_driver.h"
 #include "meci_C.h"
 #include "mndod.h"
 #include "moldat.h"
@@ -643,6 +644,17 @@ void run_mopac() {
       if (react.empty()) react.assign(3 * numat + 1, 0.0);
       if (keywrd.find(" HTML") != std::string::npos) write_path_html();
       drc(react, react);
+      iflepo = -1;
+    } else if (keywrd.find(" MOLDYN") != std::string::npos ||
+               [&]() {
+                 // Trigger the velocity-Verlet MD driver when the comment line
+                 // carries the user's "Mixture:" header (case-insensitive).
+                 std::string up = koment;
+                 upcase(up, static_cast<int>(up.size()));
+                 return up.find("MIXTURE") != std::string::npos;
+               }()) {
+      to_screen(" Molecular dynamics (velocity-Verlet) calculation");
+      run_md_velocity_verlet(keywrd, iw);
       iflepo = -1;
     } else if (keywrd.find(" NLLSQ") != std::string::npos) {
       std::printf(" Transition state refinement using NLLSQ\n");

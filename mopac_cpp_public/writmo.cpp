@@ -16,6 +16,7 @@
 #include "chanel_C.h"
 #include "common_arrays_C.h"
 #include "cosmo_C.h"
+#include "cosmo.h"
 #include "big_swap.h"          // l_control
 #include "bonds.h"
 #include "denrot.h"
@@ -238,11 +239,30 @@ void writmo() {
     std::printf("%10sCORE-CORE REPULSION     =%17.5f EV\n", "", enuclr);
     if (iseps)
         std::printf("%10sDIELECTRIC ENERGY       =%17.5f EV\n", "", ediel);
-    if (fepsi > 1e-10 && area > 1e-3) {
+    // F90 writmo.F90: default COSMO cavity for finite, non-polymeric systems:
+    // even without an explicit EPS keyword the area/volume are computed and
+    // printed (fepsi = (78.4-1)/(78.4+0.5), cosini + coscav).
+    if (keywrd.find(" EPS") == std::string::npos && id == 0 &&
+        !mozyme && numat < 700) {
+        const double sum = 78.4;
+        fepsi = (sum - 1.0) / (sum + 0.5);
+        cosini(false);
+        if (moperr) {
+            moperr = false;
+            area = 0.0;
+            cosvol = 0.0;
+        } else {
+            coscav();
+        }
+    }
+    if (moperr) {
+        moperr = false;
+    } else if (fepsi > 1e-10 && area > 1e-3) {
         std::printf("%10sCOSMO AREA              =%14.2f SQUARE ANGSTROMS\n", "", area);
         std::printf("%10sCOSMO VOLUME            =%14.2f CUBIC ANGSTROMS\n", "", cosvol);
     }
-    std::printf("%10sGRADIENT NORM           =%17.5f\n", "", gnorm);
+    if (lprtgra || gnorm > 1.e-15)
+        std::printf("%10sGRADIENT NORM           =%17.5f\n", "", gnorm);
     // F90 L345-369: stationary-point check + NOANCI hint.
     bool still = true;
     if (latom == 0) {

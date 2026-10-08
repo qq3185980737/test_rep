@@ -176,6 +176,13 @@ void density_for_GPU(double* c, double fract, int ndubl, int nsingl,
                         for (int k = 0; k < ndubl; ++k) s += ci[k] * cj_[k];
                         pp[pack_idx(i, j)] = occ * s;
                     }
+            } else {
+                // Official F90: dsyrk(k=ndubl=0, beta=0) zeroes the full matrix,
+                // then dtrttp copies it to pp.  The old `if (ndubl > 0)` guard
+                // left pp untouched (e.g. UHF beta density for H/Li/Na single
+                // atoms kept the initial 0.5 guess, corrupting the Fock build).
+                int pN = (norbs * (norbs + 1)) / 2;
+                for (int idx = 1; idx <= pN; ++idx) pp[idx] = 0.0;
             }
             int pN = (norbs * (norbs + 1)) / 2;
             break;

@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -272,6 +273,13 @@ void getgeo(int iread, std::vector<int>& labels,
                 if ((line[ii - 2] == 'D' && line[ii - 1] == '-') ||
                     (line[ii - 2] == 'E' && line[ii - 1] == '-')) leadsp = false;
             }
+        }
+        // User MD-format "Constraint:" header line -> skip (treated as a comment).
+        {
+            std::string tok = line.substr(istart[1] - 1, istart[2] - istart[1]);
+            size_t e = tok.find_first_of(" :");
+            std::string head = tok.substr(0, e == std::string::npos ? tok.size() : e);
+            if (head == "CONSTRAINT" || head == "CONSTRAINTS") continue;
         }
         if (nvalue == 4) {
             // Four data: Cartesian coordinates without optimization flags?
@@ -532,15 +540,35 @@ void getgeo(int iread, std::vector<int>& labels,
             return;
         }
         react.assign(3 * natoms + 1, 0.0);
+        // Fortran reads the velocity block from unit "iread"; in this port the
+        // records come from the shared getdat_lines queue. Each line must hold
+        // exactly three velocity components (Angstroms/fs), stored in atom order
+        // into react((i-1)*3+1..3).  Parsed locally to avoid shared-state issues.
         for (int i = 1; i <= natoms; ++i) {
-            std::getline(std::cin, line);
-            double v0 = 0.0;
-            nuchar(const_cast<char*>(line.data()), len_trim(line), &v0, ndmy);
-            react[(i - 1) * 3 + 1] = v0;
-            if (ndmy == 3) continue;
-            std::fprintf(stdout, "  THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE\n");
-            mopend("THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE.");
-            return;
+            if (getdat_line_idx >= getdat_lines.size()) {
+                std::fprintf(stdout, "  THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE\n");
+                mopend("THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE.");
+                return;
+            }
+            const std::string vl = getdat_lines[getdat_line_idx++];
+            double v[3];
+            int nread = 0;
+            {
+                std::istringstream is(vl);
+                double x;
+                while (is >> x) {
+                    if (nread < 3) v[nread] = x;
+                    ++nread;
+                }
+            }
+            if (nread != 3) {
+                std::fprintf(stdout, "  THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE\n");
+                mopend("THERE MUST BE EXACTLY THREE VELOCITY DATA PER LINE.");
+                return;
+            }
+            react[(i - 1) * 3 + 1] = v[0];
+            react[(i - 1) * 3 + 2] = v[1];
+            react[(i - 1) * 3 + 3] = v[2];
         }
     }
     if (ircdrc) {

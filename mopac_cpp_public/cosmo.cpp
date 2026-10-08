@@ -246,8 +246,8 @@ void diegrd(double* dxyz) {
 }
 
 void ansude(double ra, double rb, double d, double rs,
-            double& aar, double& abr, double& ara, double& arad,
-            double& arb, double& arbd, double& rinc) {
+            double& ara, double& arb, double& aar, double& abr,
+            double& arad, double& arbd, double& rinc) {
     double qa = ra + rs, qb = rb + rs;
     double ca = (qa * qa + d * d - qb * qb) / (2.0 * qa * d);
     double cbv = (qb * qb + d * d - qa * qa) / (2.0 * qb * d);
@@ -386,7 +386,7 @@ void coscav() {
     auto DD=[&](int ix,int i)->double& { return (&dirvec[0][0])[(i-1)*4+(ix-1)]; };
     auto DS=[&](int ix,int i)->double& { return (&dirsm[0][0])[(i-1)*4+(ix-1)]; };
     std::vector<double> rdat(numat + 1);
-    std::vector<std::array<double,4>> rsc(maxrs + 1);
+    std::vector<std::vector<double>> rsc(4, std::vector<double>(maxrs + 1, 0.0));
     std::vector<std::array<std::array<double,3>,3>> Tmat(numat + 1);
     std::vector<std::array<int,3>> nn(numat + 1);
     std::vector<int> isort(maxrs + 1), ipsrs(maxrs + 1);
@@ -402,6 +402,8 @@ void coscav() {
     if (srad.empty()) srad.resize(numat + 1);
     if (nar_csm.empty()) nar_csm.resize(lenabc + 2);
 
+    // MAKE COORDINATES A BIT ASYMMETRIC IN ORDER TO AVOID
+    // SYMMETRY PROBLEMS WITH CAVITY CONSTRUCTION (F90 cosmo.F90 235-238)
     for (int i = 1; i <= numat; ++i)
         for (int j = 1; j <= 3; ++j)
             coord[j-1][i] += std::cos(i*j*0.1) * 3.0e-9;
@@ -577,6 +579,11 @@ void coscav() {
         if (ilipa >= 70*numat) break;
     }
     if (ioldcv == 0) {
+        // Fortran cosmo.F90 L548-553: din(1..numat) is reused as an atom
+        // marker before surclo: all true, then false for atoms that carry
+        // at least one segment (iatsp).  surclo skips atoms with din==true.
+        for (int i = 1; i <= numat; ++i) din[i] = 1;
+        for (int j = 1; j <= nps; ++j) din[iatsp[j]] = 0;
         // call surclo — closure of the concave regions of the cavity.
         // C++ surclo expects a planar [3][numat+1] coordinate buffer and a
         // bool[] din; convert from the row-major global coord and vector<char>.
@@ -584,8 +591,8 @@ void coscav() {
         for (int a = 1; a <= numat; ++a)
             for (int ix = 0; ix < 3; ++ix)
                 coord_flat[ix * (numat + 1) + a] = coord[ix][a];
-        rsc_ptrs.resize(maxrs + 1);
-        for (int i2 = 1; i2 <= maxrs; ++i2) rsc_ptrs[i2] = &rsc[i2][0];
+        rsc_ptrs.resize(4);
+        for (int ix = 0; ix < 4; ++ix) rsc_ptrs[ix] = rsc[ix].data();
         surclo(coord_flat.data(), nipa.data(), lipa.data(),
                reinterpret_cast<const bool*>(din.data()),
                std::max(numat, 1082), rsc_ptrs.data(), isort.data(),
@@ -999,11 +1006,7 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
     for (int ia = 1; ia <= numat - 1; ++ia) {
         if (din[ia]) { ilipa += nipa[ia]; continue; }
         double ra = srad[ia] + rsolv;
-        std::array<double,3> xta1{coord[0*0+0],0,0};
-        // xta(:,1) = coord(:,ia)
         std::array<double,3> xta;
-        for (int ix = 0; ix < 3; ++ix) xta[ix] = coord[(ix)*0+ia]; // placeholder
-        // use coord[ix][ia] via flat layout assumed coord[3][numat+1]
         for (int ix = 0; ix < 3; ++ix) xta[ix] = coord[ix*(numat+1)+ia];
         for (int iib = ilipa + 1; iib <= ilipa + nipa[ia]; ++iib) {
             int ib = lipa[iib];
@@ -1047,8 +1050,9 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
             rvy[2]=(xx[0]*rvx[1]-xx[1]*rvx[0])/dab;
 
             std::array<int,50> iset{};
-            std::array<double,50> phiset{}, tarset{};
-            int ntrp=0;
+            std::array<double,50> phiset{};
+            static std::array<double,50> tarset; // F90: `tarset=0.d0` in declaration => implicit SAVE; never reset per ring/atom (cosmo.F90 L1243)
+            int ntrp=0, ntrp2=0;
             for (int iic = ilipa+1; iic <= ilipa+nipa[ia]; ++iic) {
                 int ic = lipa[iic];
                 if (ic == ib) continue;
@@ -1065,7 +1069,7 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
                 cosa = sp/dab/dabc;
                 sina = std::sqrt(std::max(1e-28,1.0-cosa*cosa));
                 double cj = (dabc*dabc+hh*hh-rc*rc)/(2*dabc*hh*sina);
-                if (cj < 1.0) {} // ntrp2 unused downstream
+                if (cj < 1.0) ntrp2 += 2;
                 if (cj <= 1.0 && cj >= -1.0) {
                     double sj = std::sqrt(std::max(0.0,1.0-cj*cj));
                     std::array<double,3> tvx;
@@ -1124,7 +1128,7 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
             }
             if (ntrp%2 != 0) mopend("ODD NTRP");
             if (ntrp > 18) mopend("NTRP TOO LARGE");
-            if (ntrp == 0) {
+            if (ntrp + ntrp2 == 0) {
                 phiset[1]=0; phiset[2]=(2.0*pi); tarset[2]=0;
                 iset[1]=1; iset[2]=-1; ntrp=2;
             }
@@ -1156,8 +1160,9 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
                     double htr=(iat==ia)?aar/(2.0*pi):abr/(2.0*pi);
                     double fz=(ich==1)?fz1:fz2;
                     double yx=(ich==1)?yx1:yx2;
-                    // third atom index for offset
-                    int offi=(ich==1)?ia:ib;
+                    // third atom index for offset: xta(:,3-ich)
+                    int offi=(ich==1)?ib:ia;
+                    double yx_other=(ich==1)?yx2:yx1; // yx(3-ich)
                     for (int ja=ich;ja<=nsa;ja+=2) {
                         int jb=std::max(ja-1,1), jc=std::min(ja+1,nsa);
                         double xja[3],xjb[3],xjc[3];
@@ -1165,17 +1170,17 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
                             double phi=phiu+(ja-1)*dp;
                             double ca=xd[ix]+(std::cos(phi)*rvx[ix]+std::sin(phi)*rvy[ix])*fz;
                             ca=ca+(coord[ix*(numat+1)+(ich==1?ia:ib)]-ca)*yx;
-                            xja[ix]=ca+(coord[ix*(numat+1)+offi]-ca)*ddd*(1.0-fz);
+                            xja[ix]=ca+(coord[ix*(numat+1)+offi]-coord[ix*(numat+1)+(ich==1?ia:ib)])*ddd*(1.0-fz);
                         }
                         for (int ix=0;ix<3;++ix) {
                             double phi=phiu+(jb-1)*dp;
                             double ca=xd[ix]+std::cos(phi)*rvx[ix]+std::sin(phi)*rvy[ix];
-                            xjb[ix]=ca+(coord[ix*(numat+1)+offi]-ca)*yx;
+                            xjb[ix]=ca+(coord[ix*(numat+1)+offi]-ca)*yx_other;
                         }
                         for (int ix=0;ix<3;++ix) {
                             double phi=phiu+(jc-1)*dp;
                             double ca=xd[ix]+std::cos(phi)*rvx[ix]+std::sin(phi)*rvy[ix];
-                            xjc[ix]=ca+(coord[ix*(numat+1)+offi]-ca)*yx;
+                            xjc[ix]=ca+(coord[ix*(numat+1)+offi]-ca)*yx_other;
                         }
                         ++nrs;
                         double sp=0,d2=0,spn=0,spn2=0,dist2=0;
@@ -1232,49 +1237,53 @@ void surclo(double* coord, const int* nipa, const int* lipa, const bool* din,
         }
     }
     // match each ring segment to nearest primary segment of same atom
+    // NOTE: the nearest-segment search and the segment update run for EVERY
+    // ring segment (i loop), not only when a new atom is entered (F90 surclo
+    // L1576-1644: d2min block is outside the if (iat > iat0) block).
     for (int i=1;i<=nps;++i) nipsrs[i]=0;
-    int iat0=0, ips1=0;
+    int iat0=0, ips1=0, ips0=1;
+    double d2max=0;
     for (int i=1;i<=nrs;++i) {
         int iat=ipsrs[i];
         if (iat>iat0) {
             iat0=iat;
-            double d2max=16*srad[iat]*srad[iat]/n0[1];
-            if (nat[iat]==1) d2max*=n0[1]/n0[2];
+            d2max=16*srad[iat]*srad[iat]/n0[1];
+            if (nat[iat]==1) d2max*=static_cast<double>(n0[1])/n0[2];
             int ips;
             for (ips=ips1+1;ips<=nps;++ips) if (iatsp[ips]==iat) break;
-            int ips0=ips;
+            ips0=ips;
             for (;ips<nps;++ips) if (iatsp[ips+1]>iat) break;
             ips1=ips;
-            double d2min=1e6; int ipsmin=ips0;
-            for (ips=ips0;ips<=ips1;++ips) {
-                double d2=0;
-                for (int ix=0;ix<3;++ix) {
-                    double dd=cosurf[ix+1][ips]-rsc[ix][i];
-                    d2+=dd*dd;
-                }
-                if (d2<d2min) { d2min=d2; ipsmin=ips; }
+        }
+        double d2min=1e6; int ipsmin=ips0;
+        for (int ips=ips0;ips<=ips1;++ips) {
+            double d2=0;
+            for (int ix=0;ix<3;++ix) {
+                double dd=cosurf[ix+1][ips]-rsc[ix][i];
+                d2+=dd*dd;
             }
-            if (d2min>d2max) {
-                ++ips1;
-                for (int ip1=nps;ip1>=ips1;--ip1) {
-                    for (int ix=0;ix<4;++ix) cosurf[ix+1][ip1+1]=cosurf[ix+1][ip1];
-                    iatsp[ip1+1]=iatsp[ip1];
-                    nsetf[ip1+1]=nsetf[ip1];
-                    nar_csm[ip1+1]=nar_csm[ip1];
-                    nipsrs[ip1+1]=nipsrs[ip1];
-                }
-                ipsrs[i]=ips1; ++nps;
-                for (int ix=0;ix<4;++ix) cosurf[ix+1][ips1]=rsc[ix][i];
-                iatsp[ips1]=iatsp[ips1-1];
-                nar_csm[ips1]=0; nipsrs[ips1]=1;
-                nsetf[ips1]=nsetf[ips1+1];
-            } else {
-                ipsrs[i]=ipsmin; ++nipsrs[ipsmin];
-                double arseg=cosurf[4][ipsmin], arsegn=arseg+rsc[3][i];
-                for (int ix=0;ix<3;++ix)
-                    cosurf[ix+1][ipsmin]=(arseg*cosurf[ix+1][ipsmin]+rsc[3][i]*rsc[ix][i])/arsegn;
-                cosurf[4][ipsmin]=arsegn;
+            if (d2<d2min) { d2min=d2; ipsmin=ips; }
+        }
+        if (d2min>d2max) {
+            ++ips1;
+            for (int ip1=nps;ip1>=ips1;--ip1) {
+                for (int ix=0;ix<4;++ix) cosurf[ix+1][ip1+1]=cosurf[ix+1][ip1];
+                iatsp[ip1+1]=iatsp[ip1];
+                nsetf[ip1+1]=nsetf[ip1];
+                nar_csm[ip1+1]=nar_csm[ip1];
+                nipsrs[ip1+1]=nipsrs[ip1];
             }
+            ipsrs[i]=ips1; ++nps;
+            for (int ix=0;ix<4;++ix) cosurf[ix+1][ips1]=rsc[ix][i];
+            iatsp[ips1]=iatsp[ips1-1];
+            nar_csm[ips1]=0; nipsrs[ips1]=1;
+            nsetf[ips1]=nsetf[ips1+1];
+        } else {
+            ipsrs[i]=ipsmin; ++nipsrs[ipsmin];
+            double arseg=cosurf[4][ipsmin], arsegn=arseg+rsc[3][i];
+            for (int ix=0;ix<3;++ix)
+                cosurf[ix+1][ipsmin]=(arseg*cosurf[ix+1][ipsmin]+rsc[3][i]*rsc[ix][i])/arsegn;
+            cosurf[4][ipsmin]=arsegn;
         }
     }
 }
