@@ -48,7 +48,6 @@ void mpcpop(int icok, FILE* isyb) {
             for (j = 1; j <= numat; ++j) std::fprintf(isyb, "%12.6f", chrg[j]);
             std::fprintf(isyb, "\n");
         }
-        to_screen("To_file: Mulliken");
     }
 }
 

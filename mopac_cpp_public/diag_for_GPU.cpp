@@ -168,9 +168,6 @@ void diag_for_GPU(double* fao, double* vector, int nocc, double* eig,
         }
     _tr += std::chrono::duration_cast<std::chrono::microseconds>(
                std::chrono::steady_clock::now() - _d).count();
-    if (++_tc % 8 == 0)
-        fprintf(stderr, "[DGFPROF] unpack=%.1f gemm=%.1f trans=%.1f rot=%.1fms n=%d\n",
-                _tu / 1e3, _tg / 1e3, _tt / 1e3, _tr / 1e3, norbs);
 #ifdef MOPAC_USE_MKL
     mkl_set_num_threads(molkst_C::num_threads);  // restore (official F90 L207)
 #endif

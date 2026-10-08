@@ -1570,7 +1570,6 @@ void ef(std::vector<double>& xparam, double& funct) {
             updhes(svec, tvec, grad, nvar, iupd, hesinv, oldf, d);
         }
         if (iprnt >= 2) geout(iw);
-        fprintf(stderr, "[EFGRAD] nstep=%d grad=%+.12f %+.12f %+.12f\n", nstep, grad[1], grad[2], grad[3]);
         if (iprnt >= 2) {
             std::printf(" XPARAM \n");
             for (i = 1; i <= nvar; ++i)
@@ -1598,7 +1597,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                             "GRAD.:%10.3f HEAT:%14.7g\n",
                             nstep + 1, std::min(tstep, 9999.99), tprt, txt,
                             std::min(gnorm, 999999.999), funct);
-                to_screen("To_file: Geometry optimizing");
             } else {
                 if (id == 3) {
                     write_cell(iw);
@@ -1607,7 +1605,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                 std::printf(" RESTART FILE WRITTEN,      TIME LEFT:%6.2f%c  "
                             "GRAD.:%10.3f HEAT:%14.7g\n",
                             tprt, txt, std::min(gnorm, 999999.999), funct);
-                to_screen("To_file: Geometry optimizing");
             }
         }
         if ((ef_mode != 0 && best_gnorm > gnorm) ||
@@ -1907,7 +1904,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                     }
                 } else {
                     for (i = 1; i <= nvar; ++i) d[i] = d[i] * cos_const;
-                    fprintf(stderr, "[EFSTEP] nstep=%d cos=%f d=%+.12f %+.12f %+.12f\n", nstep, cos_const, d[1], d[2], d[3]);
                     for (i = 1; i <= nvar; ++i) {
                         xparam[i] = xparam[i] + d[i];
                         k = loc[1][i];

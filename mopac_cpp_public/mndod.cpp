@@ -521,13 +521,6 @@ void rotatd(int ni,int nj,const std::vector<double>& ci,const std::vector<double
         }
     }
     int iw=(ii*(ii+1))/2, jw=(kk*(kk+1))/2;
-    if (ni==1 && nj==2) {
-        fprintf(stderr, "[RT] ci1=%+.6f ww1=%.4f ww2=%.4f ww3=%.4f v47=%.4f v1=%.4f id11=%d ind21=%d limij=%d limkl=%d pp11=%.6f pp22=%.6f c31=%.6f c41=%.6f\n",
-                ci[1], ww[1], ww[2], ww[3], v[1*46+1], v[1], indexd[1][1], ind2[1][1], iw, jw,
-                pp[1][1][1], pp[1][2][2], pp[1][3][3], cored[3][1], cored[4][1]);
-        fflush(stderr);
-    }
-    { static int prt=0; if (prt<3) { fprintf(stderr, "[RT2] ni=%d nj=%d natorbni=%d\n", ni, nj, natorb[ni]); fflush(stderr); prt++; } }
     w2mat(ww,w,kr,iw,jw);
     double sum=0;
     for(int i=1;i<=9;++i) for(int j=1;j<=9;++j){ int ii_=45*((i*(i+1))/2-1); int jj=(j*(j+1))/2; sum+=ww[ii_+jj]; }

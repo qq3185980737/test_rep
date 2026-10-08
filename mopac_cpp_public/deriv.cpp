@@ -239,23 +239,9 @@ void deriv(const std::vector<std::vector<double>>& geo,
         int ncol = 0;
         jcarin(xparam.data(), step, precis, work2.data(), ncol, i, j);
         mxm(work2.data(), j - i + 1, &dxyz[1], ncol, &gradnt[i], 1);
-        std::fprintf(stderr, "[DGD] i=%d j=%d nvar=%d ncol=%d nstep=%d step=%.9f\n", i, j, nvar, ncol, nstep, step);
-        for (int r = 1; r <= (j - i + 1); ++r) {
-            std::fprintf(stderr, "[DGD-R%d]", r);
-            for (int cc = 1; cc <= ncol; ++cc)
-                std::fprintf(stderr, " %+.6f", work2[(cc - 1) * (j - i + 1) + (r - 1)]);
-            std::fprintf(stderr, "\n");
-        }
     }
     step = precis ? 0.5 / step : 1.0 / step;
     for (int i = 1; i <= nvar; ++i) gradnt[i] *= step;
-    std::fprintf(stderr, "[DGD-GD] step2=%.9f\n", step);
-    for (int i = 1; i <= nvar; ++i)
-        std::fprintf(stderr, "[DGD-GD%d] %+.9f\n", i, gradnt[i]);
-    std::fprintf(stderr, "[DGD-DXYZ]");
-    for (int i = 1; i <= 3 * numat; ++i)
-        std::fprintf(stderr, " %+.9f", dxyz[i]);
-    std::fprintf(stderr, "\n");
         if (geochk) {
             sum = dot3(&gradnt[1], &gradnt[1], nvar);
             if (sum < 2.0 &&

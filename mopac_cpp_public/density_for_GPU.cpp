@@ -120,36 +120,6 @@ void density_for_GPU(double* c, double fract, int ndubl, int nsingl,
             for (int j = 1; j <= norbs; ++j)
                 for (int i = 1; i <= j; ++i)
                     pp[pack_idx(i, j)] = xmat[(size_t)(j - 1) * norbs + (i - 1)];
-            {   // DEBUG: C12/C80 dsyrk check
-                static int dbg = 0;
-                if (dbg++ < 2) {
-                    std::vector<double> xm2(norbs * norbs, 0.0);
-                    for (int i = 1; i <= norbs; ++i)
-                        for (int j = 1; j <= norbs; ++j) {
-                            double s = 0.0;
-                            for (int k = 1; k <= ndubl; ++k)
-                                s += c[(k - 1) * norbs + (i - 1)] * c[(k - 1) * norbs + (j - 1)];
-                            xm2[(i - 1) * norbs + (j - 1)] = occ * s;
-                        }
-                    double mx = 0.0; int mi = -1, mj = -1;
-                    for (int j = 1; j <= norbs; ++j)
-                        for (int i = 1; i <= j; ++i) {
-                            double d = std::fabs(xm2[(i - 1) * norbs + (j - 1)] - xmat[(j - 1) * norbs + (i - 1)]);
-                            if (d > mx) { mx = d; mi = i; mj = j; }
-                        }
-                    // compare PACKED pp vs serial-packed
-                    double mp = 0.0; int mip = -1;
-                    for (int j = 1; j <= norbs; ++j)
-                        for (int i = 1; i <= j; ++i) {
-                            int idx = pack_idx(i, j);
-                            double d = std::fabs(xm2[(i - 1) * norbs + (j - 1)] - pp[idx]);
-                            if (d > mp) { mp = d; mip = idx; }
-                        }
-                    fprintf(stderr, "[DBG] dsyrk-check maxdiff=%.3e at(%d,%d) pp_maxdiff=%.3e at(%d) norbs=%d k=%d occ=%.1f\n",
-                            mx, mi, mj, mp, mip, norbs, ndubl, occ);
-                    fflush(stderr);
-                }
-            }
             int pN = (norbs * (norbs + 1)) / 2;
             break;
 #else

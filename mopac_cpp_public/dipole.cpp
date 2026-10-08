@@ -103,15 +103,6 @@ double dipole(const std::vector<double>& pv,
         dip[3][j - 1] = std::sqrt(dip[0][j - 1] * dip[0][j - 1] +
                                   dip[1][j - 1] * dip[1][j - 1] +
                                   dip[2][j - 1] * dip[2][j - 1]);
-    fprintf(stderr, "[DIPDBG] mode=%d q:", mode);
-    for (i = 1; i <= numat; ++i) fprintf(stderr, " %+.6f", q[i]);
-    fprintf(stderr, "\n[DIPDBG] crd:");
-    for (i = 1; i <= numat; ++i)
-        fprintf(stderr, " (%+.6f,%+.6f,%+.6f)", crd[0][i], crd[1][i], crd[2][i]);
-    fprintf(stderr, "\n[DIPDBG] dip[0..3][0..2]: %.6f %.6f %.6f | %.6f %.6f %.6f | %.6f %.6f %.6f | %.6f %.6f %.6f\n",
-        dip[0][0], dip[1][0], dip[2][0], dip[3][0],
-        dip[0][1], dip[1][1], dip[2][1], dip[3][1],
-        dip[0][2], dip[1][2], dip[2][2], dip[3][2]); fflush(stderr);
     if (force) {
         dipvec[1] = dip[0][2];
         dipvec[2] = dip[1][2];

@@ -485,8 +485,6 @@ void writmo() {
     // DIPOLE section (F90: dipole(p, coord, dumy, 1) after NET ATOMIC CHARGES).
     if (id == 0) {
         std::vector<double> dipvec(4, 0.0);
-        fprintf(stderr, "[DIPIN] coord[1..3][1]=%.6f %.6f %.6f  [1..3][2]=%.6f %.6f %.6f\n",
-                coord[1][1], coord[2][1], coord[3][1], coord[1][2], coord[2][2], coord[3][2]); fflush(stderr);
         dipole(p, coord, dipvec, 1);
     }
     // FOCK / DENS matrices (F90 L683-698).

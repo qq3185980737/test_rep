@@ -316,7 +316,6 @@ void force() {
                             cb[rr][cc] = cb_flat[(cc - 1) * nsz2 + (rr - 1)];
                 }
             }
-            to_screen("To_file: Normal output");
         }
         std::fprintf(stdout, "\n\n          GRADIENT NORM =%12.5f\n", gnorm);
         if (gnorm > 10.0 && !ts) {
@@ -326,7 +325,6 @@ void force() {
                 std::fprintf(stdout, "\n\n\n ** GRADIENT IS TOO LARGE TO ALLOW FORCE MATRIX TO BE CALCULATED, (LIMIT=10) **\n\n");
                 std::fprintf(stdout, "\n EITHER ADD 'LET' OR REDUCE GRADIENT\n");
                 std::fprintf(stdout, " USING 'TS' OR OTHER GEOMETRY OPTIMIZER\n");
-                to_screen("To_file: ERROR: GRADIENT IS TOO LARGE TO ALLOW FORCE MATRIX TO BE CALCULATED");
                 mopend("Gradient in FORCE is too large");
                 { cleanup(); return; }
             }
@@ -671,7 +669,6 @@ void force() {
         force_thermo(store, nvib, a, b, c, linear, escf);
     for (i = 1; i <= numat; ++i)
         for (int k = 1; k <= 3; ++k) coord[k-1][i] = store_coord[k-1][i];
-    to_screen("To_file: Force output");
     for (i = 1; i <= (nvar * (nvar + 1)) / 2; ++i) fmatrx[i] = oldf[i] * 1.0e-5;
     if (!ts && numat > 1) {
         std::vector<double> geo_flat;

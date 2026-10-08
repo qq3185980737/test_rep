@@ -169,7 +169,6 @@ void pathk() {
             }
             to_screen(molkst_C::line);
         }
-        to_screen("To_file: Reaction path");
         geout(chanel_C::iw);
         if (molkst_C::keywrd.find("PDBOUT") != std::string::npos) {
             ++imodel;

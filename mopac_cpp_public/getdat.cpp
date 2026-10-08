@@ -58,7 +58,6 @@ void getdat(int input, int output) {
     using namespace common_arrays_C;
     getdat_lines.clear();
     natoms = 0;
-    to_screen("To_file: getdat");
     bool exists = false, arc_file = false;
     if (gui) {
         jobnam = "MOPAC input";

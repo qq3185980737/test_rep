@@ -387,7 +387,6 @@ void lbfgs(double* xparam_arr, double& escf) {
       if (nflush != 0 && nstep % nflush == 0) {
         // endfile/backspace on iw/ilog: no-ops
       }
-      to_screen("To_file: Geometry optimizing");
       dcopy1(nvar, &grad[1], 1, &gold[1], 1);
       if (gnorm < tolerg) {
         iflepo = 3;

@@ -1525,7 +1525,6 @@ void potcal() {
         for (i = 1; i <= numat; ++i) {
             // write(iw,'(17X,I4,9X,A2,1X,F10.4)') i, elemnt(nat(i)), q(i)
         }
-        to_screen("To_file: Esp");
     } else {
         // MNDO CALCULATION-SCALE THE CHARGES. TEST FOR SLOPE KEYWORD
         if ((pos = keywrd.find("SLOPE=")) != std::string::npos)

@@ -118,7 +118,6 @@ void run_mopac() {
   // Read in all data; put it into a scratch file "ir"
   //
   getdat(ir, iw);       // ir: temp file; natoms: number of lines incl. blanks/comments
-  to_screen("To_file: Start of reading in data");
   if (natoms == 0 || moperr) return;
   //
   // Time budget (wrtkey.F90 equivalent): default two days, overridable by T=
@@ -216,7 +215,6 @@ void run_mopac() {
     MM_corrections = false;
     state_Irred_Rep = " ";
 
-    if (numcal > 1) to_screen("To_file: Leaving MOPAC");
     if (numcal > 1 && numcal < 4 && keywrd.find(" GEO_DAT") != std::string::npos) {
       // Quickly jump over the first three lines
       // close(ir) — no-op in C++ mapping.
@@ -326,7 +324,6 @@ void run_mopac() {
     moldat(0);                        // orbitals, spin, two-electron count
     calpar();                         // derived parameters
     if (moperr) goto LendBody;        // F90: goto 100
-    to_screen("To_file: Data read in");
     //
     // If no SCF calculations are needed, output geometry and quit
     // (F90 dead-code block "if (.false.) then" is omitted; see source lines

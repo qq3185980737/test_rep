@@ -125,7 +125,6 @@ void bonds() {
 
     std::printf("\n\n\n BOND ORDERS AND VALENCIES\n");
     vecprt(bondab, numat);
-    to_screen("To_file: Bonds");
     if (keywrd.find(" LARGE") == std::string::npos) return;
 
     // Spin population analysis.

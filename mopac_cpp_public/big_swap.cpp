@@ -754,7 +754,6 @@ void lbfgs_TS(std::vector<double>& big_xparam, int big_nvar, double& escf_tot,
           // endfile/backspace -> no-op
         }
       }
-      to_screen("To_file: Geometry optimizing");
       dcopy1b(big_nvar, &big_grad[1], 1, &gold[1], 1);
       if (gnorm < tolerg) {
         iflepo = 3;

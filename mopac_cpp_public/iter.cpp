@@ -346,9 +346,6 @@ L320:
                 if (ok) for (int i = 0; i < m; ++i) if (std::fabs(c[i]) > 2.0) ok = false;
             }
             if (ok && m >= 2) {
-                fprintf(stderr, "[DIIS] it=%d m=%d c=", niter, m);
-                for (int i = 0; i < m; ++i) fprintf(stderr, "%.4f ", c[i]);
-                fprintf(stderr, "\n");
                 std::vector<double> fstar(mpack + 1);
                 diis_extrapolate(fstar, diis_F, c, m, mpack);
                 for (int k = 1; k <= mpack; ++k) f[k] = 0.7 * fstar[k] + 0.3 * f[k];
@@ -565,11 +562,6 @@ L600:
     shift=1.0;
     escf=(ee+enuclr)*enrgy_+atheat;
     if(emin==0.0) emin=escf; else emin=std::min(emin,escf);
-    fprintf(stderr, "[ITPROF] fock2=%.1fms diag=%.1fms(pseudo:%d=%.1fms full:%d=%.1fms) dens=%.1fms total=%.1fms\n",
-            _tf2 / 1e3, _tdiag / 1e3, _n_pseudo, _tpseudo / 1e3, _n_full, _tfull / 1e3,
-            _tdens / 1e3,
-            std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now() - _t0).count() / 1e3);
 }
 
 // delete_iter_arrays: F90 deallocates scratch arrays; C++ RAII makes this a no-op.

@@ -467,10 +467,4 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
         }
     }
     if (cosmo_C::useps) addfck(f, ptot);
-    auto t1 = std::chrono::steady_clock::now();
-    fprintf(stderr,
-            "[F2PROF] hh=%lld(%.1fms) hl=%lld(%.1fms) ll=%lld(%.1fms) fd=%lld(%.1fms) pr=%lld(%.1fms) total=%.1fms\n",
-            n_hh, t_hh / 1e6, n_hl, t_hl / 1e6, n_ll, t_ll / 1e6,
-            n_fd, t_fd / 1e6, n_pr, t_pr / 1e6,
-            std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1e3);
 }

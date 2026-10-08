@@ -183,7 +183,6 @@ void drcout(const std::vector<std::vector<double>>& xyz3,
         if (run_local) local(&c[1][0], i, &eigs[1], 0, "c ");
         mullik();
     }
-    to_screen_("To_file: IRC-DRC");
     if (keywrd.find(" LDRC_FIRST") != std::string::npos) {
         l_control("LDRC_FIRST", 10,
                   -1);

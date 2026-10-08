@@ -299,10 +299,6 @@ void compfg(const std::vector<double>& xparam, bool int_flag, double& escf,
   // Reform the density matrix if a CI was done and either the last SCF or a
   // force calculation is in progress.
   if (usedci && force) mecip();
-  fprintf(stderr, "[CFPROF] hcore=%.1fms iter=%.1fms deriv=%.1fms total=%.1fms\n",
-          _th / 1e3, _ti / 1e3, _td / 1e3,
-          std::chrono::duration_cast<std::chrono::microseconds>(
-              std::chrono::steady_clock::now() - _t0).count() / 1e3);
 }
 
 // Core-core repulsion used by the XFAC keyword (same file in the Fortran).
