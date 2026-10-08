@@ -1,0 +1,5 @@
+PM7 1SCF CHARGE=0
+O2 O2 singlet single-point (PM7, R=1.5 A)
+
+O 0.0 0.0 0.0
+O 0.0 0.0 1.5

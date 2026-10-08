@@ -1,0 +1,6 @@
+PM7 1SCF CHARGE=0
+H2O water single-point (PM7, OH=0.957 A, 104.5 deg)
+
+O 0.0 0.0 0.0
+H 0.7567 0.0 0.5859
+H -0.7567 0.0 0.5859

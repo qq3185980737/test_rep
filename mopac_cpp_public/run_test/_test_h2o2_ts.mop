@@ -1,0 +1,7 @@
+PM7 DRC CYCLES=500
+H2+O2 -> 2 OH DRC, bent HO--OH (O-O=1.6, H's opposite sides)
+
+O 0.0 0.0 0.0
+O 0.0 0.0 1.60
+H 0.0 0.8 0.60
+H 0.0 -0.8 1.00

@@ -1,0 +1,5 @@
+DRC
+h2 DRC test (PM7, R=0.74 A, one quantum)
+
+H 0.0 0.0 0.0
+H 0.74 0.0 0.0
