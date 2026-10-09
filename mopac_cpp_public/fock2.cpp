@@ -133,7 +133,12 @@ void fock1dorbs(std::vector<double>& f, const std::vector<double>& ptot,
                     int ikw = (im * (im - 1)) / 2 + jm;
                     im = std::max(lw, iw); jm = std::min(lw, iw);
                     int jlw = (im * (im - 1)) / 2 + jm;
-                    sum += ptot[ijp] * w[ijw][klw] - pa[ijp] * w[ikw][jlw];
+                    // NOTE: F90 writes "sum = sum + ptot*w - pa*w", which is
+                    // left-associative: (sum + ptot*w) - pa*w. A C++ shorthand
+                    // "sum += ptot*w - pa*w" would round (ptot*w - pa*w)
+                    // first and diverge by 1 ULP; split into two statements.
+                    sum += ptot[ijp] * w[ijw][klw];
+                    sum -= pa[ijp] * w[ikw][jlw];
                 }
             }
             f[ij] += sum;
