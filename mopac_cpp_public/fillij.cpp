@@ -28,7 +28,7 @@ void fillij(bool count) {
     if (!count) {
         if (MOZYME_C::nijbo.empty()) {
             if (MOZYME_C::lijbo) {
-                MOZYME_C::nijbo.assign(numat, std::vector<int>(numat, 0));
+                MOZYME_C::nijbo.assign(numat + 1, std::vector<int>(numat + 1, 0));   // 1-based (Fortran nijbo(numat,numat))
             }
             if (!MOZYME_C::lijbo) {
                 MOZYME_C::iijj.assign(MOZYME_C::ij_dim, 0);
@@ -126,9 +126,9 @@ void fillij(bool count) {
                 ix = ix + 1;
                 if (!count) {
                     if (MOZYME_C::lijbo) {
-                        if (first || MOZYME_C::nijbo[i-1][j-1] < 0) {
-                            MOZYME_C::nijbo[i-1][j-1] = mpack;
-                            MOZYME_C::nijbo[j-1][i-1] = mpack;
+                        if (first || MOZYME_C::nijbo[i][j] < 0) {
+                            MOZYME_C::nijbo[i][j] = mpack;
+                            MOZYME_C::nijbo[j][i] = mpack;
                         } else {
                             mpack = mpack - io * jo;
                         }
@@ -145,16 +145,16 @@ void fillij(bool count) {
                     else n2elec = n2elec + (jo > 1 ? 4 : 1);
                 }
                 if (MOZYME_C::lijbo && !count) {
-                    if (first || MOZYME_C::nijbo[i-1][j-1] == -1) {
-                        MOZYME_C::nijbo[i-1][j-1] = -2;
-                        MOZYME_C::nijbo[j-1][i-1] = -2;
+                    if (first || MOZYME_C::nijbo[i][j] == -1) {
+                        MOZYME_C::nijbo[i][j] = -2;
+                        MOZYME_C::nijbo[j][i] = -2;
                     }
                 }
             } else {
                 if (!MOZYME_C::semidr) n2elec = n2elec + 1;
                 if (MOZYME_C::lijbo && !count && first) {
-                    MOZYME_C::nijbo[i-1][j-1] = -1;
-                    MOZYME_C::nijbo[j-1][i-1] = -1;
+                    MOZYME_C::nijbo[i][j] = -1;
+                    MOZYME_C::nijbo[j][i] = -1;
                 }
             }
         }
@@ -162,7 +162,7 @@ void fillij(bool count) {
         if (!count) {
             if (MOZYME_C::lijbo) {
                 if (first) {
-                    MOZYME_C::nijbo[i-1][i-1] = mpack;
+                    MOZYME_C::nijbo[i][i] = mpack;
                 } else {
                     mpack = mpack - (io * (io + 1)) / 2;
                 }

@@ -10,6 +10,7 @@ bool direct = false;
 bool semidr = false;
 bool rapid = false;
 double thresh = 0.0;
+double scfref = 0.0;
 std::vector<double> partp;
 std::vector<double> parth;
 std::vector<double> partf;

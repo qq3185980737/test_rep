@@ -62,17 +62,6 @@ static const double demin = 1.0e-2, gmin = 5.0;
 // ---------------------------------------------------------------------------
 static void gemm_cpu(int n, const double* a, const double* b, double* c) {
 #ifdef MOPAC_USE_MKL
-    static int dbg_done = 0;
-    if (!dbg_done) {
-        dbg_done = 1;
-        const char* p = std::getenv("MOPAC_GEMM_DBG");
-        if (p) std::fprintf(stderr,
-            "DBG gemm n=%d max_threads=%d omp=%s mkl=%s dyn=%s\n",
-            n, mkl_get_max_threads(),
-            std::getenv("OMP_NUM_THREADS") ? std::getenv("OMP_NUM_THREADS") : "-",
-            std::getenv("MKL_NUM_THREADS") ? std::getenv("MKL_NUM_THREADS") : "-",
-            std::getenv("MKL_DYNAMIC") ? std::getenv("MKL_DYNAMIC") : "-");
-    }
     // The prjfc buffers (hesinv/p/cof) are 1-based-layout vectors: slot 0 is a
     // dead pad, real data is [1..n*n].  Fortran dgemm reads from the address
     // given, so pass data()+1 to skip the pad and align exactly with the
@@ -367,49 +356,49 @@ static void efstr(std::vector<double>& xparam, double& funct, int& ihess,
     iprnt = 3;
     ip = (int)keywrd.find(" PRNT=");
     if (ip != (int)std::string::npos) {
-        iprnt = (int)std::lround(reada(keywrd, ip));
+        iprnt = (int)std::lround(reada(keywrd, ip + 1));
         if (iprnt > 5) iprnt = 5;
         if (iprnt < 0) iprnt = 0;
     }
     mxstep = 2000;
     i = (int)keywrd.find(" CYCLES=");
     if (i != (int)std::string::npos) {
-        mxstep = (int)std::lround(reada(keywrd, i));
+        mxstep = (int)std::lround(reada(keywrd, i + 1));
         if (mxstep == 0 && ip == (int)std::string::npos) iprnt = 3;
     }
     i = (int)keywrd.find(" RECALC=");
     if (i != (int)std::string::npos)
-        ireclc = (int)std::lround(reada(keywrd, i));
+        ireclc = (int)std::lround(reada(keywrd, i + 1));
     i = (int)keywrd.find(" IUPD=");
-    if (i != (int)std::string::npos) iupd = (int)std::lround(reada(keywrd, i));
+    if (i != (int)std::string::npos) iupd = (int)std::lround(reada(keywrd, i + 1));
     i = (int)keywrd.find(" MODE=");
     if (i != (int)std::string::npos)
-        ef_mode = (int)std::lround(reada(keywrd, i));
+        ef_mode = (int)std::lround(reada(keywrd, i + 1));
     ddmin = 1.0e-4;
     i = (int)keywrd.find(" DDMIN=");
-    if (i != (int)std::string::npos) ddmin = reada(keywrd, i);
+    if (i != (int)std::string::npos) ddmin = reada(keywrd, i + 1);
     i = (int)keywrd.find(" DMAX=");
-    if (i != (int)std::string::npos) dmax = reada(keywrd, i);
+    if (i != (int)std::string::npos) dmax = reada(keywrd, i + 1);
     i = (int)keywrd.find(" DDMAX=");
-    if (i != (int)std::string::npos) ddmax = reada(keywrd, i);
+    if (i != (int)std::string::npos) ddmax = reada(keywrd, i + 1);
     tol2 = 1.0;
     if (id != 0) tol2 = id * 2.0 - 1.0;
     if (keywrd.find(" PREC") != std::string::npos) tol2 *= 5.0e-2;
     i = (int)keywrd.find(" GNORM=");
-    if (i != (int)std::string::npos) tol2 = reada(keywrd, i);
+    if (i != (int)std::string::npos) tol2 = reada(keywrd, i + 1);
     if (keywrd.find(" LET") == std::string::npos && tol2 < 0.01) {
         std::printf("\n  GNORM HAS BEEN SET TOO LOW, RESET TO 0.01\n"
                     "  SPECIFY LET AS KEYWORD TO ALLOW GNORM LESS THAN 0.01\n");
         tol2 = 0.01;
     }
     i = (int)keywrd.find(" HESS=");
-    if (i != (int)std::string::npos) igthes = (int)std::lround(reada(keywrd, i));
+    if (i != (int)std::string::npos) igthes = (int)std::lround(reada(keywrd, i + 1));
     i = (int)keywrd.find(" RMIN=");
-    if (i != (int)std::string::npos) rmin = reada(keywrd, i);
+    if (i != (int)std::string::npos) rmin = reada(keywrd, i + 1);
     i = (int)keywrd.find(" RMAX=");
-    if (i != (int)std::string::npos) rmax = reada(keywrd, i);
+    if (i != (int)std::string::npos) rmax = reada(keywrd, i + 1);
     i = (int)keywrd.find(" OMIN=");
-    if (i != (int)std::string::npos) omin = reada(keywrd, i);
+    if (i != (int)std::string::npos) omin = reada(keywrd, i + 1);
     time1 = time0;
     time2 = time1;
     if ((its != (int)std::string::npos) && (iupd == 2)) {
@@ -884,24 +873,6 @@ static void prjfc(std::vector<double>& f, const std::vector<double>& xparam,
     rot[2][1] = rot[1][2];
     rot[3][1] = rot[1][3];
     rot[3][2] = rot[2][3];
-    if (std::getenv("PRJFC_PROBE")) {
-        static bool rot_dumped = false;
-        if (!rot_dumped) {
-            rot_dumped = true;
-            FILE* fp = std::fopen("prjfc_rot_our.txt", "w");
-            if (fp) {
-                std::fprintf(fp, "%.17e %.17e %.17e\n", cmass[1], cmass[2],
-                             cmass[3]);
-                std::fprintf(fp, "%.17e\n", totm);
-                for (int ii = 1; ii <= 3; ++ii)
-                    std::fprintf(fp, " % .17e % .17e % .17e\n", rot[1][ii],
-                                 rot[2][ii], rot[3][ii]);
-                for (int ii = 1; ii <= nc1; ++ii)
-                    std::fprintf(fp, "%.17e\n", x[ii]);
-                std::fclose(fp);
-            }
-        }
-    }
     double chk = rot[1][1] * rot[2][2] * rot[3][3];
     int iscr[6] = {};
     double det2[2] = {};
@@ -1005,71 +976,8 @@ static void prjfc(std::vector<double>& f, const std::vector<double>& xparam,
             p[j + (i - 1) * nc1] = p[i + (j - 1) * nc1];
         }
     // cof = f*p;  f = p*cof   (CPU dgemm equivalents).
-    if (std::getenv("PRJFC_PROBE")) {
-        // First invocation only: dump p (dgemm input) and f (hessc output).
-        static bool dumped = false;
-        if (!dumped) {
-            dumped = true;
-            std::printf("PRJFC cyc nvar=%d\n", nc1);
-            std::printf("PRJFC p[1..8] =");
-            for (int k = 1; k <= 8; ++k)
-                std::printf(" %20.14f", p[k + (0) * nc1]);
-            std::printf("\nPRJFC p[%d]= (i=%d,j=1)\n", nc1, nc1);
-            std::printf("PRJFC p[i=%d]= %20.14f %20.14f %20.14f\n", nc1,
-                        p[nc1 + 0 * nc1], p[nc1 + 1 * nc1], p[nc1 + 2 * nc1]);
-            FILE* pf = std::fopen("prjfc_p_our.txt", "w");
-            if (pf) {
-                for (int ii = 1; ii <= nc1; ++ii)
-                    for (int jj = 1; jj <= ii; ++jj)
-                        std::fprintf(pf, "%.17e\n", p[jj + (ii - 1) * nc1]);
-                std::fclose(pf);
-            }
-            FILE* hf = std::fopen("prjfc_hes_our.txt", "w");
-            if (hf) {
-                for (int ii = 1; ii <= nc1; ++ii)
-                    for (int jj = 1; jj <= ii; ++jj)
-                        std::fprintf(hf, "%.17e\n", f[jj + (ii - 1) * nc1]);
-                std::fclose(hf);
-            }
-            std::printf("PRJFC f[1..8] =");
-            for (int k = 1; k <= 8; ++k)
-                std::printf(" %20.14f", f[k]);
-            std::printf("\n");
-        }
-    }
     gemm_cpu(nc1, f.data(), p.data(), cof.data());
     gemm_cpu(nc1, p.data(), cof.data(), f.data());
-    if (std::getenv("PRJFC_PROBE")) {
-        static bool dumped2 = false;
-        if (!dumped2) {
-            dumped2 = true;
-            std::printf("PRJFC after-gemm f[1..8] =");
-            for (int k = 1; k <= 8; ++k)
-                std::printf(" %20.14f", f[k]);
-            std::printf("\nPRJFC after-gemm f[%d]= %20.14f\n", nc1, f[nc1]);
-            FILE* fp = std::fopen("prjfc_f_our.txt", "w");
-            if (fp) {
-                for (int ii = 1; ii <= nc1; ++ii)
-                    for (int jj = 1; jj <= ii; ++jj)
-                        std::fprintf(fp, "%.16e\n", f[jj + (ii - 1) * nc1]);
-                std::fclose(fp);
-            }
-            fp = std::fopen("prjfc_x_our.txt", "w");
-            if (fp) {
-                for (int ii = 1; ii <= natm_loc; ++ii)
-                    std::fprintf(fp, "%4d % .17e % .17e % .17e % .17e\n", ii,
-                                 coord[0][ii], coord[1][ii], coord[2][ii],
-                                 atmass[ii]);
-                for (int ii = 1; ii <= 12; ++ii)
-                    std::fprintf(fp, "%.17e\n", x[ii]);
-                std::fprintf(fp, "ROT\n");
-                for (int ii = 1; ii <= 3; ++ii)
-                    std::fprintf(fp, " % .17e % .17e % .17e\n", rot[1][ii],
-                                 rot[2][ii], rot[3][ii]);
-                std::fclose(fp);
-            }
-        }
-    }
 }
 // ---------------------------------------------------------------------------
 // formd: form geometry step (NR / P-RFO / QA) (ef.F90 lines 1095-1534).
@@ -1677,33 +1585,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                         rsp_in[ij] = hesinv[j + (i - 1) * nvar];
                         ++ij;
                     }
-                if (std::getenv("HESSPROBE")) {
-                    std::printf(" HESSPROBE cyc%6d\n", nstep + 1);
-                    std::printf("  hc ");
-                    int ihp = nvar * (nvar + 1) / 2;
-                    for (int k = 0; k < ihp; ++k) std::printf("%20.14f", rsp_in[k]);
-                    std::printf("\n");
-                }
-                // ULP perturbation injection (research probe): MOPAC_ULPPERT=idx:dir
-                // idx: 1-based linear index into packed hessc (1..nvar*(nvar+1)/2);
-                // dir: +1/-1 (nextafter). Applied once on the first EF cycle only.
-                {
-                    static bool ulp_done = false;
-                    const char* upp = std::getenv("MOPAC_ULPPERT");
-                    if (upp && !ulp_done) {
-                        int uidx = 0, udir = 1;
-                        if (std::sscanf(upp, "%d:%d", &uidx, &udir) == 2 &&
-                            uidx >= 1 && uidx <= nvar * (nvar + 1) / 2) {
-                            double base = rsp_in[uidx - 1];
-                            rsp_in[uidx - 1] = std::nextafter(
-                                base, (udir > 0) ? std::numeric_limits<double>::infinity()
-                                                 : -std::numeric_limits<double>::infinity());
-                            std::printf(" ULPPERT idx=%d dir=%d base=%.17e new=%.17e\n",
-                                        uidx, udir, base, rsp_in[uidx - 1]);
-                            ulp_done = true;
-                        }
-                    }
-                }
             rsp(rsp_in.data(), nvar, rsp_root.data(), rsp_vec.data());
                 for (i = 1; i <= nvar; ++i) {
                     eigval[i] = rsp_root[i - 1];
@@ -1735,142 +1616,15 @@ void ef(std::vector<double>& xparam, double& funct) {
                 for (i = 1; i <= neg; ++i) std::printf("%7.1f", eigval[i]);
                 std::printf("\n");
             }
-            // fx = row_i(u) . grad  (official Fortran semantics; verified
-            // bit-identical to the official exe on the 10 small molecules and
-            // required for EF convergence — column-form/skip-degenerate
-            // variants diverge, see paper-discussion notes 2026-10-06).
-            // Optional DSPG variant (MOPAC_DSPG=1, paper path C): project grad
-            // onto the non-degenerate subspace (grad' = grad - P_d*grad, P_d
-            // the |eigval|<1e-6-subspace projector) before computing fx.
-            // C12H26: 267 steps / -66.77024 vs baseline 227 / -66.52132 —
-            // under test on more molecules for systematic improvement.
-            // ---- GAB: gradient-aligned degenerate basis (research probe) ----
-            // Rotate the degenerate columns of u so that the first one aligns
-            // with the gradient projection onto the degenerate subspace.
-            // This concentrates fx into one degenerate component, giving EF
-            // clean per-mode decisions (hypothesis: official dsyevd basis
-            // performs well for the same reason).  MOPAC_GAB=1 gated, default
-            // off (official path stays bit-identical).
-            if (std::getenv("MOPAC_GAB")) {
-                std::vector<int> D;
-                for (i = 1; i <= nvar; ++i)
-                    if (std::abs(eigval[i]) < 1.0e-6) D.push_back(i);
-                int m = (int)D.size();
-                if (m >= 2 && m < nvar) {
-                    std::vector<double> gd(m, 0.0);
-                    for (int a = 0; a < m; ++a) {
-                        int col = D[a];
-                        for (int r = 1; r <= nvar; ++r)
-                            gd[a] += u[r + (col - 1) * nvar] * grad[r];
-                    }
-                    double ng = 0.0;
-                    for (int a = 0; a < m; ++a) ng += gd[a] * gd[a];
-                    ng = std::sqrt(ng);
-                    if (ng > 0.0) {
-                        std::vector<std::vector<double>> Q(m,
-                                                           std::vector<double>(m, 0.0));
-                        for (int a = 0; a < m; ++a) Q[0][a] = gd[a] / ng;
-                        for (int b = 1; b < m; ++b) {
-                            for (int a = 0; a < m; ++a)
-                                Q[b][a] = (a == b - 1) ? 1.0 : 0.0;
-                            for (int c = 0; c < b; ++c) {
-                                double dot = 0.0;
-                                for (int a = 0; a < m; ++a)
-                                    dot += Q[b][a] * Q[c][a];
-                                for (int a = 0; a < m; ++a)
-                                    Q[b][a] -= dot * Q[c][a];
-                            }
-                            double nn = 0.0;
-                            for (int a = 0; a < m; ++a) nn += Q[b][a] * Q[b][a];
-                            if (nn > 0.0) {
-                                nn = std::sqrt(nn);
-                                for (int a = 0; a < m; ++a) Q[b][a] /= nn;
-                            } else {
-                                for (int a = 0; a < m; ++a)
-                                    Q[b][a] = (a == b) ? 1.0 : 0.0;
-                            }
-                        }
-                        std::vector<double> tmp(nvar * m, 0.0);
-                        for (int b = 0; b < m; ++b)
-                            for (int r = 1; r <= nvar; ++r) {
-                                double s = 0.0;
-                                for (int a = 0; a < m; ++a)
-                                    s += Q[b][a] * u[r + (D[a] - 1) * nvar];
-                                tmp[b * nvar + (r - 1)] = s;
-                            }
-                        for (int b = 0; b < m; ++b)
-                            for (int r = 1; r <= nvar; ++r)
-                                u[r + (D[b] - 1) * nvar] =
-                                    tmp[b * nvar + (r - 1)];
-                        std::printf(" GAB m=%d |gd|=%.6e fx-concentrated\n",
-                                    m, ng);
-                    }
-                }
-            }
-            if (std::getenv("MOPAC_DSPG")) {
-                std::vector<double> gradp(nvar + 1, 0.0);
-                for (i = 1; i <= nvar; ++i) gradp[i] = grad[i];
-                for (k = 1; k <= nvar; ++k) {
-                    if (std::abs(eigval[k]) == 0.0) {
-                        double c =
-                            ddot(nvar, u.data() + 1 + (k - 1) * nvar, 1,
-                                 &grad[1], 1);
-                        for (int r = 1; r <= nvar; ++r)
-                            gradp[r] -= c * u[r + (k - 1) * nvar];
-                    }
-                }
-                for (i = 1; i <= nvar; ++i) {
-                    fx[i] = ddot(nvar, u.data() + 1 + (i - 1) * nvar, 1,
-                                 &gradp[1], 1);
-                    if (std::abs(eigval[i]) == 0.0) fx[i] = 0.0;
-                }
-            } else {
-                for (i = 1; i <= nvar; ++i) {
-                    fx[i] = ddot(nvar, u.data() + 1 + (i - 1) * nvar, 1,
-                                 &grad[1], 1);
-                    if (std::abs(eigval[i]) == 0.0) fx[i] = 0.0;
-                }
-            }
-            if (ihess == 1 && std::getenv("EFPROBE")) {
-                std::printf("\n  fc ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", fx[i]);
-                std::printf("\n  ec ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", eigval[i]);
-                std::printf("\n  u8c ");
-                for (j = 1; j <= 5; ++j) std::printf("%13.7f", u[j + 7 * nvar]);
-                std::printf("\n  u7v ");
-                for (j = 1; j <= 5; ++j)
-                    std::printf("%13.7f", u[7 + (j - 1) * nvar]);
-                std::printf("\n");
-            }
-            // EFPROBE: diagnostics only (env EFPROBE=1), mirrors official
-            // ef.F90 probe block — prints xparam/grad/eigval/fx/d per cycle.
-            if (std::getenv("EFPROBE")) {
-                std::printf(" EFPROBE cyc%6d\n", nstep + 1);
-                std::printf("  xp ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", xparam[i]);
-                std::printf("\n  gr ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", grad[i]);
-                std::printf("\n  ev ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", eigval[i]);
-                std::printf("\n  fx ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", fx[i]);
-                std::printf("\n  d  ");
-                for (i = 1; i <= nvar; ++i) std::printf("%13.7f", d[i]);
-                std::printf("\n  u7 ");
-                for (j = 1; j <= 10; ++j) std::printf("%13.7f", u[j + 6 * nvar]);
-                std::printf("\n  u8 ");
-                for (j = 1; j <= 10; ++j) std::printf("%13.7f", u[j + 7 * nvar]);
-                std::printf("\n");
+            // fx = row_i(u) . grad  (official Fortran semantics)
+            for (i = 1; i <= nvar; ++i) {
+                fx[i] = ddot(nvar, u.data() + 1 + (i - 1) * nvar, 1,
+                             &grad[1], 1);
+                if (std::abs(eigval[i]) == 0.0) fx[i] = 0.0;
             }
             for (;;) {
                 formd(eigval, fx, nvar, dmax, ddmin, lts, lorjk, rrscal, donr,
                       u, d, vmode);
-                if (std::getenv("EFPROBE")) {
-                    std::printf("\n  dn ");
-                    for (i = 1; i <= nvar; ++i) std::printf("%13.7f", d[i]);
-                    std::printf("\n");
-                }
                 if (moperr) goto L1100;
                 if (lorjk) {
                     if (iprnt >= 1) std::printf("      NOW UNDOING PREVIOUS STEP\n");

@@ -224,8 +224,10 @@ void hcore() {
                 int ii = i1 * (i1 - 1) / 2 + ja - 1;
                 ++i2;
                 int jj = std::min(i1, jb);
-                for (int k = 1; k <= jj - ja + 1; ++k)
-                    h[ii + k] = h[ii + k] + di[11 + (k - 1) * 9 + (i2 - 1)];  // 1-based (i2,k) col-major, 9-stride
+                for (int k = 1; k <= jj - ja + 1; ++k) {
+                    int tgt = ii + k;
+                    h[tgt] = h[tgt] + di[11 + (k - 1) * 9 + (i2 - 1)];  // 1-based (i2,k) col-major, 9-stride
+                }
             }
             // Calculate the two-electron integrals W, the electron-nuclear
             // terms E1B and E2A, and the nuclear-nuclear term ENUC.
@@ -249,8 +251,10 @@ void hcore() {
             for (int i1 = ia; i1 <= ib; ++i1) {
                 int ii = i1 * (i1 - 1) / 2 + ia - 1;
                 if (i1 - ia + 1 > 0) {
-                    for (int k = 1; k <= i1 - ia + 1; ++k)
-                        h[ii + k] = h[ii + k] + e1b[i2 + k - 1] * half;  // e1b is 0-based packed; F90 reads e1b(i2+1:)
+                    for (int k = 1; k <= i1 - ia + 1; ++k) {
+                        int tgt = ii + k;
+                        h[tgt] = h[tgt] + e1b[i2 + k - 1] * half;  // e1b is 0-based packed; F90 reads e1b(i2+1:)
+                    }
                     i2 = i1 - ia + 1 + i2;
                 }
             }
@@ -259,8 +263,10 @@ void hcore() {
             for (int i1 = ja; i1 <= jb; ++i1) {
                 int ii = i1 * (i1 - 1) / 2 + ja - 1;
                 if (i1 - ja + 1 > 0) {
-                    for (int k = 1; k <= i1 - ja + 1; ++k)
-                        h[ii + k] = h[ii + k] + e2a[i2 + k - 1] * half;  // e2a is 0-based packed; F90 reads e2a(i2+1:)
+                    for (int k = 1; k <= i1 - ja + 1; ++k) {
+                        int tgt = ii + k;
+                        h[tgt] = h[tgt] + e2a[i2 + k - 1] * half;  // e2a is 0-based packed; F90 reads e2a(i2+1:)
+                    }
                     i2 = i1 - ja + 1 + i2;
                 }
             }
@@ -292,11 +298,6 @@ void hcore() {
         }
         for (int i = 1; i <= j; ++i) std::fprintf(stdout, "%8.4f", w[i]);
         std::fprintf(stdout, "\n");
-        if (id != 0) {
-            std::fprintf(stdout, "\n\n          TWO-ELECTRON K MATRIX IN HCORE\n");
-            for (int i = 1; i <= j; ++i) std::fprintf(stdout, "%8.4f", wk[i]);
-            std::fprintf(stdout, "\n");
-        }
     }
 }
 

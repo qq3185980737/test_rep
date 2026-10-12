@@ -341,10 +341,13 @@ void getgeo(int iread, std::vector<int>& labels,
         double real = std::fabs(reada(string, 1));
         if (real < 1.e-15) {
             ele = string.substr(0, 2);
+            // Fortran fixed-length semantics: pad to 2 chars so "C" == "C "
+            if (ele.size() < 2) ele += ' ';
         } else {
             weight = real;
             if (string.size() >= 2 && string[1] >= '0' && string[1] <= '9') ele = string.substr(0, 1);
             else ele = string.substr(0, 2);
+            if (ele.size() < 2) ele += ' ';
         }
         if (ele.size() >= 2 && ele[0] == '-' && ele[1] != '-') ele[1] = ' ';
         for (int ie = 1; ie <= 107; ++ie) {
@@ -371,6 +374,8 @@ void getgeo(int iread, std::vector<int>& labels,
         }
 
     label70:
+        // Fortran CHARACTER*80 semantics: fixed 80-char line, fields past end are blank.
+        while ((int)line.size() < 80) line += ' ';
         natoms = natoms + 1;
         nb[natoms] = 0;
         nc[natoms] = 0;

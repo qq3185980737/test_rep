@@ -50,13 +50,6 @@ void ijkl(double* cp, double* cf, int nelec, int nmos,
                     // wcij is 1-based semantic (partxy wrote physical [ls-1]);
                     // ckl built 1-based physical: ckl[ii]=ckl(ii).
                     for (int ii=1;ii<=ipq;++ii) sum += ckl[ii]*wcij[ii-1];
-                    if (ij==2 && k==2 && l==2) {
-                        fprintf(stderr, "[IJKL] ipq=%d sum=%.6f ckl:", ipq, sum);
-                        for (int ii=1;ii<=ipq;++ii) fprintf(stderr, " %+.4f", ckl[ii]);
-                        fprintf(stderr, "\n[IJKL] wcij:"); fflush(stderr);
-                        for (int ii=1;ii<=ipq;++ii) fprintf(stderr, " %+.4f", wcij[ii-1]);
-                        fprintf(stderr, "\n"); fflush(stderr);
-                    }
                     // Fortran dijkl(norbs,nmos,mpair): linear = k + (l-1)*norbs + (ij-1)*norbs*nmos
                     dijkl[(ij-1)*norbs*nmos + (l-1)*norbs + k-1] = sum;
                 }

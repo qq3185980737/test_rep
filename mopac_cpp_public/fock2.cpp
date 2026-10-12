@@ -111,9 +111,12 @@ void addfck(std::vector<double>&, const std::vector<double>&) {}
 } // namespace
 
 void fock1dorbs(std::vector<double>& f, const std::vector<double>& ptot,
-                const std::vector<double>& pa,
-                const std::vector<std::vector<double>>& w,
+                const std::vector<double>& pa, int mpack,
+                const std::vector<double>& w,
                 int& kr, int ia, int ib, int ilim) {
+    // F90: w is a (ilim, ilim) array in column-major order; the caller passes
+    // the base (or a kk+1 slice) of the packed w storage.  Index (ijw, klw)
+    // maps to w[ijw + (klw-1)*ilim] with 1-based addressing.
     for (int i = ia; i <= ib; ++i) {
         int iw = i - ia + 1;
         for (int j = ia; j <= i; ++j) {
@@ -133,12 +136,8 @@ void fock1dorbs(std::vector<double>& f, const std::vector<double>& ptot,
                     int ikw = (im * (im - 1)) / 2 + jm;
                     im = std::max(lw, iw); jm = std::min(lw, iw);
                     int jlw = (im * (im - 1)) / 2 + jm;
-                    // NOTE: F90 writes "sum = sum + ptot*w - pa*w", which is
-                    // left-associative: (sum + ptot*w) - pa*w. A C++ shorthand
-                    // "sum += ptot*w - pa*w" would round (ptot*w - pa*w)
-                    // first and diverge by 1 ULP; split into two statements.
-                    sum += ptot[ijp] * w[ijw][klw];
-                    sum -= pa[ijp] * w[ikw][jlw];
+                    sum += ptot[ijp] * w[ijw + (klw - 1) * ilim] -
+                           pa[ijp] * w[ikw + (jlw - 1) * ilim];
                 }
             }
             f[ij] += sum;
@@ -462,13 +461,14 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
             work_pair(ii, jj, kk, f);
         if (mode == 2) {
             int ilim = ((ib - ia + 1) * (ib - ia + 2)) / 2;
-            static thread_local std::vector<std::vector<double>> wloc;  // per-thread reuse
-            if (wloc.size() < static_cast<size_t>(ilim) + 1)
-                wloc.assign(ilim + 1, std::vector<double>(ilim + 1, 0.0));
-            for (int a = 1; a <= ilim; ++a)
-                for (int b = 1; b <= ilim; ++b)
-                    wloc[a][b] = w[kk + (a - 1) + (b - 1) * ilim + 1];
-            fock1dorbs(f, ptot, p, wloc, kk, ia, ib, ilim);
+            static thread_local std::vector<double> wsub;  // per-thread reuse
+            if (wsub.size() < static_cast<size_t>(ilim) * ilim + 1)
+                wsub.assign(static_cast<size_t>(ilim) * ilim + 1, 0.0);
+            // F90 passes w(kk+1) as the (ilim,ilim) block in column-major order.
+            for (int b = 1; b <= ilim; ++b)
+                for (int a = 1; a <= ilim; ++a)
+                    wsub[a + (b - 1) * ilim] = w[kk + (a - 1) + (b - 1) * ilim + 1];
+            fock1dorbs(f, ptot, p, molkst_C::mpack, wsub, kk, ia, ib, ilim);
         }
     }
     if (cosmo_C::useps) addfck(f, ptot);

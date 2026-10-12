@@ -104,7 +104,7 @@ void flepo(std::vector<double>& xparam, int nvar, double& funct1) {
         if (keywrd.find("GNORM=") != std::string::npos) {
             rootv = 1.0;
             const_s = 1e-20;
-            tolerg = reada(keywrd, (int)keywrd.find("GNORM="));
+            tolerg = reada(keywrd, (int)keywrd.find("GNORM=") + 1);
             if (keywrd.find(" LET") == std::string::npos && tolerg < 1e-2) {
                 std::printf("  GNORM HAS BEEN SET TOO LOW, RESET TO 0.01\n");
                 tolerg = 1e-2;
@@ -656,18 +656,12 @@ L430:
         if (minprt)
             std::printf(" RESTART FILE WRITTEN,      TIME LEFT:%6.2f%c  GRAD.:%10.3f HEAT:%14.7f\n",
                         tprt, txt, std::min(gnorm, 999999.999), funct1);
-        if (chanel_C::log) std::fprintf(stderr, " CYCLE:%6d TIME:%8.3f TIME LEFT:%6.2f%c  GRAD.:%10.3f HEAT:%14.7f\n",
-                              jcyc, std::min(tcycle, 9999.99), tprt, txt,
-                              std::min(gnorm, 999999.999), funct1);
         resfil = false;
     } else {
         if (minprt)
             std::printf(" CYCLE:%6d TIME:%8.3f TIME LEFT:%6.2f%c  GRAD.:%10.3f HEAT:%14.7f\n",
                         jcyc, std::min(tcycle, 9999.99), tprt, txt,
                         std::min(gnorm, 999999.999), funct1);
-        if (chanel_C::log) std::fprintf(stderr, " CYCLE:%6d TIME:%8.3f TIME LEFT:%6.2f%c  GRAD.:%10.3f HEAT:%14.7f\n",
-                              jcyc, std::min(tcycle, 9999.99), tprt, txt,
-                              std::min(gnorm, 999999.999), funct1);
     }
     if (tleft > sfact * cycmx && jcyc - icyc < maxcyc) goto L10;
     std::printf("                    THERE IS NOT ENOUGH TIME FOR ANOTHER CYCLE\n"

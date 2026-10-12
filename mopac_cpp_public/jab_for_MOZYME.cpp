@@ -34,8 +34,8 @@ void jab_for_MOZYME(int ia, int ja, const double* pja, const double* pjb,
     double suma[11]={}, sumb[11]={};
     for (int j=1;j<=16;++j)
         for (int i=1;i<=10;++i) {
-            suma[i]+=pja[j]*w[jindx[i][j]];
-            sumb[i]+=pjb[j]*w[jjndx[i][j]];
+            suma[i]+=pja[j]*w[jindx[i][j]-1];   // Fortran w(jindx), 1-based -> 0-based
+            sumb[i]+=pjb[j]*w[jjndx[i][j]-1];
         }
     int i=0;
     for (int i5=1;i5<=4;++i5) {

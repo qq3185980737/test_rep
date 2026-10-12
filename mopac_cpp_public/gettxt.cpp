@@ -73,7 +73,7 @@ void gettxt() {
     using namespace chanel_C;
     koment = "    NULL  ";
     title = "    NULL  ";
-    refkey.assign(6, "    NULL  ");
+    refkey.assign(7, "    NULL  ");   // 7 slots: 1-based access uses [1..6]
     bool aux = (keywrd.find("AUX") != std::string::npos);
     std::string oldkey;
     std::string filen, path;

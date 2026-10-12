@@ -19,7 +19,6 @@ const int nb[10] = {0, 1, 0, 0, 10, 0, 0, 0, 0, 45};
 void partxy(const double* c34, double* pq34, const double* w) {
     for (int i = 0; i < molkst_C::lm61; ++i) pq34[i] = 0.0;
     if (molkst_C::numat == 2 && nfirst[1] == 1 && nlast[1] == 1) {
-        fprintf(stderr, "[PXY] c34[0..2]=%+.4f %+.4f %+.4f\n", c34[0], c34[1], c34[2]); fflush(stderr);
     }
     int iband = 1, kr = 1, ls = 0;
     for (int ii = 1; ii <= numat; ++ii) {
@@ -75,6 +74,5 @@ void partxy(const double* c34, double* pq34, const double* w) {
         }
     }
     if (molkst_C::numat == 2 && nfirst[1] == 1 && nlast[1] == 1) {
-        fprintf(stderr, "[PXY] pq34[0..2]=%+.4f %+.4f %+.4f\n", pq34[0], pq34[1], pq34[2]); fflush(stderr);
     }
 }

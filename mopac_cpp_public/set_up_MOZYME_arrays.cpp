@@ -69,8 +69,10 @@ void set_up_MOZYME_arrays() {
     fillij(true);
     noccupied = nelecs / 2;
     nvirtual = norbs - noccupied;
-    int ipad2 = std::min(numat + 10, (int)std::lround(std::pow((double)numat, 0.25) * 50));
-    int ipad4 = (int)std::lround((double)ipad2 * norbs / numat);
+    MOZYME_C::ipad2 = std::min(numat + 10, (int)std::lround(std::pow((double)numat, 0.25) * 50));
+    MOZYME_C::ipad4 = (int)std::lround((double)MOZYME_C::ipad2 * norbs / numat);
+    int ipad2 = MOZYME_C::ipad2;
+    int ipad4 = MOZYME_C::ipad4;
     icocc_dim = ipad2 * noccupied + 1000;
     icvir_dim = ipad2 * nvirtual + 1000;
     cocc_dim = ipad4 * noccupied + 1000;
@@ -105,7 +107,7 @@ void set_up_MOZYME_arrays() {
     }
     fmo_dim = std::min(300, norbs) * norbs;
     fmo.resize(fmo_dim + 1);
-    ifmo.resize(2, std::vector<int>(fmo_dim + 1, 0));
+    ifmo.resize(3, std::vector<int>(fmo_dim + 1, 0));  // 1-based rows 1..2 (row 0 padding)
     std::fill(icocc.begin(), icocc.end(), 0);
     std::fill(icvir.begin(), icvir.end(), 0);
     fillij(false);

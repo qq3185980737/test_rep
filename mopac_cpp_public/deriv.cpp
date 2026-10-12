@@ -9,6 +9,10 @@
 #include "deriv.h"
 
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <string>

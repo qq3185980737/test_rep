@@ -19,6 +19,9 @@
 #include "diat.h"
 #include <vector>
 
+namespace mndod_C { extern thread_local double cored[11][3]; }
+namespace parameters_C { extern double tore[108]; }
+
 extern "C" void diat_(int* ni, int* nj, double* xjuc, double* smat) {
   // Diatomic one-electron integrals (s/p/d block).
   std::vector<double> xj(xjuc, xjuc + 3);

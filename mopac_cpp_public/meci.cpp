@@ -162,9 +162,6 @@ double meci() {
             if (l > nmos) break;
             occa[l] = 0.0;
         }
-        fprintf(stderr, "[MECI] nclose=%d nopen=%d nmos=%d fract=%.4f ndoubl=%d nmeci=%d occa:", nclose, nopen, nmos, fract, ndoubl, nmeci);
-        for (int ii = 1; ii <= nmos; ++ii) fprintf(stderr, " %+.4f", occa[ii]);
-        fprintf(stderr, "\n"); fflush(stderr);
         sing = keywrd.find(" SING") != std::string::npos ||
                keywrd.find(" EXCI") != std::string::npos ||
                keywrd.find(" BIRAD") != std::string::npos;
@@ -204,11 +201,6 @@ double meci() {
     // eiga = active-space eigenvalues.
     eiga.assign(nmos + 1, 0.0);
     for (int i = 1; i <= nmos; ++i) eiga[i] = eigs[nelec + i];
-    {
-        fprintf(stderr, "[MECI] eigs1..%d:", norbs);
-        for (int ii = 1; ii <= norbs; ++ii) fprintf(stderr, " %+.6f", eigs[ii]);
-        fprintf(stderr, " nelec=%d\n", nelec); fflush(stderr);
-    }
 
     // Pack MO coefficients into contiguous column-major buffers.
     std::vector<double> cp(norbs * nmos, 0.0);
@@ -224,11 +216,6 @@ double meci() {
     dijkl.assign(norbs * nmos * (nmos * (nmos + 1) / 2), 0.0);
     xy.assign(nmos * nmos * nmos * nmos, 0.0);
     std::vector<double> cij(lm61), ckl(lm61), wcij(lm61);
-    {
-        fprintf(stderr, "[MECI] w0..10:");
-        for (int ii = 0; ii < 11; ++ii) fprintf(stderr, " %+.6f", common_arrays_C::w[ii]);
-        fprintf(stderr, "\n"); fflush(stderr);
-    }
     ijkl(cp.data(), cfull.data(), nelec, nmos, dijkl.data(), cij.data(),
          ckl.data(), wcij.data(), xy.data());
 
@@ -452,34 +439,12 @@ double meci() {
         cimat[(i * (i + 1)) / 2] +=
             1e-10 * i * (i % 2 == 0 ? 1 : -1);
 
-    {
-        fprintf(stderr, "[MECI] diag1..%d:", lab);
-        for (int ii = 1; ii <= lab; ++ii) fprintf(stderr, " %+.6f", diag[ii]);
-        fprintf(stderr, " gse=%.6f\n", gse); fflush(stderr);
-        if (lab >= 2) {
-            fprintf(stderr, "[MECI] xy1211=%.6f xy1121=%.6f xy1111=%.6f xy1122=%.6f xy1212=%.6f xy2222=%.6f\n",
-                    xy[xyidx(1,2,1,1,nmos)], xy[xyidx(1,1,2,1,nmos)],
-                    xy[xyidx(1,1,1,1,nmos)], xy[xyidx(1,1,2,2,nmos)],
-                    xy[xyidx(1,2,1,2,nmos)], xy[xyidx(2,2,2,2,nmos)]); fflush(stderr);
-            fprintf(stderr, "[MECI] eiga1..2=%.6f %.6f nelec=%d ne=%d\n", eiga[1], eiga[2], nelec, ne); fflush(stderr);
-        }
-    }
-
     labsiz = std::min(lab, lroot + 10);
     if ((last == 3 && prnt2) || (root_requested != 1 && first1) ||
         root_ir != "XXXX")
         labsiz = lab;
 
     rsp(cimat.data(), lab, eig.data(), conf.data());
-    {
-        fprintf(stderr, "[MECI] conf16:"); for (int ii = 0; ii < 16; ++ii) fprintf(stderr, " %+.6f", conf[ii]); fprintf(stderr, "\n"); fflush(stderr);
-        fprintf(stderr, "[MECI] eig4:"); for (int ii = 0; ii < 4; ++ii) fprintf(stderr, " %+.8f", eig[ii]); fprintf(stderr, "\n"); fflush(stderr);
-        for (int cc = 0; cc < lab; ++cc) {
-            double n2 = 0.0;
-            for (int rr = 0; rr < lab; ++rr) n2 += conf[cc * lab + rr] * conf[cc * lab + rr];
-            fprintf(stderr, "[MECI] col%d norm=%.8f\n", cc + 1, std::sqrt(n2)); fflush(stderr);
-        }
-    }
 
     // Ensure symmetry arrays are sized.
     if ((int)namo.size() < lab + 1) namo.resize(lab + 1);
@@ -570,9 +535,6 @@ double meci() {
                 if (kk > std::min(lab, i + 22)) kk = std::min(lab, i + 4) + 1;
                 nstate = kk - i;
                 (void)meci_val;
-                fprintf(stderr, "[MECI] root_requested=%d nstate=%d vectci0..7=%+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f\n",
-                        i, nstate, vectci[0], vectci[1], vectci[2], vectci[3],
-                        vectci[4], vectci[5], vectci[6], vectci[7]); fflush(stderr);
             }
             jroot = iroot;
         }

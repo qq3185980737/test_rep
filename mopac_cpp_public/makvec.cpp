@@ -4,6 +4,8 @@
 #include "makvec.h"
 
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #include "MOZYME_C.h"
@@ -60,8 +62,8 @@ void makvec() {
     for (int i = 1; i <= norbs; ++i) u[i] = 0;  // .false.
 
     for (int nLewis = 1; nLewis <= Lewis_tot; ++nLewis) {
-        int ii = Lewis_elem[0][nLewis];
-        int jj = Lewis_elem[1][nLewis];
+        int ii = Lewis_elem[1][nLewis];
+        int jj = Lewis_elem[2][nLewis];
         if (ii > 0 && jj > 0) {
             int ni = nfirst[ii];
             int nj = nfirst[jj];
@@ -89,7 +91,7 @@ void makvec() {
                     for (int m1 = 1; m1 <= iorbs[ii]; ++m1) {
                         m = m + 1;
                         // catom(m1,k): column-major catom(morb,norbs)
-                        cocc[m] = catom[(k - 1) * morb + (m1 - 1) + 1];
+                        cocc[m] = catom[(k - 1) * morb + (m1 - 1)];
                     }
                     nncf[nocc + 1] = nf_loc;
                     mlmo(locc, lvir, ii, 0, nf_loc, ne, nocc, nvir,
@@ -107,7 +109,7 @@ void makvec() {
                     m = lvir;
                     for (int m1 = 1; m1 <= iorbs[jj]; ++m1) {
                         m = m + 1;
-                        cvir[m] = catom[(k - 1) * morb + (m1 - 1) + 1];
+                        cvir[m] = catom[(k - 1) * morb + (m1 - 1)];
                     }
                     nnce[nvir + 1] = ne;
                     mlmo(locc, lvir, 0, jj, nf_loc, ne, nocc, nvir,

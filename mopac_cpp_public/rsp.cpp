@@ -107,24 +107,6 @@ void rsp(double* a, int n, double* root, double* vect) {
                                          // left untouched — canonicalizing their
                                          // degenerate vectors corrupts point
                                          // group / symmetry handling.
-            std::fprintf(stderr, "[CANON] m=%d deg=", m);
-            for (int k = 0; k < m; ++k) std::fprintf(stderr, " %d", deg[k]);
-            std::fprintf(stderr, "\n w0-7:");
-            for (int k = 0; k < 8 && k < n; ++k)
-                std::fprintf(stderr, " %.6e", w[k]);
-            std::fprintf(stderr, "\n");
-            // Debug: col0/col1 before any rewrite (col-major: vect[r*n] etc.)
-            std::fprintf(stderr, "[CANON] in0:");
-            for (int r = 0; r < 4; ++r) std::fprintf(stderr, " %.9e", a[r]);
-            std::fprintf(stderr, "\n[CANON] col0pre:");
-            for (int r = 0; r < 4; ++r) std::fprintf(stderr, " %.9e", vect[r * n]);
-            std::fprintf(stderr, "\n[CANON] col1pre:");
-            for (int r = 0; r < 4; ++r)
-                std::fprintf(stderr, " %.9e", vect[1 + r * n]);
-            std::fprintf(stderr, "\n[CANON] col7pre:");
-            for (int r = 0; r < 4; ++r)
-                std::fprintf(stderr, " %.9e", vect[7 + r * n]);
-            std::fprintf(stderr, "\n");
             std::vector<double> Q(n * m, 0.0);
             int qc = 0;
             for (int j = 0; j < n && qc < m; ++j) {
@@ -151,16 +133,6 @@ void rsp(double* a, int n, double* root, double* vect) {
                 for (int k = 0; k < m; ++k)
                     for (int r = 0; r < n; ++r)
                         vect[deg[k] + r * n] = Q[k * n + r];
-                std::fprintf(stderr, "[CANON] col0post:");
-                for (int r = 0; r < 4; ++r)
-                    std::fprintf(stderr, " %.9e", vect[r * n]);
-                std::fprintf(stderr, "\n[CANON] col1post:");
-                for (int r = 0; r < 4; ++r)
-                    std::fprintf(stderr, " %.9e", vect[1 + r * n]);
-                std::fprintf(stderr, "\n[CANON] col7post:");
-                for (int r = 0; r < 4; ++r)
-                    std::fprintf(stderr, " %.9e", vect[7 + r * n]);
-                std::fprintf(stderr, "\n");
             }
         }
     }

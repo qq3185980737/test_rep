@@ -321,8 +321,6 @@ L320:
         double norm = 0.0;
         for (int k = 1; k <= mpack; ++k) norm += e[k] * e[k];
         norm = std::sqrt(norm);
-        fprintf(stderr, "[DIISe] it=%d |e|=%.6e prev=%.6e bad=%d\n", niter, norm,
-                diis_prev_norm, diis_bad);
         if (norm > diis_prev_norm * 1.2) ++diis_bad; else diis_bad = 0;
         if (diis_bad >= 3) { diis_F.clear(); diis_E.clear(); diis_bad = 0; }
         diis_prev_norm = norm;
@@ -461,23 +459,11 @@ L540:
         } else {
             auto _b3 = std::chrono::steady_clock::now();
             eigenvectors_LAPACK(cflat,f,eigs,norbs);
-            if (niter == 1 && std::getenv("EIGDBG"))
-                std::fprintf(stderr, "[EIGDBG1] %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n",
-                             eigs[1], eigs[2], eigs[3], eigs[4], eigs[5], eigs[6], eigs[7], eigs[8]);
-            if ((niter == 2 || niter == 3 || niter == 4 || niter == 5 || niter == 10 || niter == 20 || niter == 30) && std::getenv("EIGDBG"))
-                std::fprintf(stderr, "[EIGDBG%d] %.12f %.12f %.12f %.12f %.12f %.12f %.12f %.12f\n",
-                             niter, eigs[1], eigs[2], eigs[3], eigs[4], eigs[5], eigs[6], eigs[7], eigs[8]);
             _tdiag += std::chrono::duration_cast<std::chrono::microseconds>(
                           std::chrono::steady_clock::now() - _b3).count();
             ++_n_full;
             _tfull += std::chrono::duration_cast<std::chrono::microseconds>(
                           std::chrono::steady_clock::now() - _b3).count();
-        }
-        if (std::getenv("SCFPROBE")) {
-            std::printf(" SCFPROBE iter%6d %d\n", niter, (int)newdg);
-            std::printf("  ei ");
-            for (int ii = 1; ii <= 8 && ii <= norbs; ++ii) std::printf("%13.7f", eigs[ii]);
-            std::printf("\n");
         }
         if(prtvec){ j=uhf?2:1; matout(cflat,eigs,norbs,norbs,norbs); }
     }
@@ -518,9 +504,6 @@ L540:
     if(uhf){ for(int ii=1;ii<=mpack;++ii) p[ii]=pa[ii]+pb[ii]; }
     else { for(int ii=1;ii<=mpack;++ii){ pa[ii]=p[ii]*0.5; pb[ii]=pa[ii]; } }
     if(itrmax<3) return;
-    if (std::getenv("EIGDBG"))
-        std::fprintf(stderr, "[SCFDBG] niter=%d pl=%.3e diff=%.3e ready=%d newdg=%d shift=%.3e sellim=%.3e escf=%.9f\n",
-                     niter, pl, diff, (int)ready, (int)newdg, shift, sellim, escf);
     oknewd = pl<sellim || oknewd;
     newdg = (pl<trans && oknewd) || newdg;
     if(pl<trans*0.3333) oknewd=true;

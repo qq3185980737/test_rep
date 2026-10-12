@@ -581,6 +581,7 @@ void run_mopac() {
     // available in the arrays.  Now decide what type of calculation to do.
     //
     if (mozyme) {
+      if (std::getenv("MOZRUN")) { std::fprintf(stderr, "MOZRUN-A enter mozyme branch\n"); std::fflush(stderr); }
       geochk();
       if (moperr) {
         if (keywrd.find(" PDBOUT") != std::string::npos) {
@@ -605,12 +606,14 @@ void run_mopac() {
       rapid = (keywrd.find(" RAPID") != std::string::npos ||
                keywrd.find(" LOCATE-TS") != std::string::npos);
       set_up_MOZYME_arrays();
+      if (std::getenv("MOZRUN")) { std::fprintf(stderr, "MOZRUN-B after set_up_MOZYME_arrays\n"); std::fflush(stderr); }
       if (moperr) { st = 2; goto LendBody; }       // F90: goto 101
       if (keywrd.find(" RAPID") != std::string::npos) set_up_rapid("ON");
     }
     //
     // Dispatch to the requested calculation type
     //
+    if (std::getenv("MOZRUN")) { std::fprintf(stderr, "MOZRUN-C dispatch\n"); std::fflush(stderr); }
     if (keywrd.find(" SADDLE") != std::string::npos) {
       to_screen(" Transition state geometry calculated using SADDLE");
       react1();
@@ -708,7 +711,7 @@ void run_mopac() {
     //
     // Calculation done, now print results
     //
-    if (moperr) goto LendBody;        // F90: go to 100
+    if (moperr) { std::fprintf(stderr, "RM-MOPERR-before-writmo iflepo=%d\n", (int)iflepo); std::fflush(stderr); goto LendBody; }        // F90: go to 100
     last = 1;
     if (iflepo >= 0) {
       wall_clock_1 = second(1);   // timout() end markers

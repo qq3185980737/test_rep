@@ -25,7 +25,7 @@ void kab_for_MOZYME(int ia, int ja, const double* pk, const double* w, double* f
     double sum[17]={};
     for (int j=1;j<=16;++j)
         for (int i=1;i<=16;++i)
-            sum[j] += pk[i]*w[kb[j][i]];
+            sum[j] += pk[i]*w[kb[j][i]-1];   // Fortran w(kkind(i,j)), 1-based -> 0-based
     if (ia > ja) {
         int m=0;
         for (int j1=ia; j1<=ia+3; ++j1) {

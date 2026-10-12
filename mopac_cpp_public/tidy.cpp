@@ -28,7 +28,13 @@ void tidy(int nmos_loc, int* nc, int* ic, int& n01, double* c, int n02,
         large = keywrd.find(" LARGE") != std::string::npos;
     }
     if (nmos_loc==0) return;
-    int isnew=0, nmol=0;
+    int isnew=0;
+    // Fortran: "integer :: nmol = 0" -- an initialized local variable is
+    // implicitly SAVE in Fortran, so nmol persists across calls; mode==2
+    // sets it to numcal and later calls then skip the "new molecule"
+    // branch (imode/ireset not reset).  A plain local would reset every
+    // call and wrongly re-enter that branch each time.
+    static int nmol=0;
     if (nmol!=numcal) { imode[1]=step_num; imode[2]=step_num; ireset=0; }
     int momax=0, momin=10000;
     while (true) {

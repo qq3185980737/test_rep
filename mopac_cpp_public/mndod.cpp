@@ -441,9 +441,6 @@ void rotatd(int ni,int nj,const std::vector<double>& ci,const std::vector<double
     }
     int ii=natorb[ni], kk=natorb[nj];
     if (ni==1 && nj==2) {
-        fprintf(stderr, "[RT] ni=%d nj=%d ci1=%+.6f r=%.4f ri1=%.4f rep1=%.4f rep3=%.4f\n",
-                ni, nj, ci[1], r, ri[1], rep[1], rep[3]);
-        fflush(stderr);
     }
     if(ii*kk>0){
         int limij=indx[ii][ii], limkl=indx[kk][kk];
@@ -528,9 +525,6 @@ void rotatd(int ni,int nj,const std::vector<double>& ci,const std::vector<double
     int li=natorb[ni], lj=natorb[nj];
     elenuc(1,li,li+1,li+lj,en);
     if (ni==1 && nj==2) {
-        fprintf(stderr, "[EN] ci1=%+.6f en0=%.4f en1=%.4f en2=%.4f en3=%.4f en4=%.4f en5=%.4f en6=%.4f\n",
-                ci[1], en[0], en[1], en[2], en[3], en[4], en[5], en[6]);
-        fflush(stderr);
     }
     ccrep(ni,nj,r,gab,enuc);
 }

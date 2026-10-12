@@ -189,7 +189,9 @@ void hcore_for_MOZYME() {
         // Molecular system.
         if (ijbo(i, j) >= 0) {
           if (calcij) {
-            h1elec(ni, nj, &coord[0][i], &coord[0][j], di);
+            double xi3[3] = {coord[0][i], coord[1][i], coord[2][i]};
+            double xj3[3] = {coord[0][j], coord[1][j], coord[2][j]};
+            h1elec(ni, nj, xi3, xj3, di);
             ii = ijbo(i, j);
             if (i == j) {
               for (i1 = 1; i1 <= iorbs[i]; ++i1)
@@ -206,7 +208,10 @@ void hcore_for_MOZYME() {
             }
             // Calculate the two-electron integrals W; the electron nuclear
             // terms E1B and E2A; and the nuclear-nuclear term ENUC.
-            rotate(ni, nj, &coord[0][i], &coord[0][j], &w[kr], kr, e1b, e2a,
+            // F90 hcore_for_MOZYME.F90:210 calls rotate(..., w(kr), i1, ...)
+            // -- i1 is the length accumulator (advanced inside rotate), kr
+            // (segment base) must NOT be advanced here.
+            rotate(ni, nj, xi3, xj3, &w[kr], i1, e1b, e2a,
                    enuc);
             enuclr = enuclr + enuc;
           } else if (!direct) {
@@ -215,7 +220,9 @@ void hcore_for_MOZYME() {
           }
         } else if (ijbo(i, j) == -2) {
           if (calcij) {
-            outer2(ni, nj, &coord[0][i], &coord[0][j], &w[kr], kr, e1b, e2a,
+            double xi3[3] = {coord[0][i], coord[1][i], coord[2][i]};
+            double xj3[3] = {coord[0][j], coord[1][j], coord[2][j]};
+            outer2(ni, nj, xi3, xj3, &w[kr], kr, e1b, e2a,
                    enuc, id, semidr);
             enuclr = enuclr + enuc;
           } else if (!semidr) {
@@ -232,7 +239,9 @@ void hcore_for_MOZYME() {
             }
           }
         } else if (calcij) {
-          outer1(ni, nj, &coord[0][i], &coord[0][j], &w[kr], kr, e1b, e2a,
+          double xi3[3] = {coord[0][i], coord[1][i], coord[2][i]};
+          double xj3[3] = {coord[0][j], coord[1][j], coord[2][j]};
+          outer1(ni, nj, xi3, xj3, &w[kr], kr, e1b, e2a,
                  enuc, 0, semidr);
           enuclr = enuclr + enuc;
         } else if (!semidr) {

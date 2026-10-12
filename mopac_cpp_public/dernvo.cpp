@@ -72,10 +72,6 @@ void dernvo() {
     std::vector<int> nbovec(4);
     for (int ii = 1; ii <= 3; ++ii) nbovec[ii] = nbo[ii];
     deri0(eigs, norbs, scalar, diag, fract, nbovec);
-    fprintf(stderr, "[DSCAL] %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-        scalar[1], scalar[2], scalar[3], scalar[4], scalar[5], scalar[6], scalar[7], scalar[8]); fflush(stderr);
-    fprintf(stderr, "[DDIAG] %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-        diag[1], diag[2], diag[3], diag[4], diag[5], diag[6], diag[7], diag[8]); fflush(stderr);
 
     // eigbb: scratch area for deri2 (F90 eigbb(nmos*norbs*20)).
     std::vector<std::vector<double>> eigbb(
@@ -111,8 +107,6 @@ void dernvo() {
             double dgrad = 0.0;
             deri1(i, dgrad, fv, minear, fdv, scalar, work2d);
             dxyz[i] = dgrad;
-            fprintf(stderr, "[DFMO] i=%d fv=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f fdv=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-                i, fv[1], fv[2], fv[3], fv[4], fv[5], fv[6], fv[7], fv[8], fdv[1], fdv[2], fdv[3], fdv[4], fdv[5], fdv[6]); fflush(stderr);
             for (int kk = 1; kk <= minear; ++kk) fmooff[j + kk - 1] = fv[kk];
             for (int kk = 1; kk <= ninear; ++kk) fmoon[k + kk - 1] = fdv[kk];
         }
@@ -137,10 +131,8 @@ void dernvo() {
             std::vector<double> dseg(ncol, 0.0);
             for (int iv = 1; iv <= ncol; ++iv)
                 dseg[iv - 1] = dxyzr[ifirst + iv - 1];
-            fprintf(stderr, "[DV] before deri2 ncol=%d minear=%d ninear=%d ncolmax=%d\n", ncol, minear, ninear, ncolmax); fflush(stderr);
             deri2(minear, f2d, fd2d, fci2d, ninear, ncol, dseg, 1e-5, diag,
                   scalar, work);
-            fprintf(stderr, "[DV] after deri2\n"); fflush(stderr);
             for (int iv = 1; iv <= ncol; ++iv) {
                 dxyzr[ifirst + iv - 1] = dseg[iv - 1];
                 for (int kk = 1; kk <= minear; ++kk)
@@ -156,10 +148,6 @@ void dernvo() {
 
     dxyz.resize(nvax + 1);
     for (i = 1; i <= nvax; ++i) dxyz[i] = dxyz[i] + dxyzr[i];
-    fprintf(stderr, "[DVOUT] dxyz=%+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f\n",
-        dxyz[1], dxyz[2], dxyz[3], dxyz[4], dxyz[5], dxyz[6], dxyz[7], dxyz[8], dxyz[9]); fflush(stderr);
-    fprintf(stderr, "[DVOUT] dxyzr=%+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f\n",
-        dxyzr[1], dxyzr[2], dxyzr[3], dxyzr[4], dxyzr[5], dxyzr[6], dxyzr[7], dxyzr[8], dxyzr[9]); fflush(stderr);
     if (relaxd) std::fill(dxyzr.begin(), dxyzr.end(), 0.0);
     (void)eigbb;
 }

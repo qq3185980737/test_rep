@@ -19,6 +19,7 @@ extern bool semidr;   // semi-direct SCF
 extern bool rapid;    // rapid (partitioned) SCF path
 // thresh: MOZYME sparsity threshold (cutoff = thresh*10 in adjvec).
 extern double thresh;
+extern double scfref;   // SCF reference criterion (iter_for_MOZYME resets to 0)
 extern std::vector<double> partp;  // partitioned p vector
 extern std::vector<double> parth; // partitioned h vector
 extern std::vector<double> partf; // partitioned f vector

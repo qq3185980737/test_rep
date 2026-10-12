@@ -47,8 +47,6 @@ void mecid(const double* eigs, double& gse, double* eiga, double* diag,
             double xyij = xy[xyidx(i, i, j, j, nmos)];
             double xyyj = xy[xyidx(i, j, i, j, nmos)];
             x += (2.0 * xyij - xyyj) * occa[j];
-            fprintf(stderr, "[MECID] i=%d j=%d xyij=%.6f xyyj=%.6f occa=%.1f x=%.6f\n",
-                    i, j, xyij, xyyj, occa[j], x); fflush(stderr);
         }
         eiga[i] = eigs[i - 1] - x;
         gse += eiga[i] * occa[i] * 2.0;
@@ -57,7 +55,6 @@ void mecid(const double* eigs, double& gse, double* eiga, double* diag,
             gse += 2.0 * (2.0 * xy[xyidx(i, i, j, j, nmos)] -
                           xy[xyidx(i, j, i, j, nmos)]) *
                    occa[i] * occa[j];
-        fprintf(stderr, "[MECID] i=%d eiga=%+.6f gse=%+.6f\n", i, eiga[i], gse); fflush(stderr);
     }
     for (int i = 1; i <= lab; ++i) {
         std::vector<int> ma(nmos + 1), mb(nmos + 1);

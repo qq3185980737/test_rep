@@ -108,7 +108,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;svml_dispmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/DEBUG %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -133,7 +133,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;svml_dispmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -390,6 +390,7 @@
     <ClCompile Include="matout.cpp" />
     <ClCompile Include="mbonds.cpp" />
     <ClCompile Include="md_C.cpp" />
+    <ClCompile Include="md_driver.cpp" />
     <ClCompile Include="meci.cpp" />
     <ClCompile Include="meci_C.cpp" />
     <ClCompile Include="mecid.cpp" />
@@ -544,7 +545,6 @@
     <ClCompile Include="xyzcry.cpp" />
     <ClCompile Include="xyzint.cpp" />
     <ClCompile Include="xyzint_stubs.cpp" />
-    <ClCompile Include="md_driver.cpp" />
     <ClCompile Include="mndod_C.cpp" />
     <ClCompile Include="polar_helpers.cpp" />
     <ClCompile Include="main.cpp" />

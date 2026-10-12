@@ -25,6 +25,7 @@
 #include "dot.h"
 #include "elemts_C.h"
 #include "chrge.h"
+#include "ijbo.h"
 #include "enpart.h"
 #include "meci_C.h"
 #include "mecip.h"
@@ -34,6 +35,7 @@
 #include "funcon_C.h"
 #include "maps_C.h"
 #include "molkst_C.h"
+#include "MOZYME_C.h"
 #include "timout.h"
 #include "to_screen.h"
 #include "vecprt.h"
@@ -471,14 +473,43 @@ void writmo() {
         std::vector<double> q2(numat + 1, 0.0);
         chrge(p, q2);
         double sumq = 0.0;
+        std::vector<double> rxyz(4, 0.0);
         for (int i = 1; i <= numat; ++i) {
             int l = nat[i];
             q[i] = parameters_C::tore[l] - q2[i];
             sumq += q[i];
             if (!l_atom[i]) continue;
-            if (prt_charges)
-                std::printf("%5d       %-2s  %15.6f%14.4f\n", i,
+            // F90 writmo.F90 L633-658: s-/p-/d-populations (rxyz(1:j)).
+            int j = (int)std::lround(std::sqrt(parameters_C::natorb[l] + 1e-4));
+            int k = nfirst[i];
+            rxyz[1] = rxyz[2] = rxyz[3] = 0.0;
+            if (j > 0) {
+                if (mozyme) {
+                    k = ijbo(i, i);
+                    rxyz[1] = p[k + 1];
+                    if (j > 1) {
+                        rxyz[2] = p[k + 3] + p[k + 6] + p[k + 10];
+                        if (j > 2)
+                            rxyz[3] = p[k + 15] + p[k + 21] + p[k + 28] + p[k + 36] + p[k + 45];
+                    }
+                } else {
+                    rxyz[1] = p[(k * (k + 1)) / 2];
+                    if (j > 1) {
+                        rxyz[2] = p[((k + 1) * (k + 2)) / 2] + p[((k + 2) * (k + 3)) / 2]
+                                + p[((k + 3) * (k + 4)) / 2];
+                        if (j > 2)
+                            rxyz[3] = p[((k + 4) * (k + 5)) / 2] + p[((k + 5) * (k + 6)) / 2]
+                                    + p[((k + 6) * (k + 7)) / 2] + p[((k + 7) * (k + 8)) / 2]
+                                    + p[((k + 8) * (k + 9)) / 2];
+                    }
+                }
+            }
+            if (prt_charges) {
+                std::printf("%5d       %-2s  %15.6f%14.4f", i,
                             elemts_C::elemnt[l].c_str(), q[i], q2[i]);
+                for (int m = 1; m <= j; ++m) std::printf("%12.5f", rxyz[m]);
+                std::printf("\n");
+            }
         }
         (void)sumq;  // total charge (kchrge) not printed here
     }
@@ -510,11 +541,32 @@ void writmo() {
             std::printf("   Atom     s        px        py        pz\n");
         else
             std::printf("   Atom     s\n");
-        for (int i = 1; i <= numat; ++i) {
-            std::printf("%5d %-2s", i, elemts_C::elemnt[nat[i]].c_str());
-            for (int j = nfirst[i]; j <= nlast[i]; ++j)
-                std::printf("%10.5f", p[(j * (j + 1)) / 2]);
-            std::printf("\n");
+        if (mozyme) {
+            // F90 writmo.F90 L724-743: pdiag(l) = p(ijbo(i,i)+k), then print by
+            // global AO indices nfirst..nlast.
+            std::vector<double> pdiag(norbs + 1, 0.0);
+            int l = 0;
+            for (int i = 1; i <= numat; ++i) {
+                int j = ijbo(i, i);
+                for (int k = 1; k <= MOZYME_C::iorbs[i]; ++k) {
+                    ++l;
+                    j += k;
+                    pdiag[l] = p[j];
+                }
+            }
+            for (int i = 1; i <= numat; ++i) {
+                std::printf("%5d %-2s", i, elemts_C::elemnt[nat[i]].c_str());
+                for (int j = nfirst[i]; j <= nlast[i]; ++j)
+                    std::printf("%10.5f", pdiag[j]);
+                std::printf("\n");
+            }
+        } else {
+            for (int i = 1; i <= numat; ++i) {
+                std::printf("%5d %-2s", i, elemts_C::elemnt[nat[i]].c_str());
+                for (int j = nfirst[i]; j <= nlast[i]; ++j)
+                    std::printf("%10.5f", p[(j * (j + 1)) / 2]);
+                std::printf("\n");
+            }
         }
     }
     // PI bond orders (F90 L758-761).

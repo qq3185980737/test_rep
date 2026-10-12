@@ -27,14 +27,8 @@ void mecih(double* diag, double* cimat, int nmos, const int* /*lab_in*/,
                 iy += std::abs(microb[j][iiloop] - microb[j][jloop]);
             }
             if (ix + iy > 4 || nalmat[iiloop] != nalmat[jloop]) {
-                if (iiloop == 2 && jloop == 1)
-                    fprintf(stderr, "[MECIH] (2,1) SKIP ix=%d iy=%d nalma=%d nalmb=%d\n",
-                            ix, iy, nalmat[iiloop], nalmat[jloop]); fflush(stderr);
                 continue;
             }
-            if (iiloop == 2 && jloop == 1)
-                fprintf(stderr, "[MECIH] (2,1) PASS ix=%d iy=%d nalma=%d nalmb=%d\n",
-                        ix, iy, nalmat[iiloop], nalmat[jloop]); fflush(stderr);
 
             std::vector<int> ma1(nmos + 1), mb1(nmos + 1), ma2(nmos + 1),
                 mb2(nmos + 1);
@@ -57,13 +51,8 @@ void mecih(double* diag, double* cimat, int nmos, const int* /*lab_in*/,
                                            nmos, xy);
             } else if (ix == 2) {
                 cimat[ik - 1] = aababc(&ma1[0], &mb1[0], &ma2[0], nmos, xy);
-                if (iiloop == 2 && jloop == 1)
-                    fprintf(stderr, "[MECIH] (2,1) ix=%d iy=%d nalma=%d nalmb=%d val=%.8f\n",
-                            ix, iy, nalmat[iiloop], nalmat[jloop], cimat[ik - 1]); fflush(stderr);
             } else if (iy == 2) {
                 cimat[ik - 1] = babbbc(&ma1[0], &mb1[0], &mb2[0], nmos, xy);
-                if (iiloop == 2 && jloop == 1)
-                    fprintf(stderr, "[MECIH] (2,1) babbbc val=%.8f\n", cimat[ik - 1]); fflush(stderr);
             } else {
                 cimat[ik - 1] = diag[iiloop];
             }

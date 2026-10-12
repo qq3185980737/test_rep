@@ -47,17 +47,6 @@ void deri22(const std::vector<std::vector<double>>& c,
 
     // STEP 0: unscale B.
     for (int i = 1; i <= minear; ++i) b[boff + i] *= scalar[i];
-    fprintf(stderr, "[D22BS] %+15.8f %+15.8f %+15.8f %+15.8f %+15.8f %+15.8f %+15.8f %+15.8f\n",
-        b[boff+1],b[boff+2],b[boff+3],b[boff+4],b[boff+5],b[boff+6],b[boff+7],b[boff+8]); fflush(stderr);
-    if (minear > 8)
-        fprintf(stderr, "[D22B9] %+15.8f %+15.8f %+15.8f %+15.8f\n",
-            b[boff+9],b[boff+10],b[boff+11],b[boff+12]); fflush(stderr);
-    fprintf(stderr, "[D22C5] %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f\n",
-        cf[1],cf[2],cf[3],cf[4],cf[5],
-        cf[norbs+1],cf[norbs+2],cf[norbs+3],cf[norbs+4],cf[norbs+5],
-        cf[2*norbs+1],cf[2*norbs+2],cf[2*norbs+3],cf[2*norbs+4],cf[2*norbs+5],
-        cf[3*norbs+1],cf[3*norbs+2],cf[3*norbs+3],cf[3*norbs+4],cf[3*norbs+5],
-        cf[4*norbs+1],cf[4*norbs+2],cf[4*norbs+3],cf[4*norbs+4],cf[4*norbs+5]); fflush(stderr);
 
     // STEP 1: work = C*B in the packed block order of B.
     int l = 1;
@@ -115,12 +104,6 @@ void deri22(const std::vector<std::vector<double>>& c,
         }
     }
 
-    fprintf(stderr, "[D22W] %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f\n",
-        wflat[1],wflat[2],wflat[3],wflat[4],wflat[5],
-        wflat[norbs+1],wflat[norbs+2],wflat[norbs+3],wflat[norbs+4],wflat[norbs+5],
-        wflat[2*norbs+1],wflat[2*norbs+2],wflat[2*norbs+3],wflat[2*norbs+4],wflat[2*norbs+5],
-        wflat[3*norbs+1],wflat[3*norbs+2],wflat[3*norbs+3],wflat[3*norbs+4],wflat[3*norbs+5],
-        wflat[4*norbs+1],wflat[4*norbs+2],wflat[4*norbs+3],wflat[4*norbs+4],wflat[4*norbs+5]); fflush(stderr);
 
     // STEP 2: dp = work*C', packed canonical.
     int l2 = 0;
@@ -131,24 +114,17 @@ void deri22(const std::vector<std::vector<double>>& c,
                 s += wflat[(m - 1) * norbs + i] * cf[(m - 1) * norbs + j];
             dp[++l2] = s;
         }
-    fprintf(stderr, "[D22DP] %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f %+12.7f\n",
-        dp[1],dp[2],dp[3],dp[4],dp[5],dp[6],dp[7],dp[8],dp[9],dp[10],dp[11],dp[12],dp[13],dp[14],dp[15]); fflush(stderr);
 
     // 2-electron Fock matrix built with the density-matrix derivative.
     std::fill(foc2.begin(), foc2.end(), 0.0);
     for (int i = 1; i <= norbs * norbs; ++i) dpa[i] = 0.5 * dp[i];
     std::vector<double> wj(2, 0.0), wk(2, 0.0);
     fock2(foc2, dp, dpa, w, wj, wk, numat, nfirst, nlast, 2);
-    fprintf(stderr, "[D22F2] %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f %11.6f\n",
-        foc2[1],foc2[2],foc2[3],foc2[4],foc2[5],foc2[6],foc2[7],foc2[8],foc2[9],foc2[10],
-        foc2[11],foc2[12],foc2[13],foc2[14],foc2[15],foc2[16],foc2[17],foc2[18],foc2[19],foc2[20],foc2[21]); fflush(stderr);
     // dp(norbs,nend) = foc2(norbs,norbs) * c(norbs,nend).
     int nend = std::max(nopen, nelec + nmos);
     for (int i = 1; i <= nend; ++i)
         supdot(&dp[(i - 1) * norbs], foc2.data(), &cf[(i - 1) * norbs],
                norbs, 1);
-    fprintf(stderr, "[D22DN] %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f\n",
-        dp[1],dp[2],dp[3],dp[4],dp[5],dp[6],dp[7],dp[8],dp[9],dp[10],dp[11],dp[12],dp[13],dp[14],dp[15],dp[16],dp[17],dp[18],dp[19],dp[20],dp[21],dp[22],dp[23],dp[24],dp[25],dp[26],dp[27],dp[28],dp[29],dp[30],dp[31],dp[32],dp[33],dp[34],dp[35],dp[36]); fflush(stderr);
 
     // EXTRACT FCI.
     l = 1;

@@ -131,13 +131,13 @@ void hybrid(double* catom) {
                     int j = (i*(i-1))/2 + l;
                     a[j] = a[j] + j*2e-4;
                 }
-            std::vector<double> eig(11, 0.0);
+            std::vector<double> eig(20, 0.0);   // k = 4+nb <= 19; Fortran declares eig(10) but rsp writes k roots
             std::vector<double> c(366, 0.0);   // k*k <= (4+15)^2 = 361, 1-based
-            if (k == 1) { eig[1] = a[1]; c[1] = 1.0; }
-            else rsp(a.data(), k, eig.data(), c.data());
+            if (k == 1) { eig[0] = a[1]; c[0] = 1.0; }
+            else rsp(a.data() + 1, k, eig.data(), c.data());
             for (int i = 1; i <= k; ++i)
-                if (c[(i-1)*k + 1] < 1e-14)
-                    for (int j = 1; j <= k; ++j)
+                if (c[(i-1)*k + 0] < 1e-14)
+                    for (int j = 0; j < k; ++j)
                         c[(i-1)*k+j] = -c[(i-1)*k+j];
             int j = 8 - k;
             if (j > 1) minloc(c.data(), k, j);
@@ -145,10 +145,10 @@ void hybrid(double* catom) {
             for (int i = 1; i <= 4; ++i) {
                 double rt2 = 0.0;
                 for (int j2 = 1; j2 <= 4; ++j2)
-                    rt2 += c[(i-1)*k+j2] * c[(i-1)*k+j2];
+                    rt2 += c[(i-1)*k+(j2-1)] * c[(i-1)*k+(j2-1)];
                 rt2 = 1.0 / std::sqrt(rt2);
                 for (int j2 = 1; j2 <= 4; ++j2)
-                    catom[(i+loop-1)*morb + (j2-1)] = c[(i-1)*k+j2] * rt2;
+                    catom[(i+loop-1)*morb + (j2-1)] = c[(i-1)*k+(j2-1)] * rt2;
             }
             k = std::min(4, iorbs[ii]);
             for (int i = 1; i <= k; ++i)

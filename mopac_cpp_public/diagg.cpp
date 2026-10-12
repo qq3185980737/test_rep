@@ -697,9 +697,9 @@ void diagg2(int nocc, int nvir, std::vector<double>& eigv,
 
 void diagg(const std::vector<double>& fao, int nocc, int nvir, int idiagg,
            std::vector<double>& partp, int indi) {
-    std::vector<double> storei(norbs), storej(norbs), ws(norbs), aov(numat + 1),
-        avir(norbs);
-    std::vector<double> aocc(std::max(1, icocc_dim));
+    std::vector<double> storei(norbs + 1), storej(norbs + 1), ws(norbs + 1),
+        aov(numat + 1), avir(norbs + 1);
+    std::vector<double> aocc(std::max(1, icocc_dim + 1));
     std::vector<int> iused(numat + 1);
     std::vector<bool> latoms(numat + 1);
     // allocate failures cannot occur with std::vector; memory errors throw.

@@ -59,6 +59,22 @@ static void wrtchk(std::string& allkey) {
         }
     }
 
+    // F90 wrtkey.F90:303-306: MOZYME is selected when any MOZYME-family
+    // keyword is present.  Set here (at keyword-echo time), independent of
+    // compfg's iseps-guarded block, exactly as the Fortran does.
+    {
+        bool l_temp = (keywrd.find(" MOZ") != std::string::npos ||
+                       keywrd.find(" LEWIS") != std::string::npos ||
+                       keywrd.find(" LOCATE-TS") != std::string::npos ||
+                       keywrd.find(" RESEQ") != std::string::npos ||
+                       keywrd.find(" CHARGES") != std::string::npos ||
+                       keywrd.find(" REFINE-TS") != std::string::npos ||
+                       keywrd.find(" RAPID") != std::string::npos ||
+                       keywrd.find(" SITE=") != std::string::npos ||
+                       keywrd.find(" SITE(") != std::string::npos);
+        mozyme = (l_temp || keywrd.find(" PDBOUT") != std::string::npos);
+    }
+
     if (!(mozyme || has(keywrd, " PDBOUT") || has(keywrd, " RESID") ||
           has(keywrd, " ADD-H")) &&
         !has(keywrd, " 0SCF")) {

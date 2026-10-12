@@ -33,6 +33,12 @@ extern void to_point(double, double&, double&);
 #include "reada.h"
 #include "symtry.h"
 #include "volume.h"
+#include "linear_cosmo.h"
+#include "hcore_for_MOZYME.h"
+#include "iter_for_MOZYME.h"
+#include "timer.h"
+#include "buildf.h"
+#include "helecz.h"
 
 using namespace common_arrays_C;
 using namespace cosmo_C;
@@ -41,25 +47,19 @@ using namespace molkst_C;
 using namespace molmec_C;
 using namespace parameters_C;
 
-// Not-yet-ported kernels referenced by compfg (stubs in test driver; each is
-// flagged as a known gap until its own subsystem batch closes it).
+// Not-yet-ported kernels referenced by compfg (stubs; flagged as known gaps
+// until their own subsystem batch closes them).
 namespace {
-void ini_linear_cosmo() {}
-void coscavz(const std::vector<std::vector<double>>&, const std::vector<int>&) {}
-void hcore_for_MOZYME() {}
-void iter_for_MOZYME(double&) {}
 void prtpar() {}
-void timer(const char*) {}
-double nsp2_correction() { return 0.0; }
 double Si_O_H_correction() { return 0.0; }
-void buildf(std::vector<double>&, std::vector<double>&, int) {}
-double helecz() { return 0.0; }
-
-// to_point: real implementation in outer1.cpp (mndod.F90 3501-3525).
-void fock1dorbs(std::vector<double>&, const std::vector<double>&,
-                const std::vector<double>&, int, std::vector<double>&,
-                int, int, int, int) {}
 }  // namespace
+
+// Ported kernels implemented elsewhere (no dedicated header yet).
+double nsp2_correction();
+void fock1dorbs(std::vector<double>&, const std::vector<double>&,
+                const std::vector<double>&, int,
+                const std::vector<double>&, int&,
+                int, int, int);
 
 namespace {
 int icalcn = 0;  // save icalcn (F90 static)
@@ -125,7 +125,7 @@ void compfg(const std::vector<double>& xparam, bool int_flag, double& escf,
         mopend("MOZYME cannot be used for systems composed of only one atom!");
         return;
       }
-      if (mozyme) ini_linear_cosmo();
+      if (mozyme) linear_cosmo::ini_linear_cosmo();
     }
     aider = keywrd.find("AIDER") != std::string::npos;
     times = keywrd.find("TIMES") != std::string::npos;
@@ -159,7 +159,9 @@ void compfg(const std::vector<double>& xparam, bool int_flag, double& escf,
 
   if (iseps) {
     if (mozyme) {
-      coscavz(coord, nat);
+      // F90 coscavz(coord, nat): the ported driver uses the global coord
+      // (already set by gmetry above), matching the Fortran argument intent.
+      linear_cosmo::coscavz();
     } else {
       coscav();
       mkbmat();

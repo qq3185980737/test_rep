@@ -61,8 +61,8 @@ void xyzcry(double* tvec, int numat, double* dxyz, int iw) {
         dx(1,i) /= tv(1,1);
     }
     if (iw > 0) {  // F90: write(iw, '(A)') ' Fractional Unit Cell Derivatives'
-        std::fprintf(stderr, " Fractional Unit Cell Derivatives\n");
+        std::printf(" Fractional Unit Cell Derivatives\n");
         for (int i = 1; i <= numat; ++i)
-            std::fprintf(stderr, "%4d%12.5f%12.5f%12.5f\n", i, dx(1,i), dx(2,i), dx(3,i));
+            std::printf("%4d%12.5f%12.5f%12.5f\n", i, dx(1,i), dx(2,i), dx(3,i));
     }
 }

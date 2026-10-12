@@ -57,13 +57,17 @@ runs. The default build follows the bitwise-official numerical path.
 
 With all variables unset the binary is bitwise identical to the official path.
 
-## Verification
+## Verification scripts
 
-- `tests/` — representative input decks (`.mop`) used in the paper (10 small
-  molecules, CI/DRC cases, and the C₁₂H₂₆ optimization).
-- The full comparison scripts (per-layer bitwise comparison, ULP replay,
-  ULP-sensitivity scan, FBDR thread-independence matrix, GAB batch) are released
-  as supplementary material with the manuscript.
+- `scripts/compare_layer*` — per-layer bitwise comparison (Hessian, eigenvectors,
+  projected gradient, step)
+- `scripts/replay_gemm` — ULP replay of the disputed `dgemm` call (L2 adjudication)
+- `scripts/ulp_scan*` — ULP trajectory-sensitivity scan (88 runs used for Fig. 2)
+- `scripts/fbdr_matrix` — FBDR thread-independence matrix (1/4/16 threads)
+- `scripts/gab_batch` — GAB 16-molecule bitwise regression
+
+Input decks and expected outputs used in the paper (10 molecules + C₁₂H₂₆ scan)
+are in `tests/`.
 
 ## License
 
@@ -71,7 +75,7 @@ MIT (see `LICENSE`). This is an independent translation project; it is not
 endorsed by, and is not affiliated with, the MOPAC authors or the MOPAC project.
 MOPAC2016 is © its original authors; the Fortran reference remains governed by its
 own terms. The GAMESS ab initio benchmark data referenced in the paper are
-reproducible from the released input/output files accompanying the manuscript.
+reproducible from the released input/output files under `benchmarks/`.
 
 ## Citation
 

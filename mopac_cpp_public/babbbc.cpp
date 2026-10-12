@@ -27,16 +27,6 @@ double babbbc(const int* iocca1, const int* ioccb1, const int* ioccb2,
         sum += (xy[xyidx(i, j, k, k, nmos)] - xy[xyidx(i, k, j, k, nmos)]) *
                    (ioccb1[k] - meci_C::occa[k]) +
                xy[xyidx(i, j, k, k, nmos)] * (iocca1[k] - meci_C::occa[k]);
-    {
-        fprintf(stderr, "[BABBBC] i=%d j=%d ij=%d nmos=%d occa1..2=%+.3f %+.3f ioccb1=%d,%d ioccb2=%d,%d iocca1=%d,%d\n",
-                i, j, ij, nmos, meci_C::occa[1], meci_C::occa[2],
-                ioccb1[1], ioccb1[2], ioccb2[1], ioccb2[2], iocca1[1], iocca1[2]); fflush(stderr);
-        for (int k = 1; k <= nmos; ++k)
-            fprintf(stderr, "[BABBBC] k=%d xy_ijkk=%+.6f xy_ikjk=%+.6f t1=%.6f t2=%.6f\n",
-                    k, xy[xyidx(i, j, k, k, nmos)], xy[xyidx(i, k, j, k, nmos)],
-                    (xy[xyidx(i, j, k, k, nmos)] - xy[xyidx(i, k, j, k, nmos)]) * (ioccb1[k] - meci_C::occa[k]),
-                    xy[xyidx(i, j, k, k, nmos)] * (iocca1[k] - meci_C::occa[k])); fflush(stderr);
-    }
     if ((ij / 2) * 2 != ij) sum = -sum;
     return sum;
 }

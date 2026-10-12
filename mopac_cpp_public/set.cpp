@@ -1,6 +1,10 @@
 // set.cpp
 #include "set.h"
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 namespace overlaps_C {
     thread_local int isp=0, ips=0;
     thread_local double sa=0, sb=0;
@@ -33,7 +37,7 @@ static void bintgs(double x, int k) {
         }
         b[i+1]=y;
     }
-    return;
+    goto lfin;
   l40:
     { double expx=std::exp(x), expmx=1.0/expx;
       b[1]=(expx-expmx)/x;
@@ -42,9 +46,11 @@ static void bintgs(double x, int k) {
           b[i+1]=(i*b[i]+sgn*expx-expmx)/x;
       }
     }
-    return;
+    goto lfin;
   l90:
     for (int i=io;i<=k;++i) b[i+1]=(2*((i+1)%2))/(i+1.0);
+  lfin:
+    return;
 }
 void set_fn(double s1, double s2, int na, int nb, double rab, int ii) {
     using namespace overlaps_C;

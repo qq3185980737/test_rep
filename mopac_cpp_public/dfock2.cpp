@@ -227,7 +227,6 @@ restart:
                 kk = kk + 100;
             } else if (ib - ia >= 3) {
                 // light-atom jj - heavy-atom ii (Coulomb + exchange)
-                if (nati == 1) { fprintf(stderr, "[DF2] L-H jj=%d kk=%d jindex1..16:", jj, kk); for (int q = 1; q <= 16; ++q) fprintf(stderr, " %d", jindex[q]); fprintf(stderr, "\n"); fflush(stderr); }
                 double sumdia = 0.0, sumoff = 0.0;
                 int ll = common_arrays_C::i1fact[ja];
                 int k = 0;
@@ -267,19 +266,9 @@ restart:
                             k = k + 1;
                             j1 = common_arrays_C::ifact[ja] + j;
                             sum += p[j1] * w[kk + jindex[k]];
-                            if (nati == 1 && jj == 2 && i == 2)
-                                fprintf(stderr, "[DF2] EX i2 j=%d k=%d j1=%d p=%+.6f ji=%d w=%+.6f term=%+.6f\n",
-                                        j, k, j1, p[j1], jindex[k], w[kk + jindex[k]], p[j1] * w[kk + jindex[k]]);
                         }
                         f[i1] -= sum;
-                        if (nati == 1 && jj == 2 && i == 2)
-                            fprintf(stderr, "[DF2] EX i2 i1=%d sum=%+.6f f[i1]-=%+.6f\n", i1, sum, f[i1]);
                     }
-                }
-                if (nati == 1 && jj == 2) {
-                    fprintf(stderr, "[DF2] COUL ll=%d w1..10:", ll);
-                    for (int q = 1; q <= 10; ++q) fprintf(stderr, " %+.6f", w[kk + q]);
-                    fprintf(stderr, " ptot15=%+.6f\n", ptot[ll]); fflush(stderr);
                 }
                 kk = kk + 10;
             } else if (jb - ja >= 3) {

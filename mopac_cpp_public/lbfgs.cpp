@@ -215,7 +215,7 @@ void lbfgs(double* xparam_arr, double& escf) {
   if (keywrd.find(" CYCLES") != std::string::npos)
     maxcyc = (int)std::lround(reada(keywrd, (int)keywrd.find(" CYCLES")));
   if (keywrd.find("GNORM=") != std::string::npos) {
-    tolerg = reada(keywrd, (int)keywrd.find("GNORM="));
+    tolerg = reada(keywrd, (int)keywrd.find("GNORM=") + 1);
     if (keywrd.find(" LET") == std::string::npos && tolerg < 1.e-2) {
       std::printf("  GNORM HAS BEEN SET TOO LOW, RESET TO 0.01\n");
       tolerg = 1.e-2;

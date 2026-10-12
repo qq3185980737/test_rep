@@ -60,19 +60,13 @@ void dhcore(double* coord, double* h, double* ww, double& enuclr,
         c[(nati - 1) * 3 + (natx - 1)] = csave - step;
         rotate(ni, nj, &c[(nati - 1) * 3], &c[(j - 1) * 3], dwjd, kr, de1b, de2a, denuc);
         int k = kr - kro;
-        if (nati == 1 && j == 2) { fprintf(stderr, "[DH] k=%d kro=%d kr=%d\n", k, kro, kr); fflush(stderr); }
+        if (nati == 1 && j == 2) {  }
         if (kr > 0) {
             for (int i = 0; i <= k; ++i) wjd[i] -= dwjd[i];   // F90 wjd(1:k+1): 0-based physical
             for (int j = 0; j < k; ++j) ww[kro + j] = wjd[j];  // F90 do i=0,k-1: ww(i+kro)=wjd(i+1)
             if (nati == 1 && natx == 1 && j == 2) {
-                fprintf(stderr, "[DH] OH1 wjd0..9:"); for (int q = 0; q < 10; ++q) fprintf(stderr, " %+.4e", wjd[q]); fprintf(stderr, "\n"); fflush(stderr);
-                fprintf(stderr, "[DH] OH1 dwj0..9:"); for (int q = 0; q < 10; ++q) fprintf(stderr, " %+.4e", dwjd[q]); fprintf(stderr, "\n"); fflush(stderr);
-                fprintf(stderr, "[DH] OH1 ww1..10:"); for (int q = 1; q <= 10; ++q) fprintf(stderr, " %+.4e", ww[kro - 1 + q]); fprintf(stderr, "\n"); fflush(stderr);
             }
             if (nati == 1 && natx == 1 && j == 2) {
-                fprintf(stderr, "[DH] OH1 e1bd0..9:"); for (int q = 0; q < 10; ++q) fprintf(stderr, " %+.4e", e1b[q] - de1b[q]); fprintf(stderr, "\n"); fflush(stderr);
-                fprintf(stderr, "[DH] OH1 e2ad0..1:"); for (int q = 0; q < 2; ++q) fprintf(stderr, " %+.4e", e2a[q] - de2a[q]); fprintf(stderr, "\n"); fflush(stderr);
-                fprintf(stderr, "[DH] OH1 h1d0..3:"); for (int q = 0; q < 4; ++q) fprintf(stderr, " %+.4e", di[q * 9 + 0] - ddi[q * 9 + 0]); fprintf(stderr, "\n"); fflush(stderr);
             }
         }
         c[(nati - 1) * 3 + (natx - 1)] = csave;

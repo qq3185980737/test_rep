@@ -9,6 +9,7 @@
 
 #include "MOZYME_C.h"
 #include "chanel_C.h"
+#include "chklew.h"
 #include "common_arrays_C.h"
 #include "elemts_C.h"
 #include "molkst_C.h"
@@ -20,7 +21,6 @@ using namespace molkst_C;
 using namespace MOZYME_C;
 
 namespace {
-void add_Lewis_element(int, int, int, int&) {}
 void mopend(const char*) {}
 int sgn(double x) { return (x > 0) ? 1 : ((x < 0) ? -1 : 0); }
 

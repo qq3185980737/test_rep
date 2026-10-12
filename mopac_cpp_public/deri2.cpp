@@ -84,11 +84,7 @@ void deri2(int minear, std::vector<std::vector<double>>& f,
         maxite = std::min(std::min(60, (int)std::sqrt((double)nmeci * nmeci * nmeci)),
                           10000 * 2 / nvar_nvo);
         maxite = std::min(maxite, i / minear);
-        fprintf(stderr, "[D2] alloc ok ib=%d limci=%d b_buf=%zu ab_buf=%zu fb_buf=%zu\n",
-            ib, limci, b_buf.size(), ab_buf.size(), fb_buf.size()); fflush(stderr);
     }
-    fprintf(stderr, "[D2EN] numcal=%d icalcn=%d ab19=%+.8f ab20=%+.8f ab28=%+.8f ab29=%+.8f\n",
-        numcal, icalcn, ab_buf[19], ab_buf[20], ab_buf[28], ab_buf[29]); fflush(stderr);
 
     // 2D work matrix used by deri22 (same buffer for all columns).
     std::vector<std::vector<double>> work2d(
@@ -109,9 +105,6 @@ void deri2(int minear, std::vector<std::vector<double>>& f,
     int ilast = 0;
     deri21(&fflat[1], nvar_nvo, minear, ifirst, work.data(),
            &work[nvar_nvo * nvar_nvo], &b_buf[1], ilast);
-    fprintf(stderr, "[D2-21] ilast=%d b1..8=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-        ilast, b_buf[1], b_buf[2], b_buf[3], b_buf[4], b_buf[5], b_buf[6], b_buf[7], b_buf[8]); fflush(stderr);
-    fprintf(stderr, "[D2] after deri21 ilast=%d\n", ilast); fflush(stderr);
     bool lbab = false;
     ifirst = 1;  // nbsize == 0 at this point
     ilast = ilast;
@@ -132,16 +125,10 @@ void deri2(int minear, std::vector<std::vector<double>>& f,
         for (int j = ifirst; j <= ilast; ++j) {
             deri22(c, b_buf, j, work2d, foc2, ab_buf, j, minear, fciflat, j,
                    w, diag, scalar, ninear);
-            fprintf(stderr, "[D2AB] j=%d ab=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f b=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-                j, ab_buf[(j-1)*minear+1], ab_buf[(j-1)*minear+2], ab_buf[(j-1)*minear+3], ab_buf[(j-1)*minear+4],
-                ab_buf[(j-1)*minear+5], ab_buf[(j-1)*minear+6], ab_buf[(j-1)*minear+7], ab_buf[(j-1)*minear+8],
-                b_buf[(j-1)*minear+1], b_buf[(j-1)*minear+2], b_buf[(j-1)*minear+3], b_buf[(j-1)*minear+4],
-                b_buf[(j-1)*minear+5], b_buf[(j-1)*minear+6], b_buf[(j-1)*minear+7], b_buf[(j-1)*minear+8]); fflush(stderr);
             mxm(&ab_buf[(j - 1) * minear + 1], 1, &b_buf[1], minear,
                 &bab[(j - 1) * 70 + 1], ilast);
             for (int kk = 1; kk <= ifirst - 1; ++kk)
                 bab[(kk - 1) * 70 + j] = bab[(j - 1) * 70 + kk];
-            fprintf(stderr, "[D2BAB] %+.10f %+.10f\n", bab[(j-1)*70+1], bab[(j-1)*70+2]); fflush(stderr);
         }
     invert:
         int l = 0;
@@ -165,19 +152,9 @@ void deri2(int minear, std::vector<std::vector<double>>& f,
         if (!lbab)
             mtxm(&fflat[1], nvar_nvo, &b_buf[(ifirst - 1) * minear + 1],
                  minear, &fb_buf[ifirst], ilast - ifirst + 1);
-        fprintf(stderr, "[D2FF] fflat=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f b=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f lbab=%d\n",
-            fflat[1], fflat[2], fflat[3], fflat[4], fflat[5], fflat[6], fflat[7], fflat[8],
-            b_buf[(ifirst-1)*minear+1], b_buf[(ifirst-1)*minear+2], b_buf[(ifirst-1)*minear+3], b_buf[(ifirst-1)*minear+4],
-            b_buf[(ifirst-1)*minear+5], b_buf[(ifirst-1)*minear+6], b_buf[(ifirst-1)*minear+7], b_buf[(ifirst-1)*minear+8],
-            (int)lbab); fflush(stderr);
-        fprintf(stderr, "[D2FB] %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-            fb_buf[ifirst], fb_buf[ifirst+1], fb_buf[ifirst+2], fb_buf[ifirst+3], fb_buf[ifirst+4],
-            fb_buf[ifirst+5], fb_buf[ifirst+6], fb_buf[ifirst+7], fb_buf[ifirst+8]); fflush(stderr);
         if (ilast != 0)
             mxmt(babinv.data(), ilast, &fb_buf[1], ilast, &bcoef[1],
                  nvar_nvo);
-        fprintf(stderr, "[D2BC] %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-            bcoef[1], bcoef[2], bcoef[3], bcoef[4], bcoef[5], bcoef[6], bcoef[7], bcoef[8], bcoef[9]); fflush(stderr);
         if (lbab) goto converged;
 
         // Select next basis vector as the largest residual.
@@ -220,25 +197,15 @@ void deri2(int minear, std::vector<std::vector<double>>& f,
     }
 
 converged:
-    fprintf(stderr, "[D2] converged ilast=%d\n", ilast); fflush(stderr);
     if (fail) {
         // Analytical derivatives too inaccurate; job stopped (F90 prints).
         goto done;
     }
     // Unscaled solution supervectors, stored in f.
-    fprintf(stderr, "[D2CV] ilast=%d b1=%+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f b2=%+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f %+.6f bc=%+.6f %+.6f %+.6f\n",
-        ilast,
-        b_buf[1], b_buf[2], b_buf[3], b_buf[4], b_buf[5], b_buf[6], b_buf[7], b_buf[8],
-        b_buf[9], b_buf[10], b_buf[11], b_buf[12], b_buf[13], b_buf[14], b_buf[15], b_buf[16],
-        bcoef[1], bcoef[2], bcoef[3]); fflush(stderr);
     if (ilast != 0) mxm(&b_buf[1], minear, &bcoef[1], ilast, &fflat[1], nvar_nvo);
-    fprintf(stderr, "[D2MX] %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-        fflat[1], fflat[2], fflat[3], fflat[4], fflat[5], fflat[6], fflat[7], fflat[8]); fflush(stderr);
     for (int j = 1; j <= nvar_nvo; ++j)
         for (int i = 1; i <= minear; ++i)
             fflat[(j - 1) * minear + i] *= scalar[i];
-    fprintf(stderr, "[D2F] f=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-        fflat[1], fflat[2], fflat[3], fflat[4], fflat[5], fflat[6], fflat[7], fflat[8]); fflush(stderr);
     // Fock matrix diagonal blocks over CI-active MOs, stored in fb.
     if (ilast != 0)
         mxm(&fciflat[1], ninear, &bcoef[1], ilast, &fb_buf[1], nvar_nvo);
@@ -247,7 +214,6 @@ converged:
     {
         std::vector<double> cmoflat((size_t)(lab * (lab + 1)) / 2 + 1, 0.0);
         for (int ivar = 1; ivar <= nvar_nvo; ++ivar) {
-            fprintf(stderr, "[D2] step3 ivar=%d\n", ivar); fflush(stderr);
             // CI-active MO derivatives into MO basis (cmo2d), eigenvalues
             // derivatives into bcoef.
             deri23(fflat, fdflat, eigs, fb_buf, cmo2d, bcoef, minear, ninear,
@@ -259,17 +225,12 @@ converged:
             for (int r = 0; r < norbs; ++r)
                 for (int c = 0; c < norbs; ++c)
                     ab_buf[c * norbs + r + 1] = cmo2d[r][c];
-            fprintf(stderr, "[D23FCI] ivar=%d c1=%+.7f c2=%+.7f c3=%+.7f c4=%+.7f c5=%+.7f c6=%+.7f\n",
-                ivar,
-                fb_buf[(ivar-1)*ninear+1], fb_buf[(ivar-1)*ninear+2], fb_buf[(ivar-1)*ninear+3], fb_buf[(ivar-1)*ninear+4], fb_buf[(ivar-1)*ninear+5], fb_buf[(ivar-1)*ninear+6]); fflush(stderr);
             int iindex = (norbs * nelec + 1) % minear;
             int jindex = (norbs * nelec + 1) / minear + 1;
             if (iindex == 0) {
                 iindex = minear;
                 --jindex;
             }
-            fprintf(stderr, "[D2DC] ivar=%d nelec=%d norbs=%d nmos=%d nbo=%d,%d,%d nopen=%d\n",
-                ivar, nelec, norbs, nmos, nbo[1], nbo[2], nbo[3], nopen); fflush(stderr);
             // 2-electron integral relaxation over CI-active MOs, in xy.
             {
                 std::vector<std::vector<double>> dc(
@@ -290,18 +251,6 @@ converged:
                         int L = (jindex - 1) * minear + iindex + (j - 1) * norbs + (p - 1);
                         dc[j - 1][p - 1] = ab_buf[L];
                     }
-                fprintf(stderr, "[D2DC] ivar=%d dc1=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f dc2=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-                    ivar, dc[0][0], dc[0][1], dc[0][2], dc[0][3], dc[0][4], dc[0][5],
-                    dc[1][0], dc[1][1], dc[1][2], dc[1][3], dc[1][4], dc[1][5]); fflush(stderr);
-                fprintf(stderr, "[D2D2] ivar=%d ab37..42=%+.8f %+.8f %+.8f %+.8f %+.8f %+.8f\n",
-                    ivar, ab_buf[37], ab_buf[38], ab_buf[39], ab_buf[40], ab_buf[41], ab_buf[42]); fflush(stderr);
-                fprintf(stderr, "[D2DC] c1=%.4f %.4f %.4f %.4f %.4f %.4f c2=%.4f %.4f %.4f %.4f %.4f %.4f c3=%.4f %.4f %.4f %.4f %.4f %.4f c4=%.4f %.4f %.4f %.4f %.4f %.4f c5=%.4f %.4f %.4f %.4f %.4f %.4f c6=%.4f %.4f %.4f %.4f %.4f %.4f\n",
-                    cmo2d[0][0], cmo2d[1][0], cmo2d[2][0], cmo2d[3][0], cmo2d[4][0], cmo2d[5][0],
-                    cmo2d[0][1], cmo2d[1][1], cmo2d[2][1], cmo2d[3][1], cmo2d[4][1], cmo2d[5][1],
-                    cmo2d[0][2], cmo2d[1][2], cmo2d[2][2], cmo2d[3][2], cmo2d[4][2], cmo2d[5][2],
-                    cmo2d[0][3], cmo2d[1][3], cmo2d[2][3], cmo2d[3][3], cmo2d[4][3], cmo2d[5][3],
-                    cmo2d[0][4], cmo2d[1][4], cmo2d[2][4], cmo2d[3][4], cmo2d[4][4], cmo2d[5][4],
-                    cmo2d[0][5], cmo2d[1][5], cmo2d[2][5], cmo2d[3][5], cmo2d[4][5], cmo2d[5][5]); fflush(stderr);
                 dijkl2(dc);
                 // F90 dijkl2 overwrites ab(iindex,jindex) onward; those
                 // residues are read back by the NEXT ivar's dc assembly
@@ -321,10 +270,6 @@ converged:
             // visible to the next deri2 entry (D2EN) and to supdot below.
             for (int k = 1; k <= (lab * (lab + 1)) / 2; ++k) ab_buf[k] = cmoflat[k];
             double sum = 0.0;
-            fprintf(stderr, "[D2S3] ivar=%d iindex=%d jindex=%d gse=%.10f xy1=%.10f xy2=%.10f\n",
-                ivar, iindex, jindex, gse, xy[xyidx(1,1,1,1,nmos)], xy[xyidx(2,2,2,2,nmos)]); fflush(stderr);
-            fprintf(stderr, "[D2S3] cmoflat[1..6]=%.6f %.6f %.6f %.6f %.6f %.6f\n",
-                cmoflat[1], cmoflat[2], cmoflat[3], cmoflat[4], cmoflat[5], cmoflat[6]); fflush(stderr);
             if (gse > 1e10) sum = -sum;  // dummy use of gse (F90 keeps it)
             // supdot writes its result into s[1..lab] (s[0] is padding), so
             // pass a 1-based-padding buffer and read wrk[kk] (Fortran work(kk)).
@@ -335,7 +280,6 @@ converged:
                 for (int kk = 1; kk <= lab; ++kk)
                     sum += vectci[j + kk - 1] * wrk[kk];
             }
-            fprintf(stderr, "[D2S3] sum=%.10f dxyzr[%d]=%.10f\n", sum, ivar - 1, dxyzr[ivar - 1] + sum * cnst / nstate); fflush(stderr);
             dxyzr[ivar - 1] += sum * cnst / nstate;
         }
         // Copy flat outputs back into the [col][row] containers.
