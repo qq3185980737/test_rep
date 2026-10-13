@@ -38,6 +38,8 @@ where **F** is the Fock matrix, **S** the overlap matrix, **C** the coefficient 
 
 For closed-shell calculations on organic molecules with n ≈ 50–500 orbitals, the diagonalization of **F** is a significant fraction of the per-iteration cost, and its numerical result — in particular the *sign* and *composition* of eigenvectors inside near-degenerate subspaces — feeds directly into the density matrix and hence into the next Fock matrix.
 
+The Fock matrix itself is assembled from the one- and two-electron integrals of the NDDO approximation: diagonal elements contain the core Hamiltonian and the Coulomb and exchange contributions from the current density, while off-diagonal elements couple the basis functions through the two-center integrals that the NDDO scheme retains. Because **F** depends on **P**, which depends on the eigenvectors of **F**, the SCF cycle is a fixed-point iteration; convergence is measured by the change in the density matrix (or in the total energy) between successive iterations, and the PULAY/DIIS accelerator [9] extrapolates the density or the Fock matrix to accelerate this fixed point. Every quantity in the cycle — integrals, Fock assembly, diagonalization, density construction — is computed in double precision with a fixed instruction order, so the eigensolver's output is the only stage at which a different library routine can alter the numerical result.
+
 ### 2.2 Pseudo-diagonalization in MOPAC (pairwise Jacobi rotations)
 
 The MOPAC default SCF eigensolver performs classical Jacobi sweeps: it annihilates off-diagonal elements by applying a sequence of plane rotations,
@@ -48,9 +50,13 @@ one pair (p,q) at a time, until the off-diagonal norm is below a threshold. This
 
 The weakness of the pseudo path is exposed when eigenvalues are (near-)degenerate: the rotation-based sweeper may struggle to separate a near-degenerate pair cleanly, and the resulting eigenvector composition can fluctuate, leading to slow or non-convergent SCF cycles in pathological cases.
 
+Two implementation details are relevant to the comparison below. First, a classical Jacobi sweep has O(n³) flops per pass over the matrix and O(n²) rotations per pass, each rotation costing O(n) to apply to the two affected rows and columns; in MOPAC the sweeps are stopped by a threshold on the residual off-diagonal norm rather than by a fixed pass count. Second, because the SCF iteration changes **F** only slightly between cycles, the pseudo path does not restart from scratch: it re-enters the sweeper with the previous rotation history and re-rotates only the matrix elements that have actually changed, which reduces the per-iteration work far below a full O(n³) diagonalization. This incremental strategy is the main reason the pseudo path has remained competitive for the small matrices of semiempirical work, and it is also the reason its accumulation order is deterministic on a given build: the rotation sequence is a pure function of the input matrices.
+
 ### 2.3 Exact diagonalization (LAPACK dsyevd)
 
 The exact path uses the LAPACK divide-and-conquer symmetric eigensolver `dsyevd` (via Intel MKL, the same kernel library family used by the reference build). `dsyevd` computes the full eigensystem of the dense symmetric matrix **F** with documented error bounds, handles (near-)degenerate spectra robustly, and is heavily optimized (BLAS-3 kernels, cache-blocked divide-and-conquer). For n in the hundreds it is typically faster than the Jacobi sweeper despite the higher asymptotic flop count, because the sweeper's O(n³) rotation schedule is not cache-optimized.
+
+The divide-and-conquer algorithm proceeds by splitting the tridiagonal form of **F** into two halves, computing the eigensystem of each half recursively, and then merging the two partial systems by a rank-one update whose eigenelements are obtained by solving a secular equation; the eigenvectors are assembled with BLAS-3 kernels, which is where the cache efficiency over the Jacobi sweeper comes from. The solver returns eigenvalues and orthonormal eigenvectors to machine precision within the documented error bounds (roughly O(n ε) for eigenvalues and O(ε) for eigenvector residuals, with ε the machine epsilon), and it is explicitly designed to remain stable for clustered or repeated eigenvalues. This robustness property is what makes the exact path attractive for the near-degenerate regime where the rotation sweeper struggles (§3.3).
 
 ### 2.4 The FULLDIAG gate in MOPAC-CPP
 
@@ -61,6 +67,8 @@ MOPAC-CPP is a 1-based, line-auditable C++17 translation of the 679-file MOPAC20
 
 Both are equivalent. When the gate is off — the default — the binary follows the official pseudo-diagonalization path exactly. When it is on, the Fock-matrix eigensolver is replaced by `dsyevd` at each SCF iteration; everything else (integral evaluation, Fock assembly, density construction, DIIS/PULAY accelerator, EF optimizer) is unchanged.
 
+The implementation replaces only the eigen-decomposition call inside the SCF loop (the routine that maps **F** to **C** and **ε** in Eq. (1)); the gate is parsed once at job setup, so there is no per-iteration branching cost when it is off. Threading of the MKL kernels follows the same environment-controlled policy as the reference build, and the gate is deliberately *not* combined with any other numerical change: enabling FULLDIAG isolates the effect of the eigensolver substitution, so that any difference between the two paths can be attributed to the diagonalization alone.
+
 ## 3. Results
 
 ### 3.1 Fidelity of the default path
@@ -70,6 +78,8 @@ With the FULLDIAG gate off, MOPAC-CPP reproduces the official MOPAC2016 binary b
 ### 3.2 Energy difference on non-degenerate systems
 
 On a C₈₀H₁₆₂ PM7 RHF single point (PULAY-accelerated, 482 basis functions; C: 4 AOs × 80, H: 1 AO × 162), the single-point energy computed with FULLDIAG differs from the pseudo-diagonalization result by ≈2×10⁻⁴ kcal/mol — at the level of floating-point rounding and far below the PM7 method error (≈±5–10 kcal/mol against experiment). The optimized geometries and FINAL HEAT are mathematically equivalent: for hexadecane (C₁₆H₃₄), FULLDIAG gives ΔHf = −90.18 kcal/mol vs. the NIST experimental value −89.60 kcal/mol (PM7 method error −0.58, within the method's expected accuracy band).
+
+The ≈2×10⁻⁴ kcal/mol deviation should be read against the intrinsic error of the PM7 method itself: against the NIST reference values, PM7 atomization energies carry a mean absolute error of ≈6.7 kcal/mol, so the eigensolver-induced deviation is smaller than the method error by roughly four orders of magnitude. The eigensolver substitution is therefore numerically negligible at the level of chemical accuracy, while remaining exactly quantifiable — a property that the bitwise verification pipeline of the translation [8] makes possible, since the baseline (pseudo path) itself is bitwise reproducible to the official binary.
 
 ### 3.3 Near-degenerate robustness: C₄₀H₈₂
 
@@ -107,6 +117,12 @@ The study is a worked example of a more general principle: in a faithfully trans
 - The near-degenerate robustness case (C₄₀H₈₂) is reported for a specific 122-atom alkane; a broader survey of pathological spectra is left to future work.
 - Performance numbers are single-platform (Windows x64, MSVC 2022, Intel MKL 2025.3); relative gains are expected to carry to other platforms, but absolute times do not.
 - FULLDIAG changes the numerical path; users requiring bit-for-bit parity with archived MOPAC2016 outputs must keep the default gate off.
+
+### 4.4 Relation to other semiempirical implementations and a general substitution protocol
+
+The two eigensolver routes studied here mirror the wider practice of the semiempirical field. The MOPAC family has historically relied on purpose-built, rotation-based SCF diagonalization, which is what makes its outputs bitwise stable across builds and decades of published reference values; modern electronic-structure packages, by contrast, generally rely on LAPACK-family eigensolvers for the same SCF step, at the cost of a different — but equally deterministic — accumulation order. FULLDIAG therefore does two things at once: it gives MOPAC-CPP an optional path aligned with the LAPACK-based practice of modern packages, while the default path preserves the MOPAC numerical contract.
+
+The study also documents a general protocol for kernel substitution in legacy scientific software, in four steps: (i) establish a bitwise-verified baseline (here, the pseudo path vs. the official binary [8]); (ii) replace exactly one kernel, leaving all other stages unchanged, so any deviation is attributable to that kernel alone; (iii) quantify the deviation on representative workloads, including a pathological case for the original kernel; (iv) ship the alternative as an explicit opt-in gate, so the default output is never silently changed. The same protocol transfers directly to linear solvers, integral screening, reduction orders, or any other numerical kernel of a legacy code base.
 
 ## 5. Conclusions
 

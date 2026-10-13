@@ -17,6 +17,22 @@ MOPAC2016 is one of the most widely used semiempirical molecular-orbital program
 
 ---
 
+## Code metadata
+
+| | |
+|---|---|
+| Current code version | v1.1.0 |
+| Permanent link to code/repository used for this code version | https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`) |
+| Code Ocean compute capsule | (to be added at acceptance) |
+| Legal Code License | MIT License |
+| Code versioning system used | git |
+| Software code languages, tools, and services used | C++17; MSVC 2022 (x64); Intel MKL 2025.3 (dsyevd/dgemm/BLAS kernels) |
+| Compilation requirements, operating environments & dependencies | Windows x64; MSBuild/`mopac_cpp.sln`; Intel MKL (static link), SSE2 baseline |
+| If available Link to developer documentation/manual | https://github.com/qq3185980737/test_rep/blob/main/README.md |
+| Support email for questions | liuyang123@stu.sjzu.edu.cn |
+
+---
+
 ## 1. Motivation and significance
 
 Semiempirical quantum-chemical methods (PM7 [1], PM6 [2], AM1 [3]) remain a workhorse for systems where density-functional and wave-function methods are too expensive: large organic molecules, condensed-phase sampling, reaction-path screening, and molecular dynamics [4]. Their reference implementation, MOPAC2016 [5,6], is a mature Fortran codebase (~120,000 lines, 679 source files) whose numerical semantics — including a particular pseudo-diagonalization SCF path and a fixed accumulation order — define the *de facto* values reported in thousands of published studies.
@@ -44,6 +60,8 @@ The package implements the full MOPAC2016 feature set:
 - C++17, MSVC 2022 (x64), SSE2 baseline; build via the provided `mopac_cpp.sln` or MSBuild.
 - Intel MKL (2025.3, static) for `dsyevd`/`dgemm`/BLAS kernels — the same kernel family used by the reference binary, which is part of why bitwise fidelity is attainable on the default path.
 - Single-threaded by default (`OMP_NUM_THREADS=1; MKL_NUM_THREADS=1`) for bitwise-comparable runs.
+
+**Input/output.** MOPAC-CPP reads the classic MOPAC keyword deck: one or more keywords on the first line(s) (`PM7 1SCF GEO-OK`), a title line, and a geometry block in Z-matrix, XYZ, or PDB form. The full keyword set is implemented and documented in `KEYWORDS.md` (generated from the same keyword tables as the reference program), so existing MOPAC input decks run unchanged. Output is the classic MOPAC text format (header, `FINAL HEAT OF FORMATION`, population analysis, geometry, property blocks) so downstream parsers continue to work; trajectory and property exports are additionally available in plain XYZ and CSV form for modern toolchains. All files are plain text, which keeps the program scriptable and diff-friendly for regression testing.
 
 ### 2.4 Reproducibility gates (all default OFF)
 
@@ -96,6 +114,16 @@ PM7 MOLDYN T=300 ...
 
 The DRC/MD path (including the MOPAC velocity-input `VELO=` handling) runs end-to-end and reproduces the reference trajectory; a trajectory-export module emits XYZ trajectories for downstream analysis.
 
+### 3.4 Deterministic parallel run (FBDR)
+
+```
+set MOPAC_DSPAR=1
+set OMP_NUM_THREADS=4
+mopac.exe c80h162.mop
+```
+
+With FBDR enabled, the Fock-matrix reduction is partitioned into fixed buckets whose partial sums are combined in a deterministic order, so the output file is byte-identical whether the job runs on 1, 4, 8, or 16 threads. The same deck without `MOPAC_DSPAR` reproduces the official binary bit-for-bit; with `MOPAC_DSPAR NB=1` the serial path is recovered exactly. This gives users a single switch between bitwise-parity with the reference and deterministic multi-threaded throughput.
+
 ## 4. Impact
 
 **Fidelity.** On the nominal path the C++ build is bitwise identical to the official MOPAC2016 executable: 18 small molecules (NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄, SO₂, H₂S, PH₃, SiH₄, CH₃SH, CH₃Cl, O₂, CH₃) in single-point mode, with EF-optimized trajectories identical within the verification build pair; 320/320 released-regression single-point inputs with zero exceptions; and CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories. The translation therefore contributes zero additional error at every level of the accompanying physical benchmark (NIST experimental heats of formation and GAMESS CCSD(T)/cc-pV{T,Q}Z CBS atomization energies; PM7's deviations from experiment are intrinsic parameterization errors, not migration errors).
@@ -105,6 +133,8 @@ The DRC/MD path (including the MOPAC velocity-input `VELO=` handling) runs end-t
 **Reproducibility research.** The companion methodology paper (submitted) reports the ULP-attribution protocol and the discovery that EF-optimization trajectories are chaotic at the 1-ULP level even when the SCF layer is bitwise identical; MOPAC-CPP is the open, fully instrumented case study for that work, and its gates (FBDR, GAB) are reference implementations of the two deterministic methods described there.
 
 **Audience value.** MOPAC-CPP lets existing MOPAC users switch to a modern C++ codebase with unchanged inputs and outputs, gives developers a clean embeddable library, and provides educators and researchers a complete, tested example of a verified 120k-line migration.
+
+**Maintainability and community.** The repository ships the full build configuration, hundreds of unit tests, an end-to-end regression corpus (320 released inputs), and documentation (`README.md`, `KEYWORDS.md`, build and verification guides), so that a new contributor can rebuild, test, and audit the entire package without external services. The MIT license and the 1:1 Fortran-to-C++ file correspondence (each translated unit documents its source module) lower the barrier for domain experts to review or extend the code, and the reproducibility gates are isolated behind dedicated keywords and environment variables, keeping the default path stable across releases.
 
 ## 5. Conclusions
 
