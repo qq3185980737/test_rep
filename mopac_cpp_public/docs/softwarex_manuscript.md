@@ -2,8 +2,10 @@
 
 **SoftwareX — Original Software Publication (draft)**
 
-**Authors:** Yang Liu^a, *（导师占位）*^b
-^a 沈阳建筑大学, 力学系; ^b *（导师单位）*
+**Authors:** Yang Liu^a, Xun Wang^b,*
+
+^a ^b Shenyang Jianzhu University, Shenyang, China
+*Corresponding author.
 
 **Keywords:** semiempirical quantum chemistry; PM7; Fortran-to-C++ migration; bitwise reproducibility; scientific software; molecular dynamics
 
@@ -114,7 +116,7 @@ The authors declare that they have no known competing financial interests or per
 
 ## Acknowledgements
 
-The authors thank the MOPAC development community for the open-source release of the reference code, and the GAMESS project for the ab initio reference software used for the physical benchmarks.
+This work has been financially supported by the Basic Scientific Research Project for Higher Education Institutions (Project No. LJ212610153014) of Liaoning Provincial Department of Education. The authors thank the MOPAC development community for the open-source release of the reference code, and the GAMESS project for the ab initio reference software used for the physical benchmarks.
 
 ## References
 
