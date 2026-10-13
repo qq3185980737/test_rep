@@ -2,9 +2,9 @@
 
 **SoftwareX — Original Software Publication (draft)**
 
-**Authors:** Yang Liu^a, Xun Wang^b,*
+**Authors:** Yang Liu^a, Xun Wang^a,*
 
-^a ^b Shenyang Jianzhu University, Shenyang, China
+^a Shenyang Jianzhu University, Shenyang, China
 *Corresponding author: wangxun71@aliyun.com (X. Wang); liuyang123@stu.sjzu.edu.cn (Y. Liu)
 
 **Keywords:** semiempirical quantum chemistry; PM7; Fortran-to-C++ migration; bitwise reproducibility; scientific software; molecular dynamics
@@ -13,7 +13,7 @@
 
 ## Abstract
 
-MOPAC2016 is one of the most widely used semiempirical molecular-orbital programs, and its Fortran implementation has served as the reference for the PM7 and related NDDO methods for decades. We present MOPAC-CPP, a complete translation of the MOPAC2016 package (679 Fortran source files, ≈120,000 lines) into C++17. The translation is deliberately a faithful port, not a rewrite: names, dimensions, initial values, and 1-based indexing are preserved so every function remains auditable. On the nominal numerical path, the C++ build is bitwise identical to the official MOPAC2016 executable, verified on 18 small molecules in single-point mode, on 320/320 released-regression inputs, and across CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories, with geometry-optimization trajectories identical within the verification build pair. The package also ships reproducibility gates that keep this fidelity while enabling parallelism: a fixed-bucket deterministic parallel Fock reduction (FBDR), a deterministic degenerate-basis choice for the optimizer (GAB), and an optional LAPACK exact-diagonalization mode for large systems, and a first-line performance improvement of 1.85–2.5× over the reference binary. MOPAC-CPP is released under the MIT license with its full test suite and verification scripts.
+MOPAC2016 is one of the most widely used semiempirical molecular-orbital programs, and its Fortran implementation has served as the reference for the PM7 and related NDDO methods for decades. We present MOPAC-CPP, a complete translation of the MOPAC2016 package (679 Fortran source files, ≈120,000 lines) into C++17. The translation is deliberately a faithful port, not a rewrite: names, dimensions, initial values, and 1-based indexing are preserved so every function remains auditable. On the nominal numerical path, the C++ build is bitwise identical to a local Intel-ifort rebuild of the official MOPAC2016 source (the verification build pair), verified on 18 small molecules in single-point mode, on 320/320 released-regression inputs, and across CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories, with geometry-optimization trajectories identical within the verification build pair. The package also ships reproducibility gates that keep this fidelity while enabling parallelism: a fixed-bucket deterministic parallel Fock reduction (FBDR), a deterministic degenerate-basis choice for the optimizer (GAB), and an optional LAPACK exact-diagonalization mode for large systems, and a first-line performance improvement of 1.85–2.5× over the reference rebuild. MOPAC-CPP is released under the MIT license with its full test suite and verification scripts.
 
 ---
 
@@ -37,9 +37,9 @@ MOPAC2016 is one of the most widely used semiempirical molecular-orbital program
 
 Semiempirical quantum-chemical methods (PM7 ¹, PM6 ², AM1 ³) remain a workhorse for systems where density-functional and wave-function methods are too expensive: large organic molecules, condensed-phase sampling, reaction-path screening, and molecular dynamics ⁴. Their reference implementation, MOPAC2016 ⁵,⁶, is a mature Fortran codebase (~120,000 lines, 679 source files) whose numerical semantics — including a particular pseudo-diagonalization SCF path and a fixed accumulation order — define the *de facto* values reported in thousands of published studies.
 
-Scientific software in this state faces two well-known problems. First, legacy Fortran code is increasingly difficult to maintain, extend, and integrate into modern C++-based toolchains (AI/ML pipelines, visualization, workflow engines). Second, as reproducibility standards tighten ⁷,⁸, the community needs a defensible answer to the question: *when a program is re-expressed in another language, how do we know the numbers are still the numbers?* Prior work has addressed parallel non-determinism within a single code (e.g., FELTOR ⁹) or used differential fault injection to test LLM-modernized code ¹⁰, but no published work reports a bitwise-verified full migration of a production quantum-chemistry package at this scale.
+Scientific software in this state faces two well-known problems. First, legacy Fortran code is increasingly difficult to maintain, extend, and integrate into modern C++-based toolchains (AI/ML pipelines, visualization, workflow engines). Second, as reproducibility standards tighten ⁷,⁸, the community needs a defensible answer to the question: *when a program is re-expressed in another language, how do we know the numbers are still the numbers?* Prior work has addressed parallel non-determinism within a single code (e.g., FELTOR ⁹), used differential fault injection to test LLM-modernized code ¹⁰, and evaluated the correctness and reproducibility of LLM-generated parallel C/C++ translations at scale ¹¹; to our knowledge none reports a bitwise-verified full migration of a production quantum-chemistry package at this scale on the nominal path.
 
-MOPAC-CPP addresses both problems. It provides (i) a complete, buildable C++17 port that preserves the original numerical semantics exactly on the default path, so existing inputs and expected outputs carry over unchanged; (ii) a public verification pipeline that certifies bitwise fidelity against the official binary; and (iii) optional deterministic parallelism and an exact-diagonalization mode for users who need speed or robustness without sacrificing auditability. The software is aimed at computational chemists who need a modern, embeddable MOPAC, and at scientific-software engineers who need a worked, fully open example of a verified large-scale migration.
+MOPAC-CPP addresses both problems. It provides (i) a complete, buildable C++17 port that preserves the original numerical semantics exactly on the default path, so existing inputs and expected outputs carry over unchanged; (ii) a public verification pipeline that certifies bitwise fidelity against the reference rebuild; and (iii) optional deterministic parallelism and an exact-diagonalization mode for users who need speed or robustness without sacrificing auditability. The software is aimed at computational chemists who need a modern, embeddable MOPAC, and at scientific-software engineers who need a worked, fully open example of a verified large-scale migration.
 
 ## 2. Software description
 
@@ -65,13 +65,13 @@ The package implements the full MOPAC2016 feature set:
 
 ### 2.4 Reproducibility gates (all default OFF)
 
-The default binary follows the bitwise-official path exactly. Three optional gates are provided:
+The default binary follows the bitwise-identical-to-reference path exactly. Three optional gates are provided, all isolated behind dedicated keywords or environment variables so that the default path is never silently changed:
 
 | Gate | Effect |
 |---|---|
 | `MOPAC_DSPAR` / `MOPAC_DSPAR_NB` | **FBDR** — fixed-bucket deterministic parallel Fock-matrix reduction; thread-count-independent, bitwise identical across 1/4/8/16 threads; `NB=1` equals the serial path |
 | `MOPAC_GAB` | **GAB** — deterministic choice of basis inside degenerate eigenspaces of the EF optimizer, removing library-instance-dependent trajectory noise on symmetric molecules |
-| `FULLDIAG` (keyword) / `MOPAC_FULL_DIAG` (env) | optional exact LAPACK (`dsyevd`) diagonalization: ≈2.1–3.6× faster 1SCF on large alkanes and robust to near-degenerate SCF convergence; converges to mathematically equivalent optimized geometries (NIST-verified) while the default pseudo-diagonalization path keeps bitwise fidelity |
+| `FULLDIAG` (keyword) / `MOPAC_FULL_DIAG` (env) | optional exact LAPACK (`dsyevd`) diagonalization: ≈2.1–3.6× faster 1SCF on large alkanes (single to eight threads); the single-point energy differs from the default path by ≈2×10⁻⁴ kcal/mol on non-degenerate systems, and on near-degenerate regular alkanes it converges to a different, slightly lower SCF state (0.2–0.4 kcal/mol) while the default path preserves the reference state selection |
 
 ### 2.5 Testing
 
@@ -93,7 +93,7 @@ H2O single point
  r=0.957 a=104.5
 ```
 
-Run: `mopac.exe h2o.mop` → output `h2o.out` contains `FINAL HEAT OF FORMATION = -57.799 kcal/mol` — bitwise identical to the official MOPAC2016 binary on the verification build pair.
+Run: `mopac.exe h2o.mop` → output `h2o.out` contains `FINAL HEAT OF FORMATION = -57.799 kcal/mol` — bitwise identical to the reference MOPAC2016 rebuild on the verification build pair.
 
 ### 3.2 Geometry optimization (EF, PM7)
 
@@ -122,13 +122,13 @@ set OMP_NUM_THREADS=4
 mopac.exe c80h162.mop
 ```
 
-With FBDR enabled, the Fock-matrix reduction is partitioned into fixed buckets whose partial sums are combined in a deterministic order, so the output file is byte-identical whether the job runs on 1, 4, 8, or 16 threads. The same deck without `MOPAC_DSPAR` reproduces the official binary bit-for-bit; with `MOPAC_DSPAR NB=1` the serial path is recovered exactly. This gives users a single switch between bitwise-parity with the reference and deterministic multi-threaded throughput.
+With FBDR enabled, the Fock-matrix reduction is partitioned into fixed buckets whose partial sums are combined in a deterministic order, so the output file is byte-identical whether the job runs on 1, 4, 8, or 16 threads. The same deck without `MOPAC_DSPAR` reproduces the reference rebuild bit-for-bit; with `MOPAC_DSPAR NB=1` the serial path is recovered exactly. This gives users a single switch between bitwise-parity with the reference and deterministic multi-threaded throughput.
 
 ## 4. Impact
 
-**Fidelity.** On the nominal path the C++ build is bitwise identical to the official MOPAC2016 executable: 18 small molecules (NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄, SO₂, H₂S, PH₃, SiH₄, CH₃SH, CH₃Cl, O₂, CH₃) in single-point mode, with EF-optimized trajectories identical within the verification build pair; 320/320 released-regression single-point inputs with zero exceptions; and CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories. The translation therefore contributes zero additional error at every level of the accompanying physical benchmark (NIST experimental heats of formation and GAMESS ¹¹ CCSD(T)/cc-pV{T,Q}Z CBS atomization energies; PM7's deviations from experiment are intrinsic parameterization errors, not migration errors).
+**Fidelity.** On the nominal path the C++ build is bitwise identical to a local Intel-ifort rebuild of the official MOPAC2016 source: 18 small molecules (NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄, SO₂, H₂S, PH₃, SiH₄, CH₃SH, CH₃Cl, O₂, CH₃) in single-point mode, with EF-optimized trajectories identical within the verification build pair; 320/320 released-regression single-point inputs with zero exceptions; and CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories. The translation therefore contributes zero additional error at every level of the accompanying physical benchmark (NIST experimental heats of formation and GAMESS ¹² CCSD(T)/cc-pV{T,Q}Z CBS atomization energies; PM7's deviations from experiment are intrinsic parameterization errors, not migration errors).
 
-**Performance.** On the same machine and workload (C₈₀H₁₆₂ PM7 RHF single point), MOPAC-CPP runs 1.85× faster than the official binary with SSE2 + MKL and ≈2.5× with LTCG. With FBDR, deterministic parallelism adds 1.15–1.26× on C₈₀H₁₆₂ and 1.57× on C₁₂₀H₂₄₂ at 8 threads while remaining bitwise identical across thread counts. On large near-degenerate systems the optional FULLDIAG path is 2.1–3.6× faster in 1SCF and fixes SCF-divergence cases (e.g., a C₄₀H₈₂ optimization that diverges on the pseudo-diagonalization path but converges on the full path).
+**Performance.** On the same machine and workload (C₈₀H₁₆₂ PM7 RHF single point), MOPAC-CPP runs 1.85× faster than the reference rebuild with SSE2 + MKL and ≈2.5× with LTCG. With FBDR, deterministic parallelism adds 1.15–1.26× on C₈₀H₁₆₂ and 1.57× on C₁₂₀H₂₄₂ at 8 threads while remaining bitwise identical across thread counts. On large systems the optional FULLDIAG path is 2.1–3.6× faster in 1SCF (single to eight threads) and, on near-degenerate regular alkanes, converges to a different, slightly lower SCF state (0.2–0.4 kcal/mol) than the default path, which preserves the reference state selection.
 
 **Reproducibility research.** The companion methodology paper (submitted) reports the ULP-attribution protocol and the discovery that EF-optimization trajectories are chaotic at the 1-ULP level even when the SCF layer is bitwise identical; MOPAC-CPP is the open, fully instrumented case study for that work, and its gates (FBDR, GAB) are reference implementations of the two deterministic methods described there.
 
@@ -144,17 +144,22 @@ MOPAC-CPP is a complete, bitwise-verified C++17 translation of MOPAC2016, releas
 
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
+## Declaration of generative AI and AI-assisted technologies in the writing process
+
+During the preparation of this work the authors used an AI-assisted writing tool to draft and refine portions of the manuscript text. After using this tool, the authors reviewed and edited the content as needed and take full responsibility for the content of the published article.
+
 ## Acknowledgements
 
 This work has been financially supported by the Basic Scientific Research Project for Higher Education Institutions (Project No. LJ212610153014) of Liaoning Provincial Department of Education. The authors thank the MOPAC development community for the open-source release of the reference code, and the GAMESS project for the ab initio reference software used for the physical benchmarks.
 
 ## Code availability
 
-The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`). All input decks and recorded outputs used in the verification reported here are included in the repository, and the repository is archived on Zenodo with a DOI (https://doi.org/10.5281/zenodo.6511958 is the DOI of the reference MOPAC2016 archive; the MOPAC-CPP archive DOI will be added at acceptance). No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain.
+The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`). All input decks and recorded outputs used in the verification reported here are included in the repository; a permanent Zenodo archive with a DOI will be created for the accepted version (the DOI 10.5281/zenodo.6511958 cited in the text refers to the reference MOPAC2016 archive, not to MOPAC-CPP). No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain.
 
 ## CRediT authorship contribution statement
 
 **Yang Liu:** Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing – original draft, Visualization. **Xun Wang:** Conceptualization, Supervision, Resources, Funding acquisition, Writing – review & editing.
+
 
 ## References
 [1] J. J. P. Stewart, Optimization of parameters for semiempirical methods VI: more modifications to the NDDO approximations and re-optimization of parameters, J. Mol. Model. 19 (2013) 1–32. https://doi.org/10.1007/s00894-012-1667-x
@@ -167,4 +172,5 @@ The MOPAC-CPP source code, test suite, verification scripts, and documentation a
 [8] G. K. Sandve, A. Nekrutenko, J. Taylor, T. Hovig, Ten simple rules for reproducible computational research, PLoS Comput. Biol. 9 (10) (2013) e1003285. https://doi.org/10.1371/journal.pcbi.1003285
 [9] M. Wiesenberger, L. Einkemmer, M. Held, A. Gutierrez-Milla, X. Sáez, R. Iakymchuk, Reproducibility, accuracy and performance of the FELTOR code and library on parallel computer architectures, Comput. Phys. Commun. 238 (2019) 145–156.
 [10] Yuan et al., Differential fault-injection validation of LLM-modernized scientific software (GAMESS), 2026. https://hub.baai.ac.cn/paper/27140009-4896-40d9-863e-ba267771d133
-[11] M. W. Schmidt et al., General atomic and molecular electronic structure system (GAMESS), J. Comput. Chem. 14 (1993) 1347–1363. https://doi.org/10.1002/jcc.540140112
+[11] P. Valero-Lara, W. F. Godoy, J. Gonzalez, A. Huante, H. Gauthier-Chaparro, J. Gonzalez, LLM-driven Fortran-to-C/C++ portability for parallel scientific codes, in: Proceedings of the 2025 IEEE International Conference on eScience (eScience), IEEE, 2025.
+[12] M. W. Schmidt et al., General atomic and molecular electronic structure system (GAMESS), J. Comput. Chem. 14 (1993) 1347–1363. https://doi.org/10.1002/jcc.540140112
