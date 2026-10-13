@@ -120,14 +120,14 @@ This work has been financially supported by the Basic Scientific Research Projec
 
 ## References
 
-[1] J. J. P. Stewart, Optimization of parameters for semiempirical methods VI: more modifications to the NDDO approximations and re-optimization of parameters, J. Mol. Model. 19 (2013) 1–32.
-[2] J. J. P. Stewart, Optimization of parameters for semiempirical methods V: modification of NDDO approximations and application to 70 elements, J. Mol. Model. 13 (2007) 1173–1213.
-[3] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, AM1: a new general purpose quantum mechanical molecular model, J. Am. Chem. Soc. 107 (1985) 3902–3909.
-[4] W. Thiel, Semiempirical quantum-chemical methods, WIREs Comput. Mol. Sci. 4 (2014) 145–157.
+[1] J. J. P. Stewart, Optimization of parameters for semiempirical methods VI: more modifications to the NDDO approximations and re-optimization of parameters, J. Mol. Model. 19 (2013) 1–32. https://doi.org/10.1007/s00894-012-1667-x
+[2] J. J. P. Stewart, Optimization of parameters for semiempirical methods V: modification of NDDO approximations and application to 70 elements, J. Mol. Model. 13 (2007) 1173–1213. https://doi.org/10.1007/s00894-007-0233-4
+[3] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, Development and use of quantum mechanical molecular models. 76. AM1: a new general purpose quantum mechanical molecular model, J. Am. Chem. Soc. 107 (1985) 3902–3909. https://doi.org/10.1021/ja00299a024
+[4] W. Thiel, Semiempirical quantum-chemical methods, Wiley Interdiscip. Rev.: Comput. Mol. Sci. 4 (2014) 145–157. https://doi.org/10.1002/wcms.1161
 [5] J. J. P. Stewart, MOPAC: A semiempirical molecular orbital program, J. Comput.-Aided Mol. Des. 4 (1990) 1–103.
 [6] MOPAC2016 DOI: https://doi.org/10.5281/zenodo.6511958
-[7] R. D. Peng, Reproducible research in computational science, Science 334 (2011) 1226–1227.
-[8] G. K. Sandve et al., Ten simple rules for reproducible computational research, PLoS Comput. Biol. 9 (2013) e1003285.
-[9] M. Wiesenberger et al., Reproducibility, accuracy and performance of the FELTOR code and library on parallel computer architectures, Comput. Phys. Commun. 238 (2019) 145–156.
-[10] Yuan et al., Differential fault-injection validation of LLM-modernized scientific software (GAMESS), 2026.
-[11] M. W. Schmidt et al., GAMESS, J. Comput. Chem. 14 (1993) 1347–1363.
+[7] R. D. Peng, Reproducible research in computational science, Science 334 (6060) (2011) 1226–1227. https://doi.org/10.1126/science.1213847
+[8] G. K. Sandve, A. Nekrutenko, J. Taylor, T. Hovig, Ten simple rules for reproducible computational research, PLoS Comput. Biol. 9 (10) (2013) e1003285. https://doi.org/10.1371/journal.pcbi.1003285
+[9] M. Wiesenberger, L. Einkemmer, M. Held, A. Gutierrez-Milla, X. Sáez, R. Iakymchuk, Reproducibility, accuracy and performance of the FELTOR code and library on parallel computer architectures, Comput. Phys. Commun. 238 (2019) 145–156.
+[10] Yuan et al., Differential fault-injection validation of LLM-modernized scientific software (GAMESS), 2026. https://hub.baai.ac.cn/paper/27140009-4896-40d9-863e-ba267771d133
+[11] M. W. Schmidt et al., General atomic and molecular electronic structure system (GAMESS), J. Comput. Chem. 14 (1993) 1347–1363. https://doi.org/10.1002/jcc.540140112

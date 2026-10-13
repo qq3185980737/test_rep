@@ -355,7 +355,7 @@ The authors declare that they have no known competing financial interests or per
 
 ## Declaration of Generative AI and AI-assisted technologies in the writing process
 
-During the preparation of this work the author(s) used an AI-assisted coding and drafting tool in order to assist with code translation, drafting, and language editing. After using this tool/service, the author(s) reviewed and edited the content as needed and take(s) full responsibility for the content of the publication.
+During the preparation of this work the authors used an AI-assisted coding and drafting tool in order to assist with code translation, drafting, and language editing. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
 
 ## Funding
 
