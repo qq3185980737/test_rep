@@ -58,8 +58,9 @@ extern double zsn[N_PARAM + 1];
 extern double zpn[N_PARAM + 1];
 extern double zdn[N_PARAM + 1];
 extern bool dorbs[N_PARAM + 1];
-// ccrep special-case constants (par1..par4)
-extern double par1, par2, par3, par4;
+// ccrep special-case constants (par1..par4) — references into the live guess
+// table (Fortran EQUIVALENCE to guess(99,·), method-dependent; see parameters_C.cpp).
+extern double& par1; extern double& par2; extern double& par3; extern double& par4;
 extern int ndelec[N_PARAM + 1];
 
 // PM6-DH2 hydrogen-bond acceptor parameters (H_bond_correction_EC_plus_ER).

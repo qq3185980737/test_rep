@@ -671,8 +671,21 @@ double zsn[N_PARAM + 1] = {};
 double zpn[N_PARAM + 1] = {};
 double zdn[N_PARAM + 1] = {};
 bool dorbs[N_PARAM + 1] = {};
-// PM7 par1..par4 = gues7*(99,*) from parameters_for_PM7_C.F90 (PAR1..PAR4)
-double par1 = 8.947612, par2 = 6.024265, par3 = -0.012037, par4 = 0.701333;
+// par1..par4 mirror Fortran's EQUIVALENCE in parameters_C.F90:36-37:
+//   (guess1(99,1),par1), (guess2(99,1),par2), (guess3(99,1),par3),
+//   (guess1(99,2),par4), ...
+// The values are method-dependent (PM6 and PM7 use different element-99
+// guess parameters; AM1/MNDO/PM3/RM1 also define their own 99-row entries).
+// Binding to the live guess table reproduces the Fortran semantics exactly:
+// switch.cpp copies the active method's table (gues61/gues71/...) into
+// guess1/2/3 at method selection, so par1..par4 always carry the current
+// method's values. The previous hard-coded PM7-only values made the PM6
+// core-core special terms (C-C par1/par2, O-H par3/par4 in ccrep.cpp) use
+// PM7 parameters, causing ~4-9 kcal/mol FINAL HEAT errors on PM6.
+double& par1 = guess1[99][1];
+double& par2 = guess2[99][1];
+double& par3 = guess3[99][1];
+double& par4 = guess1[99][2];
 int ndelec[N_PARAM + 1] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 4, 6,
