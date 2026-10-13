@@ -24,7 +24,7 @@ The migration of legacy Fortran scientific codes to modern languages is accelera
 
 **Programming language:** C++17
 
-**Supplementary material:** full C++17 translation (374 translation units plus headers; the 679 Fortran source files are consolidated into these translation units), 12 regression input files, comparison and ULP-attribution scripts, GAMESS input/output files, and atomization-energy reduction scripts.
+**Supplementary material:** full C++17 translation (374 translation units plus headers; the 679 Fortran source files are consolidated into these translation units), regression inputs and recorded outputs, and the FBDR/GAB gate implementations; GAMESS input/output files and atomization-energy reduction scripts are available from the authors on request.
 
 **Nature of problem (approx. 50–250 words):** MOPAC2016 is a widely used semiempirical quantum-chemistry package whose source consists of 679 Fortran files (~120,000 lines). Migrating such legacy codes to a modern language — by hand or by LLM agents — is increasingly common, yet standard validation only checks nominal numeric agreement, which cannot distinguish translation errors from intentional changes and cannot certify bitwise equivalence across runs, platforms, or thread counts. A second, independent problem is numerical non-reproducibility: parallel reductions reorder floating-point additions, and optimizers that project a gradient onto a (near-)degenerate eigenbasis are sensitive to the arbitrary basis returned by the eigensolver. Both mechanisms silently change scientific results. Methods that make a migrated code bitwise verifiable and numerically deterministic are required.
 
@@ -244,6 +244,8 @@ Every molecule is bitwise identical in both iteration count and FINAL HEAT. GAB 
 
 Bitwise fidelity certifies that the translation introduces no error; physical accuracy is a property of the PM7 parameterization. We decouple the two by comparing our PM7 FINAL HEAT (EF-optimized, bitwise equal to the reference within the verification build pair; Table 2 and §3.1 note) with NIST experimental heats of formation (298 K gas phase):
 
+**Table 5 — PM7 FINAL HEAT vs NIST experimental heats of formation (kcal/mol).**
+
 | Molecule | PM7 (kcal/mol) | NIST | Δ | Molecule | PM7 | NIST | Δ |
 |---|---|---|---|---|---|---|---|
 | H₂O | −57.799 | −57.780 | −0.02 | CO₂ | −84.515 | −94.05 | +9.53 |
@@ -255,6 +257,8 @@ Bitwise fidelity certifies that the translation introduces no error; physical ac
 *Table 5 note: PM7 values are the EF-optimized FINAL HEAT (verification-build-pair values, bitwise identical to the reference there; EF trajectories are 1-ULP build-sensitive, §3.1/§3.2); 1SCF fixed-geometry values differ and are given in Table 2. Δ = PM7 − NIST, kcal/mol.*
 
 Errors are within the expected semiempirical range (±5–10 kcal/mol; N₂ is a known PM7 parameterization limitation). As an independent ab initio reference, we computed coupled-cluster atomization energies with a local GAMESS v2024.2.1 build [9] (10 molecules, cc-pVTZ and cc-pVQZ, RHF CCSD(T); atoms C/N/O/F/Cl as open-shell ROHF with the CR-CCSD(T)_L variant, H at ROHF where the correlation energy is zero). Electronic atomization energies De are extrapolated to the complete-basis-set (CBS) limit with the two-point Helgaker X⁻³ formula [11]; the experimental De uses NIST CODATA 298-K formation enthalpies [8,12] plus experimental zero-point energies (half-sum of fundamentals [12]), omitting the small (≈1–3 kcal/mol) 298→0 K enthalpy correction:
+
+**Table 6 — Atomization-energy comparison: CCSD(T)/CBS and PM7 vs experiment (kcal/mol).**
 
 | Molecule | De CCSD(T)/CBS | De exp. | Δ | PM7 ΔH_atom | exp. ΔH_atom | Δ(PM7) |
 |---|---|---|---|---|---|---|
@@ -343,7 +347,7 @@ We presented a complete, bitwise-verified migration of MOPAC2016 from Fortran to
 - Run (single-threaded, bitwise-comparable): `OMP_NUM_THREADS=1; MKL_NUM_THREADS=1; mopac.exe <input>.mop` (output redirected to `<input>.out`).
 - Determinism gates: `MOPAC_DSPAR` / `MOPAC_DSPAR_NB` (FBDR), `MOPAC_GAB` (GAB); all default off so the default binary is the bitwise-official path. `FULLDIAG` / `MOPAC_FULL_DIAG` (optional exact diagonalization, default off) is excluded from the L0 bitwise contract by design (§4.4). (The two-level-bucket variant of the load-balancing study of §3.6 was implemented in the study build only and is not present in the released gates.)
 - Diagnostics (each off by default; unset variables leave the numerical path unchanged): `EFPROBE` (per-cycle EF optimizer state), `EFGHEX` (hex dump of the EF-chain state), `F1PROBE` (Fock-construction probe). The ULP sensitivity scan of §3.2 is driven by an external script that perturbs the packed EF state by ±1 ULP and re-runs the executable.
-- Verification scripts: layer comparison (Hessian, eigenvectors, projected gradient, step), ULP replay (`replay_gemm`), ULP sensitivity scan, FBDR thread-independence matrix, GAB 24-molecule batch.
+- Verification: per-layer comparisons (Hessian, eigenvectors, projected gradient, step), ULP replay of disputed calls, the ULP sensitivity scan, the FBDR thread-independence matrix, and the GAB 24-molecule batch were executed as described in §2–§3; the driving scripts and raw outputs are available from the authors on request.
 
 ## Declaration of competing interests
 
@@ -355,11 +359,11 @@ During the preparation of this work the author(s) used an AI-assisted coding and
 
 ## Funding
 
-This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+This work was supported by the Basic Scientific Research Project for Higher Education Institutions (Project No. LJ212610153014) of Liaoning Provincial Department of Education.
 
 ## Data availability
 
-All data and scripts required to reproduce the results of this paper — the C++17 translation, probe builds, comparison and ULP-attribution scripts, FBDR/GAB gate implementations, GAMESS v2024.2.1 inputs and outputs, and the atomization-energy reduction scripts — are provided as supplementary material.
+The C++17 translation, its regression inputs and recorded outputs, and the FBDR/GAB gate implementations are provided in the public repository linked in the Program Summary. GAMESS v2024.2.1 inputs and outputs and the atomization-energy reduction scripts are available from the authors on request; all reduced data appear in the tables and figures.
 
 ## Acknowledgements
 
@@ -405,7 +409,7 @@ All ab initio energies were computed with a local GAMESS v2024.2.1 build [9] (WS
 | CH₂O | 363.01 | 368.94 | 373.27 |
 | CH₃OH| 497.46 | 505.29 | 511.01 |
 
-Experimental inputs (kcal/mol; NIST CODATA [8,12]): atomic ΔHf = H 52.10, C 171.29, N 112.98, O 59.56, F 18.97, Cl 28.99; molecular ΔHf = CH₄ −17.90, H₂O −57.80, NH₃ −10.98, HF −65.32, HCl −22.06, CO −26.42, N₂ 0.00, CO₂ −94.05, CH₂O −25.98, CH₃OH −48.04; experimental ZPE (half-sum of fundamentals) = CH₄ 27.10, H₂O 12.88, NH₃ 20.63, HF 5.86, HCl 4.24, CO 3.09, N₂ 3.36, CO₂ 7.17, CH₂O 16.14, CH₃OH 31.02. The 298→0 K enthalpy correction is omitted (≈1–3 kcal/mol, systematic). PM7 heats of formation are the FINAL HEAT values of the C++ port, bitwise identical to the 2016 reference at every molecule within the verification build pair (§3.1 note). Full extraction and reduction scripts (`extract_all.py`, `atomization.py`) and the per-molecule GAMESS output files are released with the paper.
+Experimental inputs (kcal/mol; NIST CODATA [8,12]): atomic ΔHf = H 52.10, C 171.29, N 112.98, O 59.56, F 18.97, Cl 28.99; molecular ΔHf = CH₄ −17.90, H₂O −57.80, NH₃ −10.98, HF −65.32, HCl −22.06, CO −26.42, N₂ 0.00, CO₂ −94.05, CH₂O −25.98, CH₃OH −48.04; experimental ZPE (half-sum of fundamentals) = CH₄ 27.10, H₂O 12.88, NH₃ 20.63, HF 5.86, HCl 4.24, CO 3.09, N₂ 3.36, CO₂ 7.17, CH₂O 16.14, CH₃OH 31.02. The 298→0 K enthalpy correction is omitted (≈1–3 kcal/mol, systematic). PM7 heats of formation are the FINAL HEAT values of the C++ port, bitwise identical to the 2016 reference at every molecule within the verification build pair (§3.1 note). Full extraction and reduction scripts and the per-molecule GAMESS output files are available from the authors on request; all reduced values are tabulated above.
 
 ## References
 
