@@ -108,7 +108,7 @@ void density_for_GPU(double* c, double fract, int ndubl, int nsingl,
         case 4:
         case 5: {  // syrk path: xmat = occ*c(:,1:ndubl)*c(:,1:ndubl)^T
             std::vector<double> xmat(norbs * norbs, 0.0);
-#if 0 // MKL temporarily off for bisection
+#if 1 // MKL dsyrk: match official density_for_GPU.F90 iopc=4/5 path
             // c is column-major (LAPACK output; column = MO).  Serial code fills
             // xmat in C-style row-major linearisation ((i,j)->(i-1)*n+(j-1)).
             // We call dsyrk COLUMN-major (reads the same K columns of c as the

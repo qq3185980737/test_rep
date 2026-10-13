@@ -305,13 +305,45 @@ L250:
         if(glow) random=0;
         for(int ii=1;ii<=mpack;++ii){ random=-random; f[ii]=h[ii]+random; }
     } else { for(int ii=1;ii<=mpack;++ii) f[ii]=h.data()[ii];; }
+    if (getenv("ITPROBE")) {
+        static FILE* _it0=nullptr;
+        if(!_it0) _it0=fopen("D:\\mopac\\cxx_itprobe.txt","a");
+        fprintf(_it0,"ITF0 niter=%d", niter);
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&f[(ii*(ii+1))/2],8);
+            fprintf(_it0," %016llX", u);
+        }
+        fprintf(_it0,"\n");
+        fflush(_it0);
+    }
 L320:
     {
         auto _b0 = std::chrono::steady_clock::now();
         if(id!=0) fock2(f,p,pa,w,w,wk,numat,nfirst,nlast,2);
         else      fock2(f,p,pa,w,w,w,numat,nfirst,nlast,2);
+        if (getenv("FALLPROBE") && niter <= 3) {
+            static FILE* _fap = nullptr;
+            if (!_fap) _fap = fopen("D:\\mopac\\cxx_fallprobe.txt", "a");
+            fprintf(_fap, "FALL-CXX niter=%d\n", niter);
+            for (int ii = 1; ii <= mpack; ++ii) {
+                unsigned long long u; std::memcpy(&u, &f[ii], 8);
+                fprintf(_fap, "%016llX\n", u);
+            }
+            fflush(_fap);
+        }
         _tf2 += std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - _b0).count();
+    }
+    if (getenv("ITPROBE")) {
+        static FILE* _itf=nullptr;
+        if(!_itf) _itf=fopen("D:\\mopac\\cxx_itprobe.txt","a");
+        fprintf(_itf,"ITF niter=%d", niter);
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&f[(ii*(ii+1))/2],8);
+            fprintf(_itf," %016llX", u);
+        }
+        fprintf(_itf,"\n");
+        fflush(_itf);
     }
     if (diis_on && !getout) {
         // DIIS residual uses the OLD density (the one F_n was built from):
@@ -467,6 +499,28 @@ L540:
         }
         if(prtvec){ j=uhf?2:1; matout(cflat,eigs,norbs,norbs,norbs); }
     }
+    if (getenv("ITPROBE")) {
+        static FILE* _ite=nullptr;
+        if(!_ite) _ite=fopen("D:\\mopac\\cxx_itprobe.txt","a");
+        fprintf(_ite,"ITE niter=%d", niter);
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&eigs[ii],8);
+            fprintf(_ite," %016llX", u);
+        }
+        fprintf(_ite,"\n");
+        fflush(_ite);
+    }
+    if (getenv("ITPROBE") && niter==1) {
+        static FILE* _c1=nullptr;
+        if(!_c1) _c1=fopen("D:\\mopac\\cxx_c1probe.txt","a");
+        fprintf(_c1,"C1-CXX\n");
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&cflat[(1-1)*norbs+(ii-1)],8);
+            fprintf(_c1," %016llX", u);
+        }
+        fprintf(_c1,"\n");
+        fflush(_c1);
+    }
     if(ifill!=0) swap(cflat,norbs,norbs,na2el,ifill);
     if(uhf){
         density_for_GPU(cflat,fract,nalpha,nalpha_open,1.0,mpack,norbs,1,pa,iopc_calcp);
@@ -478,6 +532,17 @@ L540:
         _tdens += std::chrono::duration_cast<std::chrono::microseconds>(
                       std::chrono::steady_clock::now() - _b4).count();
         if(modea!=3 && !(newdg && okpuly)) cnvg(p,pold,pold2,niter,pl);
+    }
+    if (getenv("ITPROBE") && niter==1) {
+        static FILE* _p1=nullptr;
+        if(!_p1) _p1=fopen("D:\\mopac\\cxx_p1probe.txt","a");
+        fprintf(_p1,"P1-CXX\n");
+        for(int ii=1; ii<=mpack; ++ii){
+            unsigned long long u; std::memcpy(&u,&p[ii],8);
+            fprintf(_p1," %016llX", u);
+        }
+        fprintf(_p1,"\n");
+        fflush(_p1);
     }
     if(uhf){
         if(niter>2 && camkin && makeb){

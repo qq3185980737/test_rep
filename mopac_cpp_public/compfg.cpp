@@ -234,6 +234,19 @@ void compfg(const std::vector<double>& xparam, bool int_flag, double& escf,
       atheat = sum + atheat;
     }
     if (times) timer("BEFORE ITER");
+    if (std::getenv("EFPROBE") != nullptr) {
+        FILE* pf = std::fopen("D:\\mopac\\cxx_hprobe.txt", "a");
+        if (pf) {
+            int np = norbs * (norbs + 1) / 2;
+            std::fprintf(pf, "HCMP-CXX mpack=%d\n", np);
+            for (int ii = 1; ii <= np; ++ii) {
+                unsigned long long hh;
+                std::memcpy(&hh, &h[ii], sizeof(double));
+                std::fprintf(pf, "%016llX\n", hh);
+            }
+            std::fclose(pf);
+        }
+    }
     if (int_flag) {
       auto _b1 = std::chrono::steady_clock::now();
       if (mozyme) {

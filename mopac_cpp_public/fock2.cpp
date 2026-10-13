@@ -136,7 +136,7 @@ void fock1dorbs(std::vector<double>& f, const std::vector<double>& ptot,
                     int ikw = (im * (im - 1)) / 2 + jm;
                     im = std::max(lw, iw); jm = std::min(lw, iw);
                     int jlw = (im * (im - 1)) / 2 + jm;
-                    sum += ptot[ijp] * w[ijw + (klw - 1) * ilim] -
+                    sum = sum + ptot[ijp] * w[ijw + (klw - 1) * ilim] -
                            pa[ijp] * w[ikw + (jlw - 1) * ilim];
                 }
             }
@@ -265,7 +265,7 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
                     f_out[j1] += ptot[ll] * w[kk + k];
                     sumdia += ptot[j1] * w[kk + k];
                 }
-                f_out[ll] += sumoff * 2.0 + sumdia;
+                f_out[ll] = f_out[ll] + sumoff * 2.0 + sumdia;
                 k = 0;
                 for (int i = ia; i <= ib; ++i) {
                     int i1 = ifact[i] + ja;
@@ -299,7 +299,7 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
                     f_out[j1] += ptot[ll] * w[kk + k];
                     sumdia += ptot[j1] * w[kk + k];
                 }
-                f_out[ll] += sumoff * 2.0 + sumdia;
+                f_out[ll] = f_out[ll] + sumoff * 2.0 + sumdia;
                 k = ifact[ia] + ja;
                 int j = 0;
                 for (int i = k; i <= k + 3; ++i) {
@@ -468,6 +468,18 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
             for (int b = 1; b <= ilim; ++b)
                 for (int a = 1; a <= ilim; ++a)
                     wsub[a + (b - 1) * ilim] = w[kk + (a - 1) + (b - 1) * ilim + 1];
+            if (getenv("F1PROBE") && ii == 13) {
+                static FILE* _f1p = nullptr;
+                if (!_f1p) _f1p = fopen("D:\\mopac\\cxx_f1probe.txt", "a");
+                unsigned long long u; std::memcpy(&u, &f[1326], 8);
+                fprintf(_f1p, "F1PRE ii=13 f51=%016llX\n", u);
+                fprintf(_f1p, "WSUB-CXX ii=13\n");
+                for (int a = 1; a <= 100; ++a) {
+                    std::memcpy(&u, &wsub[a], 8);
+                    fprintf(_f1p, "%016llX\n", u);
+                }
+                fflush(_f1p);
+            }
             fock1dorbs(f, ptot, p, molkst_C::mpack, wsub, kk, ia, ib, ilim);
         }
     }

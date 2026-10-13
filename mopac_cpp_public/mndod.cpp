@@ -7,6 +7,8 @@
 #include <cmath>
 #include <vector>
 #include <cstring>
+extern double libm_exp(double);
+extern "C" double exp_ftn(double);
 namespace mndod_C {
 extern std::vector<std::vector<int>> indexd, indx, ind2;
 extern std::vector<int> isym;
@@ -929,7 +931,7 @@ double rsc(int k,int na,double ea,int nb,double eb,int nc,double ec,int nd,doubl
     int n=nab+ncd;
     double ae=std::log(e), a2=std::log(2.0), acd=std::log(ecd), aab=std::log(eab);
     double ff=fx[n]/std::sqrt(fx[2*na+1]*fx[2*nb+1]*fx[2*nc+1]*fx[2*nd+1]);
-    double c=ev*ff*std::exp(na*aea+nb*aeb+nc*aec+nd*aed+0.5*(aea+aeb+aec+aed)+a2*(n+2)-ae*n);
+    double c=ev*ff*exp_ftn(na*aea+nb*aeb+nc*aec+nd*aed+0.5*(aea+aeb+aec+aed)+a2*(n+2)-ae*n);
     double s0=1.0/e, s1=0.0, s2=0.0;
     int m=ncd-k;
     for(int i=1;i<=m;++i){
@@ -941,7 +943,7 @@ double rsc(int k,int na,double ea,int nb,double eb,int nc,double ec,int nd,doubl
         s0=s0*e/ecd;
         s2+=s0*b[m2][i]/b[n][i];
     }
-    double s3=std::exp(ae*n-acd*m2-aab*(nab-k))/b[n][m2];
+    double s3=exp_ftn(ae*n-acd*m2-aab*(nab-k))/b[n][m2];
     return c*(s1-s2+s3);
 }
 namespace mndod_C {

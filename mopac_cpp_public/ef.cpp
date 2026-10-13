@@ -10,6 +10,8 @@
 #include <cmath>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -1412,6 +1414,7 @@ void ef(std::vector<double>& xparam, double& funct) {
               dmax, ddmax, ddmin, tol2, time1, time2, nvar, scf1, lupd, ldump,
               rrscal, donr, hesinv, bmat, pmat, grad, oldf, d, vmode);
         if (moperr) goto L1100;
+        std::printf("EFDBG mxstep=%d keywrd=[%s] find=%d\n", mxstep, keywrd.c_str(), (int)keywrd.find(" CYCLES="));
         if (old) iloop = -1;
         let = (keywrd.find(" LET") != std::string::npos);
         saddle = (keywrd.find(" SADDLE") != std::string::npos);
@@ -1424,6 +1427,19 @@ void ef(std::vector<double>& xparam, double& funct) {
     time1 = second(1);
     compfg(xparam, true, funct, true, grad, true);
     if (moperr) goto L1100;
+    {   // EFG-C1 probe: cycle-1 gradient (first 10) + funct, hex
+        unsigned char* pb = (unsigned char*)&funct;
+        std::fprintf(stderr, "EFG-C1 funct=");
+        for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pb[q]);
+        std::fprintf(stderr, "\n");
+        for (int qi = 1; qi <= 10 && qi <= nvar; ++qi) {
+            unsigned char* pg = (unsigned char*)&grad[qi];
+            std::fprintf(stderr, "EFG-C1 g%d=", qi);
+            for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pg[q]);
+            std::fprintf(stderr, "\n");
+        }
+        std::fflush(stderr);
+    }
     olde = funct;
     nflush = 1;
     absmin = 1.0e9;
@@ -1493,7 +1509,7 @@ void ef(std::vector<double>& xparam, double& funct) {
         tleft = tleft - tstep;
         if (tleft < 0.0) tleft = -0.1;
         time1 = time2;
-        if (tleft < (tstep - (t_hess2 - t_hess1)) * 2.0) goto L1030;
+        if (tleft < (tstep - (t_hess2 - t_hess1)) * 2.0) { std::printf("EFDBG tleft=%.6f tstep=%.6f dhess=%.6f\n", tleft, tstep, t_hess2-t_hess1); goto L1030; }
         if ((!saddle && tstep > 0.5) || first_time) {
             prttim(tleft, tprt, txt);
             if (ldump == 0) {
@@ -1586,6 +1602,16 @@ void ef(std::vector<double>& xparam, double& funct) {
                         ++ij;
                     }
             rsp(rsp_in.data(), nvar, rsp_root.data(), rsp_vec.data());
+            if (std::getenv("EFGHEX")) {
+                std::fprintf(stderr, "RSPIN-C\n");
+                for (int qi2 = 0; qi2 < 20; ++qi2) {
+                    unsigned char* ph = (unsigned char*)&rsp_in[qi2];
+                    std::fprintf(stderr, "RSPIN-C %d=", qi2);
+                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", ph[q]);
+                    std::fprintf(stderr, "\n");
+                }
+                std::fflush(stderr);
+            }
                 for (i = 1; i <= nvar; ++i) {
                     eigval[i] = rsp_root[i - 1];
                     for (j = 1; j <= nvar; ++j)
@@ -1602,7 +1628,81 @@ void ef(std::vector<double>& xparam, double& funct) {
                     u[j + (i - 1) * nvar] = u[ij];
                     --ij;
                 }
+            // GAB: gradient-aligned degenerate basis (gated by MOPAC_GAB; off by
+            // default). After diagonalization, rotate the degenerate columns
+            // (|eigval| < 1e-6, already zeroed above) so that the first basis
+            // vector of the degenerate subspace is the normalized projection of
+            // the gradient onto it (g_D = U_D^T g); the remaining columns are
+            // completed deterministically (Householder reflector, equivalent to
+            // greedy Gram-Schmidt) and the block re-orthonormalized. The basis
+            // is therefore a deterministic function of (eigenvectors, gradient).
+            // With the gate unset the numerical path is bitwise unchanged.
+            if (std::getenv("MOPAC_GAB")) {
+                std::vector<int> deg;
+                for (i = 1; i <= nvar; ++i)
+                    if (eigval[i] == 0.0) deg.push_back(i);
+                const int m = (int)deg.size();
+                if (m >= 2) {
+                    std::vector<double> gD(m + 1, 0.0);
+                    for (int a = 1; a <= m; ++a) {
+                        const int col = deg[a - 1];
+                        gD[a] = ddot(nvar, u.data() + 1 + (col - 1) * nvar, 1,
+                                     &grad[1], 1);
+                    }
+                    const double gn =
+                        std::sqrt(ddot(m, &gD[1], 1, &gD[1], 1));
+                    if (gn > 1.0e-12) {
+                        for (int a = 1; a <= m; ++a) gD[a] /= gn;
+                        // Householder reflector Q with Q^T gD = e1:
+                        //   w = gD - s*e1, s = sign(gD[1]); Q = I - 2 w w^T/(w^T w)
+                        std::vector<double> w(m + 1, 0.0);
+                        const double sgn = (gD[1] >= 0.0 ? 1.0 : -1.0);
+                        for (int a = 1; a <= m; ++a) w[a] = gD[a];
+                        w[1] -= sgn;
+                        const double ww = ddot(m, &w[1], 1, &w[1], 1);
+                        if (ww > 0.0) {
+                            // U_D' = U_D * Q:
+                            //   u(:,deg[a]) -= (2/ww) * w[a] * (U_D * w)
+                            std::vector<double> t(nvar + 1, 0.0);
+                            for (int r = 1; r <= nvar; ++r) {
+                                double acc = 0.0;
+                                for (int a = 1; a <= m; ++a) {
+                                    const int col = deg[a - 1];
+                                    acc += u[r + (col - 1) * nvar] * w[a];
+                                }
+                                t[r] = (2.0 / ww) * acc;
+                            }
+                            for (int a = 1; a <= m; ++a) {
+                                const int col = deg[a - 1];
+                                for (int r = 1; r <= nvar; ++r)
+                                    u[r + (col - 1) * nvar] -= t[r] * w[a];
+                            }
+                            // Modified Gram-Schmidt over the degenerate block
+                            // (deterministic order), enforcing orthonormality.
+                            for (int a = 1; a <= m; ++a) {
+                                const int col = deg[a - 1];
+                                for (int b = 1; b < a; ++b) {
+                                    const int cb = deg[b - 1];
+                                    const double ov = ddot(
+                                        nvar, u.data() + 1 + (cb - 1) * nvar, 1,
+                                        u.data() + 1 + (col - 1) * nvar, 1);
+                                    for (int r = 1; r <= nvar; ++r)
+                                        u[r + (col - 1) * nvar] -=
+                                            ov * u[r + (cb - 1) * nvar];
+                                }
+                                const double nrm = std::sqrt(ddot(
+                                    nvar, u.data() + 1 + (col - 1) * nvar, 1,
+                                    u.data() + 1 + (col - 1) * nvar, 1));
+                                if (nrm > 0.0)
+                                    for (int r = 1; r <= nvar; ++r)
+                                        u[r + (col - 1) * nvar] /= nrm;
+                            }
+                        }
+                    }
+                }
+            }
             if (iprnt >= 3) prthes(eigval, nvar, hesinv, u);
+            std::fprintf(stderr, "EFM-C mxstep=%d nstep=%d iprnt=%d\n", mxstep, nstep, iprnt); std::fflush(stderr);
             if (mxstep == 0) {
                 nstep = 0;
                 goto L1030;
@@ -1621,6 +1721,19 @@ void ef(std::vector<double>& xparam, double& funct) {
                 fx[i] = ddot(nvar, u.data() + 1 + (i - 1) * nvar, 1,
                              &grad[1], 1);
                 if (std::abs(eigval[i]) == 0.0) fx[i] = 0.0;
+            }
+            if (std::getenv("EFGHEX")) {
+                std::fprintf(stderr, "EFX-C nstep=%d\n", nstep);
+                for (int qi2 = 1; qi2 <= nvar; ++qi2) {
+                    unsigned char* pf = (unsigned char*)&fx[qi2];
+                    std::fprintf(stderr, "EFX-C fx%d=", qi2);
+                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pf[q]);
+                    std::fprintf(stderr, " ev%d=", qi2);
+                    unsigned char* pe = (unsigned char*)&eigval[qi2];
+                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pe[q]);
+                    std::fprintf(stderr, "\n");
+                }
+                std::fflush(stderr);
             }
             for (;;) {
                 formd(eigval, fx, nvar, dmax, ddmin, lts, lorjk, rrscal, donr,
@@ -1658,11 +1771,31 @@ void ef(std::vector<double>& xparam, double& funct) {
                     }
                 } else {
                     for (i = 1; i <= nvar; ++i) d[i] = d[i] * cos_const;
+                    if (std::getenv("EFGHEX")) {
+                        std::fprintf(stderr, "EFD-C nstep=%d\n", nstep);
+                        for (int qi2 = 1; qi2 <= 5 && qi2 <= nvar; ++qi2) {
+                            unsigned char* pd = (unsigned char*)&d[qi2];
+                            std::fprintf(stderr, "EFD-C d%d=", qi2);
+                            for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pd[q]);
+                            std::fprintf(stderr, "\n");
+                        }
+                        std::fflush(stderr);
+                    }
                     for (i = 1; i <= nvar; ++i) {
                         xparam[i] = xparam[i] + d[i];
                         k = loc[1][i];
                         l = loc[2][i];
                         geo[l][k] = xparam[i];
+                    }
+                    if (std::getenv("EFGHEX")) {
+                        std::fprintf(stderr, "EFX2-C nstep=%d\n", nstep);
+                        for (int qi2 = 1; qi2 <= nvar; ++qi2) {
+                            unsigned char* px = (unsigned char*)&xparam[qi2];
+                            std::fprintf(stderr, "EFX2-C x%d=", qi2);
+                            for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", px[q]);
+                            std::fprintf(stderr, "\n");
+                        }
+                        std::fflush(stderr);
                     }
                     if (ndep != 0) symtry();
                     depre = 0.0;
@@ -1681,6 +1814,13 @@ void ef(std::vector<double>& xparam, double& funct) {
                     for (i = 1; i <= nvar; ++i) grad[i] = 0.0;
                     compfg(xparam, true, funct, true, grad, true);
                     if (moperr) goto L1100;
+                    if (std::getenv("EFGHEX")) {
+                        unsigned char* pb = (unsigned char*)&funct;
+                        std::fprintf(stderr, "EFG-C%d funct=", nstep);
+                        for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pb[q]);
+                        std::fprintf(stderr, "\n");
+                        std::fflush(stderr);
+                    }
                     deact = funct - olde;
                     if (depre == 0.0) {
                         std::printf(" CALCULATION IS TERMINATED TO AVOID ZERO DIVIDE\n");
