@@ -10,7 +10,11 @@
 
 ## Abstract
 
-Semiempirical molecular-orbital methods such as PM7 solve the self-consistent-field (SCF) problem by repeated diagonalization of the Fock matrix. The reference MOPAC2016 implementation uses a traditional pairwise-rotation (Jacobi) eigensolver as its default SCF path, whereas modern LAPACK divide-and-conquer solvers (`dsyevd`) are substantially faster on dense matrices. We report a controlled study of this trade-off in MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016 in which the official pseudo-diagonalization path is preserved bit-for-bit and an exact-diagonalization mode (FULLDIAG) is added as an opt-in gate. For non-degenerate systems the two paths differ by only ≈2×10⁻⁴ kcal/mol in the single-point energy — at the level of floating-point rounding — and converge to mathematically equivalent optimized geometries (hexadecane ΔHf = −90.18 kcal/mol vs. NIST experimental −89.60). For a near-degenerate 122-atom alkane (C₄₀H₈₂), the pseudo-diagonalization path exhibits SCF/optimization divergence while the exact path converges stably. In a C₈₀H₁₆₂ PULAY-accelerated single point the exact path is 2.1–3.6× faster than the pseudo path. We frame the choice as a three-way trade-off between bitwise fidelity, convergence robustness, and performance, and give concrete guidance on when each path should be used.
+Semiempirical methods such as PM7 solve the self-consistent-field (SCF) problem by repeated diagonalization of the Fock matrix. The reference MOPAC2016 implementation uses a pairwise-rotation (Jacobi) eigensolver as its default SCF path, whereas modern LAPACK divide-and-conquer solvers are substantially faster. We study this trade-off in MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016: the official pseudo-diagonalization path is preserved bit-for-bit, and an exact-diagonalization gate (FULLDIAG) is added. The two paths differ by only ≈2×10⁻⁴ kcal/mol on non-degenerate systems and converge to equivalent optimized geometries; for a near-degenerate 122-atom alkane the pseudo path diverges while the exact path converges stably, and on a large alkane single point the exact path is 2.1–3.6× faster. This defines a three-way fidelity–robustness–performance trade-off.
+
+## Graphical table of contents (75 words, for submission)
+
+Replacing the pairwise-rotation (pseudo-)eigensolver of a bitwise-faithful MOPAC2016 C++ translation with an opt-in LAPACK divide-and-conquer diagonalization costs only ≈2×10⁻⁴ kcal/mol on non-degenerate systems, rescues SCF convergence on a near-degenerate 122-atom alkane, and accelerates large single points by 2.1–3.6×, quantifying a three-way fidelity–robustness–performance trade-off.
 
 ## 1. Introduction
 
@@ -118,12 +122,12 @@ The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all 
 
 ## References
 
-[1] W. Thiel, Semiempirical quantum-chemical methods, Wiley Interdiscip. Rev.: Comput. Mol. Sci. 4 (2) (2014) 145–157. https://doi.org/10.1002/wcms.1161
-[2] J. J. P. Stewart, Application of the PM6 method to modeling the solid state, J. Mol. Model. 14 (2008) 499–535.
-[3] J. J. P. Stewart, MOPAC: A semiempirical molecular orbital program, J. Comput.-Aided Mol. Des. 4 (1990) 1–103.
-[4] MOPAC2016 DOI: https://doi.org/10.5281/zenodo.6511958
-[5] J. J. P. Stewart, Optimization of parameters for semiempirical methods VI: more modifications to the NDDO approximations and re-optimization of parameters, J. Mol. Model. 19 (2013) 1–32. https://doi.org/10.1007/s00894-012-1667-x
-[6] J. J. P. Stewart, Optimization of parameters for semiempirical methods V: modification of NDDO approximations and application to 70 elements, J. Mol. Model. 13 (12) (2007) 1173–1213. https://doi.org/10.1007/s00894-007-0233-4
-[7] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, Development and use of quantum mechanical molecular models. 76. AM1: a new general purpose quantum mechanical molecular model, J. Am. Chem. Soc. 107 (13) (1985) 3902–3909. https://doi.org/10.1021/ja00299a024
-[8] Y. Liu, X. Wang, Bitwise-Reproducibility Verification and Deterministic Numerical Methods for Scientific-Software Migration, with a Full MOPAC2016 (Fortran to C++) Case Study, Comput. Phys. Commun. (submitted).
-[9] P. Pulay, Convergence acceleration of iterative sequences. The case of SCF iteration, Chem. Phys. Lett. 73 (2) (1980) 393–398. https://doi.org/10.1016/0009-2614(80)80396-4
+[1] W. Thiel, Wiley Interdiscip. Rev.: Comput. Mol. Sci. 2014, 4, 145.
+[2] J. J. P. Stewart, J. Mol. Model. 2008, 14, 499.
+[3] J. J. P. Stewart, J. Comput.-Aided Mol. Des. 1990, 4, 1.
+[4] J. J. P. Stewart, MOPAC2016, https://doi.org/10.5281/zenodo.6511958 (accessed: October 2026).
+[5] J. J. P. Stewart, J. Mol. Model. 2013, 19, 1.
+[6] J. J. P. Stewart, J. Mol. Model. 2007, 13, 1173.
+[7] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, J. Am. Chem. Soc. 1985, 107, 3902.
+[8] Y. Liu, X. Wang, unpublished.
+[9] P. Pulay, Chem. Phys. Lett. 1980, 73, 393.

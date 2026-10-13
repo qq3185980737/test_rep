@@ -13,7 +13,7 @@
 
 ## Abstract
 
-MOPAC2016 is one of the most widely used semiempirical molecular-orbital programs, and its Fortran implementation has served as the reference for PM7 and related NDDO methods for decades. We present MOPAC-CPP, a complete translation of the MOPAC2016 package (679 Fortran source files, ≈120,000 lines) into C++17. The translation is deliberately a *faithful port, not a rewrite*: variable names, array dimensions, initial values, and 1-based indexing semantics are preserved from the Fortran source so that every function remains auditable line-by-line against the original. On the nominal numerical path, the C++ build is bitwise identical to the official MOPAC2016 executable — verified on 18 small molecules in single-point mode and on geometry-optimization trajectories within the verification build pair, on 320/320 released-regression inputs, and across configuration-interaction, dynamic-reaction-coordinate, and multi-Hamiltonian (PM7/PM6/RM1) trajectories. The package also ships reproducibility gates that keep this fidelity while enabling parallelism: a fixed-bucket deterministic parallel Fock reduction (FBDR), a deterministic degenerate-basis choice for the optimizer (GAB), and an optional LAPACK exact-diagonalization mode for large systems, together with a first-line performance improvement of 1.85–2.5× over the reference binary on the same machine. MOPAC-CPP is released under the MIT license with its full test suite, verification scripts, and documentation.
+MOPAC2016 is one of the most widely used semiempirical molecular-orbital programs, and its Fortran implementation has served as the reference for the PM7 and related NDDO methods for decades. We present MOPAC-CPP, a complete translation of the MOPAC2016 package (679 Fortran source files, ≈120,000 lines) into C++17. The translation is deliberately a faithful port, not a rewrite: names, dimensions, initial values, and 1-based indexing are preserved so every function remains auditable. On the nominal numerical path, the C++ build is bitwise identical to the official MOPAC2016 executable, verified on 18 small molecules in single-point mode, on 320/320 released-regression inputs, and across CI, DRC, and multi-Hamiltonian (PM7/PM6/RM1) trajectories, with geometry-optimization trajectories identical within the verification build pair. The package also ships reproducibility gates that keep this fidelity while enabling parallelism: a fixed-bucket deterministic parallel Fock reduction (FBDR), a deterministic degenerate-basis choice for the optimizer (GAB), and an optional LAPACK exact-diagonalization mode for large systems, and a first-line performance improvement of 1.85–2.5× over the reference binary. MOPAC-CPP is released under the MIT license with its full test suite and verification scripts.
 
 ---
 
@@ -117,6 +117,14 @@ The authors declare that they have no known competing financial interests or per
 ## Acknowledgements
 
 This work has been financially supported by the Basic Scientific Research Project for Higher Education Institutions (Project No. LJ212610153014) of Liaoning Provincial Department of Education. The authors thank the MOPAC development community for the open-source release of the reference code, and the GAMESS project for the ab initio reference software used for the physical benchmarks.
+
+## Code availability
+
+The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`). All input decks and recorded outputs used in the verification reported here are included in the repository, and the repository is archived on Zenodo with a DOI (https://doi.org/10.5281/zenodo.6511958 is the DOI of the reference MOPAC2016 archive; the MOPAC-CPP archive DOI will be added at acceptance). No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain.
+
+## CRediT authorship contribution statement
+
+**Yang Liu:** Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing – original draft, Visualization. **Xun Wang:** Conceptualization, Supervision, Resources, Funding acquisition, Writing – review & editing.
 
 ## References
 
