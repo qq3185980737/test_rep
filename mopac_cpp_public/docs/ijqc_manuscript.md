@@ -50,7 +50,7 @@ The exact path uses the LAPACK divide-and-conquer symmetric eigensolver `dsyevd`
 
 ### 2.4 The FULLDIAG gate in MOPAC-CPP
 
-MOPAC-CPP is a 1-based, line-auditable C++17 translation of the 679-file MOPAC2016 source [8]. Its default SCF path is bitwise identical to the official binary (verified on 320/320 released-regression inputs and 10 molecules in both single-point and geometry-optimization modes). The exact-diagonalization mode is exposed as an opt-in gate:
+MOPAC-CPP is a 1-based, line-auditable C++17 translation of the 679-file MOPAC2016 source [8]. Its default SCF path is bitwise identical to the official binary (verified on 320/320 released-regression inputs and on 18 small molecules in single-point mode, with geometry-optimization trajectories identical within the verification build pair). The exact-diagonalization mode is exposed as an opt-in gate:
 
 - input keyword: `PM7 FULLDIAG 1SCF` (or any deck containing `FULLDIAG`), or
 - environment variable: `set MOPAC_FULL_DIAG=1`
@@ -61,7 +61,7 @@ Both are equivalent. When the gate is off — the default — the binary follows
 
 ### 3.1 Fidelity of the default path
 
-With the FULLDIAG gate off, MOPAC-CPP reproduces the official MOPAC2016 binary bit-for-bit on the nominal path: 320/320 released-regression single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄ in both 1SCF and EF-optimized modes [8]. All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
+With the FULLDIAG gate off, MOPAC-CPP reproduces the official MOPAC2016 binary bit-for-bit on the nominal path: 320/320 released-regression single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair [8]. All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
 
 ### 3.2 Energy difference on non-degenerate systems
 
