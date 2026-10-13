@@ -5,7 +5,7 @@
 **Authors:** Yang Liu^a, Xun Wang^b,*
 
 ^a ^b Shenyang Jianzhu University, Shenyang, China
-*Corresponding author.
+*Corresponding author: wangxun71@aliyun.com (X. Wang); liuyang123@stu.sjzu.edu.cn (Y. Liu)
 
 **Keywords:** semiempirical quantum chemistry; PM7; Fortran-to-C++ migration; bitwise reproducibility; scientific software; molecular dynamics
 

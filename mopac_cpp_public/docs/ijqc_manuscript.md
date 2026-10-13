@@ -1,8 +1,8 @@
 # Pseudo- versus exact diagonalization in semiempirical SCF calculations: a performance–robustness–fidelity trade-off study on the MOPAC2016 C++ translation
 
-**Yang Liu, Xun Wang\***
-*Shenyang Jianzhu University, Shenyang, China*
-*\*Corresponding author*
+**Yang Liu^a, Xun Wang^a,\***
+^a *Shenyang Jianzhu University, Shenyang, China*
+*\*Corresponding author: wangxun71@aliyun.com (X. Wang); liuyang123@stu.sjzu.edu.cn (Y. Liu)*
 
 **Keywords:** semiempirical methods; PM7; SCF convergence; diagonalization; LAPACK; reproducible computing
 
