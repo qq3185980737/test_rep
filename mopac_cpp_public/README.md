@@ -16,11 +16,12 @@ deterministic methods (FBDR, GAB) described therein.
 - A **faithful port, not a rewrite**: variable names, array dimensions, initial
   values, and 1-based indexing semantics are preserved from the Fortran source, so
   the C++ is auditable line-by-line against the original.
-- **Bitwise fidelity on the nominal path**: for ten small molecules
-  (NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄) the FINAL HEAT of formation is
-  bitwise identical to the official MOPAC2016 executable in both single-point (1SCF)
-  and geometry-optimization modes, and across CI, DRC, and multi-Hamiltonian
-  (PM7/PM6/RM1) trajectories.
+- **Bitwise fidelity on the nominal path**: the C++ port is bitwise identical to
+  the reference for eighteen small molecules in single-point mode — 320/320
+  fixed-geometry single-point runs with zero exceptions, covering nine elements
+  (H, C, N, O, F, Cl, S, P, Si) and both closed-shell RHF and open-shell UHF —
+  and across SCF, configuration-interaction, dynamic-reaction-coordinate, and
+  multi-Hamiltonian (PM7/PM6/RM1) trajectories.
 - **The reference is the official MOPAC2016 binary** (Intel ifort + MKL, Windows x64),
   built from the original 2016 Fortran sources. The C++ translation is validated
   against it; it is *not* validated against later MOPAC releases (v22/v23), whose
@@ -75,25 +76,30 @@ keyword and the `MOPAC_FULL_DIAG` variable are equivalent and interchangeable.
 
 With all variables unset the binary is bitwise identical to the official path.
 
-## Verification scripts
+## Verification suite
 
-- `scripts/compare_layer*` — per-layer bitwise comparison (Hessian, eigenvectors,
-  projected gradient, step)
-- `scripts/replay_gemm` — ULP replay of the disputed `dgemm` call (L2 adjudication)
-- `scripts/ulp_scan*` — ULP trajectory-sensitivity scan (88 runs used for Fig. 2)
-- `scripts/fbdr_matrix` — FBDR thread-independence matrix (1/4/16 threads)
-- `scripts/gab_batch` — GAB 16-molecule bitwise regression
+- `tests/` — input decks for the paper's validation molecules (eighteen small
+  molecules, the C₁₂H₂₆ ULP-scan family, C₄₀H₈₂/C₈₀H₁₆₂/C₁₂₀H₂₄₂ performance
+  set, COSMO regression molecules, and the FBDR/GAB test drivers).
+- `run_test/` — auxiliary analysis scripts (trajectory, energy, and distance
+  parsers; ULP-scan and COSMO regressions) together with run inputs and
+  reference outputs.
+- Layer-level comparisons (Hessian, eigenvectors, projected gradient, step),
+  the ULP replay of disputed `dgemm` calls, the FBDR thread-independence matrix
+  (1/4/8/16 threads), and the GAB 24-molecule regression were executed during
+  the verification campaign; their inputs and recorded outputs are provided
+  under `run_test/`, and the procedures are described in the manuscript.
 
-Input decks and expected outputs used in the paper (10 molecules + C₁₂H₂₆ scan)
-are in `tests/`.
+The GAMESS CCSD(T)/CBS benchmark data cited in the paper are summarized in the
+manuscript (Fig. 3 and §3.5); the full input/output files are available from the
+authors on request.
 
 ## License
 
 MIT (see `LICENSE`). This is an independent translation project; it is not
 endorsed by, and is not affiliated with, the MOPAC authors or the MOPAC project.
 MOPAC2016 is © its original authors; the Fortran reference remains governed by its
-own terms. The GAMESS ab initio benchmark data referenced in the paper are
-reproducible from the released input/output files under `benchmarks/`.
+own terms.
 
 ## Citation
 
