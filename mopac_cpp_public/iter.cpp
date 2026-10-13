@@ -479,7 +479,7 @@ L540:
         if(newdg){
             if(okpuly && makea && iredy>1)
                 pulay(f,pa,norbs,pold,pold2,pold3,jalp,ialp,6*mpack,frst,pl);
-            if(halfe||camkin||getenv("MOPAC_FULL_DIAG")!=nullptr) eigenvectors_LAPACK(cflat,f,eigs,norbs);
+            if(halfe||camkin||getenv("MOPAC_FULL_DIAG")!=nullptr||keywrd.find(" FULLDIAG")!=std::string::npos) eigenvectors_LAPACK(cflat,f,eigs,norbs);
             else { auto _b2 = std::chrono::steady_clock::now();
             diag_for_GPU(f,cflat,na1el,eigs,norbs,mpack);
             _tdiag += std::chrono::duration_cast<std::chrono::microseconds>(

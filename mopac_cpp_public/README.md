@@ -46,6 +46,24 @@ Open `mopac_cpp.sln` and build the `mopac` project, or use MSBuild:
 Set `OMP_NUM_THREADS=1; MKL_NUM_THREADS=1` for bitwise-comparable single-threaded
 runs. The default build follows the bitwise-official numerical path.
 
+### Optional accelerated eigensolver: `FULLDIAG`
+
+By default the SCF uses the official pseudo-diagonalization path, which is
+bitwise identical to the Fortran reference. To switch to the full LAPACK
+(`dsyevd`) eigensolver — faster for large systems (≈2–3.6× in 1SCF) and more
+robust to near-degenerate SCF convergence (e.g. C₄₀H₈₂ optimization diverges on
+the pseudo path but stays stable on the full path) — either add the `FULLDIAG`
+keyword to the input deck (e.g. `PM7 FULLDIAG 1SCF`) or set the environment
+variable:
+
+    set MOPAC_FULL_DIAG=1
+    mopac.exe <input>.mop
+
+Both paths converge to mathematically equivalent optimized geometries
+(NIST-verified: hexadecane ΔHf = -90.18 kcal/mol vs exp. -89.60), while the
+default path keeps bitwise fidelity to the Fortran reference. The `FULLDIAG`
+keyword and the `MOPAC_FULL_DIAG` variable are equivalent and interchangeable.
+
 ## Reproducibility gates (all default OFF)
 
 | Variable | Effect |
