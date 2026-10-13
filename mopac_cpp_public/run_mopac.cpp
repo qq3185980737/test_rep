@@ -534,6 +534,7 @@ void run_mopac() {
       goto LendBody;                  // F90: go to 100
     }
     if (maxtxt == 26) compare_txtatm(moperr, moperr);
+    std::fprintf(stderr, "RMB-DBG after-read moperr=%d errtxt=[%s] mozyme=%d\n", (int)moperr, errtxt.c_str(), (int)mozyme); std::fflush(stderr);
     if (moperr) {
       if (keywrd.find(" GEO-OK") != std::string::npos) {
         moperr = false;
@@ -550,6 +551,7 @@ void run_mopac() {
     setup_mopac_arrays(1, 2);
     iseps = (keywrd.find(" EPS=") != std::string::npos);
     if (moperr) goto LendBody;        // F90: goto 100
+    std::fprintf(stderr, "RMB-DBG2 post-setup moperr=%d errtxt=[%s] nvar=%d latom=%d\n", (int)moperr, errtxt.c_str(), nvar, latom); std::fflush(stderr);
     nw.resize(numat + 1);   // 1-based indices nw[1..numat]
     l = 1;
     for (i = 1; i <= numat; ++i) {
@@ -614,10 +616,10 @@ void run_mopac() {
     // Dispatch to the requested calculation type
     //
     if (std::getenv("MOZRUN")) { std::fprintf(stderr, "MOZRUN-C dispatch\n"); std::fflush(stderr); }
+    std::fprintf(stderr, "RMB-DISP dispatch keywrd=[%s]\n", keywrd.c_str()); std::fflush(stderr);
     if (keywrd.find(" SADDLE") != std::string::npos) {
       to_screen(" Transition state geometry calculated using SADDLE");
-      react1();
-    } else if (keywrd.find(" STEP1") != std::string::npos) {
+      react1();    } else if (keywrd.find(" STEP1") != std::string::npos) {
       to_screen(" Grid calculation");
       grid();
       iflepo = -1;                    // prevent printing of results
@@ -691,6 +693,10 @@ void run_mopac() {
     } else if (keywrd.find(" DFP") != std::string::npos ||
                keywrd.find(" FLEPO") != std::string::npos ||
                keywrd.find(" BFGS") != std::string::npos || nvar == 1) {
+      std::printf("RMBRANCH BFGS nvar=%d DFP=%d FLEPO=%d BFGS=%d\n", nvar,
+                  (int)(keywrd.find(" DFP") != std::string::npos),
+                  (int)(keywrd.find(" FLEPO") != std::string::npos),
+                  (int)(keywrd.find(" BFGS") != std::string::npos));
       std::printf(" Geometry optimization using BFGS\n");
       to_screen(" Geometry optimization using BFGS");
       flepo(xparam, nvar, escf);
@@ -706,12 +712,14 @@ void run_mopac() {
       lbfgs(xparam.data(), escf);
     } else {
       std::printf("\n%9s\n", " 运行ef");
+      std::printf("RMBRANCH EF nvar=%d 1SCF=%d nvar0=%d\n", nvar,
+                  (int)(keywrd.find(" 1SCF") != std::string::npos), (int)(nvar == 0));
       ef(xparam, escf);
     }
     //
     // Calculation done, now print results
     //
-    if (moperr) { std::fprintf(stderr, "RM-MOPERR-before-writmo iflepo=%d\n", (int)iflepo); std::fflush(stderr); goto LendBody; }        // F90: go to 100
+    if (moperr) { std::fprintf(stderr, "RM-MOPERR-before-writmo iflepo=%d errtxt=[%s]\n", (int)iflepo, errtxt.c_str()); std::fflush(stderr); goto LendBody; }        // F90: go to 100
     last = 1;
     if (iflepo >= 0) {
       wall_clock_1 = second(1);   // timout() end markers

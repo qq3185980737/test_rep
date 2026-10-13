@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -409,6 +411,7 @@ void iter_for_MOZYME(double& ee) {
         ee = helecz();
         escf = (ee + enuclr) * fpc_9 + atheat;
         if (times) timer(" After HELEC");
+        if (times) timer(" After HELEC");
         if (useps) escf = escf + solv_energy * fpc_9;
         energy_diff = escf - eold;
         eold = escf;
@@ -463,7 +466,7 @@ void iter_for_MOZYME(double& ee) {
                 lstart = niter;
             }
         }
-    }
+}
     //************************************************************
     //
     //   The SCF equations are now solved

@@ -9,7 +9,9 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <vector>
+#include <omp.h>
 
 #include "common_arrays_C.h"
 #include "cosmo_C.h"
@@ -86,78 +88,33 @@ static void focd2z_cpp(int iab, int jba, double* fii, double* fjj, double* fij,
 }
 
 // ---------------------------------------------------------------------------
-// fz2n — fast two-center Fock (fock2z.F90:641-1253), lijbo=true path.
-//   wjloc here is a 0-based 2026-element work buffer filled by rotate()
-//   (rotate writes w[0..len-1]); jab/kab/focd2z read 0-based w.
 // ---------------------------------------------------------------------------
-static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
-                     std::vector<double>& q, std::vector<double>& qe,
-                     std::vector<std::vector<double>>& ptot2, int mode, int ione) {
-    bool calci, calcj;
-    int i, i1, iab, ii, iim1, ij, ilim, ired, j, j1, jba, ji, jj, jk, jred, k,
-        kj, kl, kr, l, li, lii, lij, lj, ljj, lk, m, ni, nj;
+// fz2n_pair - one atom pair (ii,jj) of fz2n (fock2z.F90:649-1252).
+//   Writes into target Fock pointer fw (serial: global f; parallel:
+//   per-thread private copy). kr/krinc are the sequential W-cursor and
+//   focd2z loop counter (private per thread in the parallel path).
+//   Per-thread buffers: tl_wjloc (rotation), tl_e1b/e2a, tl_pja/pjb, tl_fdummy.
+// ---------------------------------------------------------------------------
+static thread_local std::vector<double> tl_wjloc(2026, 0.0);
+static thread_local double tl_e1b[46] = {0}, tl_e2a[46] = {0};
+static thread_local double tl_pja[17] = {0}, tl_pjb[17] = {0};
+static thread_local double tl_fdummy[172] = {0};
+
+static void fz2n_pair(int ii, int jj, bool calci, bool calcj, double* fw,
+                      int& kr, int& krinc,
+                      const std::vector<double>& ptot,
+                      const std::vector<std::vector<double>>& ptot2,
+                      const std::vector<double>& qe) {
+    int i, i1, ij, j, j1, ji, jk, jba, k, kj, kl, l, li, lii, lij, lj, ljj, m, ni, nj;
     double sum, sumdia, sumoff, ade, aee, da, dx, dy, dz, r, r2, ri2, ri5, rm,
         rp, w1, w2, w3, w4, w5, w6, w7, enuc, rij, point, constv;
-    double pja[17], pjb[17];     // 1-based 1..16
-    double e1b[46], e2a[46];     // 1-based 1..45
-    double fdummy[172] = {};     // 1-based 1..171
-    std::vector<double> wjloc(2026, 0.0);  // 0-based
-
-    if (fz2n_icalcn != numcal) {
-        fz2n_icalcn = numcal;
-        m = 0;
-        for (i = 1; i <= 4; ++i)
-            for (j = 1; j <= 4; ++j) {
-                ij = std::min(i, j);
-                ji = i + j - ij;
-                for (k = 1; k <= 4; ++k)
-                    for (l = 1; l <= 4; ++l) {
-                        m = m + 1;
-                        kl = std::min(k, l);
-                        lk = k + l - kl;
-                        jindex_tab[m] = (ifact[ji] + ij) * 10 + ifact[lk] + kl - 10;
-                    }
-            }
-    }
-    //  Put P(A,A) density into array PTOT2
-    chrge_for_MOZYME(ptot.data(), qe.data(), numat, iorbs.data());
-    if (mode == -1) {
-        for (int kk = 1; kk <= mpack; ++kk) f[kk] = -f[kk];
-    }
-    l = 0;
-    for (ii = 1; ii <= numat; ++ii) {
-        q[ii] = tore[nat[ii]] - qe[ii];
-        i = nijbo[ii][ii];
-        iab = iorbs[ii];
-        m = 0;
-        for (j = 1; j <= iab; ++j)
-            for (k = 1; k <= iab; ++k) {
-                m = m + 1;
-                jk = std::min(j, k);
-                kj = k + j - jk;
-                ptot2[ii][m] = ptot[i + (kj * (kj - 1)) / 2 + jk];
-            }
-    }
-    kr = 0;
-    ired = 1;
-    for (ii = 1; ii <= numat; ++ii) {
-        calci = (kopt[ired] == ii);
-        if (calci && ired < numat) ++ired;
-        if (mode == 0) calci = true;
-        iab = iorbs[ii];
-        if (iab != 0) {
-            jred = 1;
-            iim1 = ii - ione;
-            for (jj = 1; jj <= iim1; ++jj) {
-                if (ii == 5 && jj == 1) calcj = false;  // Fortran quirk (overwritten next line)
-                calcj = (kopt[jred] == jj);
-                if (calcj && jred < numat) ++jred;
+    int iab = iorbs[ii];
                 jba = iorbs[jj];
                 if (nijbo[ii][jj] >= 0) {
                     if (direct && (calci || calcj)) {
                         double xi[3] = {coord[0][ii], coord[1][ii], coord[2][ii]};
                         double xj[3] = {coord[0][jj], coord[1][jj], coord[2][jj]};
-                        rotate(nat[ii], nat[jj], xi, xj, wjloc.data(), kr, e1b, e2a, enuc);
+                        rotate(nat[ii], nat[jj], xi, xj, tl_wjloc.data(), kr, tl_e1b, tl_e2a, enuc);
                     }
                     if (iab > 5 || jba > 5) {
                         if (!(calci || calcj)) {
@@ -167,11 +124,11 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                             j = nijbo[jj][jj] + 1;
                             ij = nijbo[ii][jj] + 1;
                             if (direct)
-                                focd2z_cpp(iab, jba, &f[i], &f[j], &f[ij], &ptot[i],
-                                           &ptot[j], &ptot[ij], wjloc.data(),
-                                           wjloc.data(), i == j, fz2n_krinc);
+                                focd2z_cpp(iab, jba, &fw[i], &fw[j], &fw[ij], &ptot[i],
+                                           &ptot[j], &ptot[ij], tl_wjloc.data(),
+                                           tl_wjloc.data(), i == j, krinc);
                             else
-                                focd2z_cpp(iab, jba, &f[i], &f[j], &f[ij], &ptot[i],
+                                focd2z_cpp(iab, jba, &fw[i], &fw[j], &fw[ij], &ptot[i],
                                            &ptot[j], &ptot[ij], &w[kr + 1],
                                            &wk[kr + 1], i == j, kr);
                         }
@@ -179,33 +136,33 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                         //  HEAVY-ATOM - HEAVY-ATOM
                         if (calci || calcj) {
                             for (i = 1; i <= 16; ++i) {
-                                pja[i] = ptot2[ii][i];
-                                pjb[i] = ptot2[jj][i];
+                                tl_pja[i] = ptot2[ii][i];
+                                tl_pjb[i] = ptot2[jj][i];
                             }
                             //  COULOMB TERMS
                             if (ii == jj) {
                                 if (direct)
-                                    jab_for_MOZYME(1, 1, pja, pjb, wjloc.data(),
-                                                   &f[nijbo[ii][ii]], fdummy);
+                                    jab_for_MOZYME(1, 1, tl_pja, tl_pjb, tl_wjloc.data(),
+                                                   &fw[nijbo[ii][ii]], tl_fdummy);
                                 else
-                                    jab_for_MOZYME(1, 1, pja, pjb, &w[kr + 1],
-                                                   &f[nijbo[ii][ii]], fdummy);
+                                    jab_for_MOZYME(1, 1, tl_pja, tl_pjb, &w[kr + 1],
+                                                   &fw[nijbo[ii][ii]], tl_fdummy);
                             } else if (direct) {
-                                jab_for_MOZYME(1, 1, pja, pjb, wjloc.data(),
-                                               &f[nijbo[ii][ii]], &f[nijbo[jj][jj]]);
+                                jab_for_MOZYME(1, 1, tl_pja, tl_pjb, tl_wjloc.data(),
+                                               &fw[nijbo[ii][ii]], &fw[nijbo[jj][jj]]);
                             } else {
-                                jab_for_MOZYME(1, 1, pja, pjb, &w[kr + 1],
-                                               &f[nijbo[ii][ii]], &f[nijbo[jj][jj]]);
+                                jab_for_MOZYME(1, 1, tl_pja, tl_pjb, &w[kr + 1],
+                                               &fw[nijbo[ii][ii]], &fw[nijbo[jj][jj]]);
                             }
                             //  EXCHANGE TERMS
                             l = nijbo[ii][jj] + 1;
                             if (ii != jj) {
                                 if (direct)
                                     kab_for_MOZYME(0, 0, &ptot[nijbo[ii][jj]],
-                                                   wjloc.data(), &f[nijbo[ii][jj]]);
+                                                   tl_wjloc.data(), &fw[nijbo[ii][jj]]);
                                 else
                                     kab_for_MOZYME(0, 0, &ptot[nijbo[ii][jj]],
-                                                   &wk[kr + 1], &f[nijbo[ii][jj]]);
+                                                   &wk[kr + 1], &fw[nijbo[ii][jj]]);
                             }
                         }
                         if (!direct) kr += 100;
@@ -223,39 +180,39 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                     for (j = 1; j <= i - 1; ++j) {
                                         li = li + 1;
                                         k = k + 1;
-                                        f[li] += ptot[lj] * wjloc[k - 1];
-                                        sumoff += ptot[li] * wjloc[k - 1];
+                                        fw[li] += ptot[lj] * tl_wjloc[k - 1];
+                                        sumoff += ptot[li] * tl_wjloc[k - 1];
                                     }
                                     li = li + 1;
                                     k = k + 1;
-                                    f[li] += ptot[lj] * wjloc[k - 1];
-                                    sumdia += ptot[li] * wjloc[k - 1];
+                                    fw[li] += ptot[lj] * tl_wjloc[k - 1];
+                                    sumdia += ptot[li] * tl_wjloc[k - 1];
                                 }
-                                f[lj] += sumoff * 2.0 + sumdia;
+                                fw[lj] += sumoff * 2.0 + sumdia;
                                 l = nijbo[ii][jj];
                                 k = 0;
                                 for (i = 1; i <= 4; ++i) {
                                     sum = 0.0;
                                     for (j = 1; j <= 4; ++j) {
                                         k = k + 1;
-                                        sum += ptot[l + j] * wjloc[jindex_tab[k] - 1];
+                                        sum += ptot[l + j] * tl_wjloc[jindex_tab[k] - 1];
                                     }
-                                    f[l + i] -= sum * 0.5;
+                                    fw[l + i] -= sum * 0.5;
                                 }
                             } else {
                                 for (i = 1; i <= 4; ++i) {
                                     for (j = 1; j <= i - 1; ++j) {
                                         li = li + 1;
                                         k = k + 1;
-                                        f[li] += ptot[lj] * w[kr + k];
+                                        fw[li] += ptot[lj] * w[kr + k];
                                         sumoff += ptot[li] * w[kr + k];
                                     }
                                     li = li + 1;
                                     k = k + 1;
-                                    f[li] += ptot[lj] * w[kr + k];
+                                    fw[li] += ptot[lj] * w[kr + k];
                                     sumdia += ptot[li] * w[kr + k];
                                 }
-                                f[lj] += sumoff * 2.0 + sumdia;
+                                fw[lj] += sumoff * 2.0 + sumdia;
                                 l = nijbo[ii][jj];
                                 k = 0;
                                 for (i = 1; i <= 4; ++i) {
@@ -264,7 +221,7 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                         k = k + 1;
                                         sum += ptot[l + j] * wk[kr + jindex_tab[k]];
                                     }
-                                    f[l + i] -= sum * 0.5;
+                                    fw[l + i] -= sum * 0.5;
                                 }
                             }
                         }
@@ -283,39 +240,39 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                     for (j = 1; j <= i - 1; ++j) {
                                         k = k + 1;
                                         lj = lj + 1;
-                                        f[lj] += ptot[li] * wjloc[k - 1];
-                                        sumoff += ptot[lj] * wjloc[k - 1];
+                                        fw[lj] += ptot[li] * tl_wjloc[k - 1];
+                                        sumoff += ptot[lj] * tl_wjloc[k - 1];
                                     }
                                     lj = lj + 1;
                                     k = k + 1;
-                                    f[lj] += ptot[li] * wjloc[k - 1];
-                                    sumdia += ptot[lj] * wjloc[k - 1];
+                                    fw[lj] += ptot[li] * tl_wjloc[k - 1];
+                                    sumdia += ptot[lj] * tl_wjloc[k - 1];
                                 }
-                                f[li] += sumoff * 2.0 + sumdia;
+                                fw[li] += sumoff * 2.0 + sumdia;
                                 l = nijbo[ii][jj];
                                 k = 0;
                                 for (i = 1; i <= 4; ++i) {
                                     sum = 0.0;
                                     for (j = 1; j <= 4; ++j) {
                                         k = k + 1;
-                                        sum += ptot[l + j] * wjloc[jindex_tab[k] - 1];
+                                        sum += ptot[l + j] * tl_wjloc[jindex_tab[k] - 1];
                                     }
-                                    f[l + i] -= sum * 0.5;
+                                    fw[l + i] -= sum * 0.5;
                                 }
                             } else {
                                 for (i = 1; i <= 4; ++i) {
                                     for (j = 1; j <= i - 1; ++j) {
                                         k = k + 1;
                                         lj = lj + 1;
-                                        f[lj] += ptot[li] * w[kr + k];
+                                        fw[lj] += ptot[li] * w[kr + k];
                                         sumoff += ptot[lj] * w[kr + k];
                                     }
                                     lj = lj + 1;
                                     k = k + 1;
-                                    f[lj] += ptot[li] * w[kr + k];
+                                    fw[lj] += ptot[li] * w[kr + k];
                                     sumdia += ptot[lj] * w[kr + k];
                                 }
-                                f[li] += sumoff * 2.0 + sumdia;
+                                fw[li] += sumoff * 2.0 + sumdia;
                                 l = nijbo[ii][jj];
                                 k = 0;
                                 for (i = 1; i <= 4; ++i) {
@@ -324,7 +281,7 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                         k = k + 1;
                                         sum += ptot[l + j] * wk[kr + jindex_tab[k]];
                                     }
-                                    f[l + i] -= sum * 0.5;
+                                    fw[l + i] -= sum * 0.5;
                                 }
                             }
                         }
@@ -336,16 +293,16 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                             lij = nijbo[ii][jj] + 1;
                             ljj = nijbo[jj][jj] + 1;
                             if (direct) {
-                                f[lii] += ptot[ljj] * wjloc[0];
+                                fw[lii] += ptot[ljj] * tl_wjloc[0];
                                 if (ii != jj) {
-                                    f[ljj] += ptot[lii] * wjloc[0];
-                                    f[lij] -= ptot[lij] * wjloc[0] * 0.5;
+                                    fw[ljj] += ptot[lii] * tl_wjloc[0];
+                                    fw[lij] -= ptot[lij] * tl_wjloc[0] * 0.5;
                                 }
                             } else {
-                                f[lii] += ptot[ljj] * w[kr + 1];
+                                fw[lii] += ptot[ljj] * w[kr + 1];
                                 if (ii != jj) {
-                                    f[ljj] += ptot[lii] * w[kr + 1];
-                                    f[lij] -= ptot[lij] * wk[kr + 1] * 0.5;
+                                    fw[ljj] += ptot[lii] * w[kr + 1];
+                                    fw[lij] -= ptot[lij] * wk[kr + 1] * 0.5;
                                 }
                             }
                         }
@@ -379,11 +336,11 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                             //  MONOPOLE
                             for (i = 1; i <= iorbs[ii]; ++i) {
                                 i1 = i1 + i;
-                                f[i1] += qe[jj] * w1;
+                                fw[i1] += qe[jj] * w1;
                             }
                             for (j = 1; j <= iorbs[jj]; ++j) {
                                 j1 = j1 + j;
-                                f[j1] += qe[ii] * w1;
+                                fw[j1] += qe[ii] * w1;
                             }
                             i1 = nijbo[ii][ii];
                             j1 = nijbo[jj][jj];
@@ -437,36 +394,36 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                             w6 = w[kr + 5];
                                             w7 = w[kr + 6];
                                         }
-                                        f[j1 + 2] += qe[ii] * w2;
-                                        f[j1 + 4] += qe[ii] * w3;
-                                        f[j1 + 7] += qe[ii] * w4;
-                                        f[i1 + 2] += qe[jj] * w5;
-                                        f[i1 + 4] += qe[jj] * w6;
-                                        f[i1 + 7] += qe[jj] * w7;
-                                        f[j1 + 1] += ptot[i1 + 2] * w5 * 2;
-                                        f[j1 + 3] += ptot[i1 + 2] * w5 * 2;
-                                        f[j1 + 6] += ptot[i1 + 2] * w5 * 2;
-                                        f[j1 + 10] += ptot[i1 + 2] * w5 * 2;
-                                        f[j1 + 1] += ptot[i1 + 4] * w6 * 2;
-                                        f[j1 + 3] += ptot[i1 + 4] * w6 * 2;
-                                        f[j1 + 6] += ptot[i1 + 4] * w6 * 2;
-                                        f[j1 + 10] += ptot[i1 + 4] * w6 * 2;
-                                        f[j1 + 1] += ptot[i1 + 7] * w7 * 2;
-                                        f[j1 + 3] += ptot[i1 + 7] * w7 * 2;
-                                        f[j1 + 6] += ptot[i1 + 7] * w7 * 2;
-                                        f[j1 + 10] += ptot[i1 + 7] * w7 * 2;
-                                        f[i1 + 1] += ptot[j1 + 2] * w2 * 2;
-                                        f[i1 + 3] += ptot[j1 + 2] * w2 * 2;
-                                        f[i1 + 6] += ptot[j1 + 2] * w2 * 2;
-                                        f[i1 + 10] += ptot[j1 + 2] * w2 * 2;
-                                        f[i1 + 1] += ptot[j1 + 4] * w3 * 2;
-                                        f[i1 + 3] += ptot[j1 + 4] * w3 * 2;
-                                        f[i1 + 6] += ptot[j1 + 4] * w3 * 2;
-                                        f[i1 + 10] += ptot[j1 + 4] * w3 * 2;
-                                        f[i1 + 1] += ptot[j1 + 7] * w4 * 2;
-                                        f[i1 + 3] += ptot[j1 + 7] * w4 * 2;
-                                        f[i1 + 6] += ptot[j1 + 7] * w4 * 2;
-                                        f[i1 + 10] += ptot[j1 + 7] * w4 * 2;
+                                        fw[j1 + 2] += qe[ii] * w2;
+                                        fw[j1 + 4] += qe[ii] * w3;
+                                        fw[j1 + 7] += qe[ii] * w4;
+                                        fw[i1 + 2] += qe[jj] * w5;
+                                        fw[i1 + 4] += qe[jj] * w6;
+                                        fw[i1 + 7] += qe[jj] * w7;
+                                        fw[j1 + 1] += ptot[i1 + 2] * w5 * 2;
+                                        fw[j1 + 3] += ptot[i1 + 2] * w5 * 2;
+                                        fw[j1 + 6] += ptot[i1 + 2] * w5 * 2;
+                                        fw[j1 + 10] += ptot[i1 + 2] * w5 * 2;
+                                        fw[j1 + 1] += ptot[i1 + 4] * w6 * 2;
+                                        fw[j1 + 3] += ptot[i1 + 4] * w6 * 2;
+                                        fw[j1 + 6] += ptot[i1 + 4] * w6 * 2;
+                                        fw[j1 + 10] += ptot[i1 + 4] * w6 * 2;
+                                        fw[j1 + 1] += ptot[i1 + 7] * w7 * 2;
+                                        fw[j1 + 3] += ptot[i1 + 7] * w7 * 2;
+                                        fw[j1 + 6] += ptot[i1 + 7] * w7 * 2;
+                                        fw[j1 + 10] += ptot[i1 + 7] * w7 * 2;
+                                        fw[i1 + 1] += ptot[j1 + 2] * w2 * 2;
+                                        fw[i1 + 3] += ptot[j1 + 2] * w2 * 2;
+                                        fw[i1 + 6] += ptot[j1 + 2] * w2 * 2;
+                                        fw[i1 + 10] += ptot[j1 + 2] * w2 * 2;
+                                        fw[i1 + 1] += ptot[j1 + 4] * w3 * 2;
+                                        fw[i1 + 3] += ptot[j1 + 4] * w3 * 2;
+                                        fw[i1 + 6] += ptot[j1 + 4] * w3 * 2;
+                                        fw[i1 + 10] += ptot[j1 + 4] * w3 * 2;
+                                        fw[i1 + 1] += ptot[j1 + 7] * w4 * 2;
+                                        fw[i1 + 3] += ptot[j1 + 7] * w4 * 2;
+                                        fw[i1 + 6] += ptot[j1 + 7] * w4 * 2;
+                                        fw[i1 + 10] += ptot[j1 + 7] * w4 * 2;
                                     }
                                     if (!semidr) kr += 6;
                                 } else {
@@ -476,12 +433,12 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                             w6 = w[kr + 2];
                                             w7 = w[kr + 3];
                                         }
-                                        f[i1 + 2] += qe[jj] * w5;
-                                        f[i1 + 4] += qe[jj] * w6;
-                                        f[i1 + 7] += qe[jj] * w7;
-                                        f[j1 + 1] += ptot[i1 + 2] * w5 * 2;
-                                        f[j1 + 1] += ptot[i1 + 4] * w6 * 2;
-                                        f[j1 + 1] += ptot[i1 + 7] * w7 * 2;
+                                        fw[i1 + 2] += qe[jj] * w5;
+                                        fw[i1 + 4] += qe[jj] * w6;
+                                        fw[i1 + 7] += qe[jj] * w7;
+                                        fw[j1 + 1] += ptot[i1 + 2] * w5 * 2;
+                                        fw[j1 + 1] += ptot[i1 + 4] * w6 * 2;
+                                        fw[j1 + 1] += ptot[i1 + 7] * w7 * 2;
                                     }
                                     if (!semidr) kr += 3;
                                 }
@@ -492,39 +449,161 @@ static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
                                         w3 = w[kr + 2];
                                         w4 = w[kr + 3];
                                     }
-                                    f[j1 + 2] += qe[ii] * w2;
-                                    f[j1 + 4] += qe[ii] * w3;
-                                    f[j1 + 7] += qe[ii] * w4;
-                                    f[i1 + 1] += ptot[j1 + 2] * w2 * 2;
-                                    f[i1 + 1] += ptot[j1 + 4] * w3 * 2;
-                                    f[i1 + 1] += ptot[j1 + 7] * w4 * 2;
+                                    fw[j1 + 2] += qe[ii] * w2;
+                                    fw[j1 + 4] += qe[ii] * w3;
+                                    fw[j1 + 7] += qe[ii] * w4;
+                                    fw[i1 + 1] += ptot[j1 + 2] * w2 * 2;
+                                    fw[i1 + 1] += ptot[j1 + 4] * w3 * 2;
+                                    fw[i1 + 1] += ptot[j1 + 7] * w4 * 2;
                                 }
                                 if (!semidr) kr += 3;
                             }
                         }
                     }
-                }
+    }
+}
+
+// fz2n — fast two-center Fock (fock2z.F90:641-1253), lijbo=true path.
+//   wjloc here is a 0-based 2026-element work buffer filled by rotate()
+//   (rotate writes w[0..len-1]); jab/kab/focd2z read 0-based w.
+// ---------------------------------------------------------------------------
+static void fz2n_cpp(std::vector<double>& f, const std::vector<double>& ptot,
+                     std::vector<double>& q, std::vector<double>& qe,
+                     std::vector<std::vector<double>>& ptot2, int mode, int ione) {
+    bool calci, calcj;
+    int i, i1, iab, ii, iim1, ij, ilim, ired, j, j1, jba, ji, jj, jk, jred, k,
+        kj, kl, kr, l, li, lii, lij, lj, ljj, lk, m, ni, nj;
+    double sum, sumdia, sumoff, ade, aee, da, dx, dy, dz, r, r2, ri2, ri5, rm,
+        rp, w1, w2, w3, w4, w5, w6, w7, enuc, rij, point, constv;
+    double pja[17], pjb[17];     // 1-based 1..16
+    double e1b[46], e2a[46];     // 1-based 1..45
+    double fdummy[172] = {};     // 1-based 1..171
+    std::vector<double> wjloc(2026, 0.0);  // 0-based
+    std::vector<char> calci_tab(numat + 1, 0);
+    std::vector<std::vector<char>> calcj_tab(numat + 1);
+
+    // Recreate the original per-call zero-initialized work buffers: the
+    // original fz2n_cpp allocated wjloc(2026, 0.0) on every call, while the
+    // thread-local versions persist across calls, so stale data could be
+    // read where a rotation wrote fewer elements than focd2z/jab read.
+    std::fill(tl_wjloc.begin(), tl_wjloc.end(), 0.0);
+    std::fill(tl_e1b, tl_e1b + 46, 0.0);
+    std::fill(tl_e2a, tl_e2a + 46, 0.0);
+    std::fill(tl_pja, tl_pja + 17, 0.0);
+    std::fill(tl_pjb, tl_pjb + 17, 0.0);
+
+    if (fz2n_icalcn != numcal) {
+        fz2n_icalcn = numcal;
+        m = 0;
+        for (i = 1; i <= 4; ++i)
+            for (j = 1; j <= 4; ++j) {
+                ij = std::min(i, j);
+                ji = i + j - ij;
+                for (k = 1; k <= 4; ++k)
+                    for (l = 1; l <= 4; ++l) {
+                        m = m + 1;
+                        kl = std::min(k, l);
+                        lk = k + l - kl;
+                        jindex_tab[m] = (ifact[ji] + ij) * 10 + ifact[lk] + kl - 10;
+                    }
             }
-            if (!direct) {
-                i = nijbo[ii][ii] + 1;
-                ilim = (iab * (iab + 1)) / 2;
-                std::vector<double> fseg(ilim + 1), pseg(ilim + 1);
-                for (int t = 1; t <= ilim; ++t) {
-                    fseg[t] = f[i + t - 1];
-                    pseg[t] = ptot[i + t - 1];
-                }
-                std::vector<std::vector<double>> w2(ilim + 1,
-                                                    std::vector<double>(ilim + 1, 0.0));
-                // Fortran w(ijw,klw) = wj(kr + (klw-1)*ilim + (ijw-1))  [column-major]
-                // Note: global w is 1-based, so offset by +1.
-                for (int row = 1; row <= ilim; ++row)
-                    for (int col = 1; col <= ilim; ++col)
-                        w2[row][col] = w[kr + (col - 1) * ilim + (row - 1) + 1];
-                fock1_for_MOZYME(fseg, pseg, w2, kr, iab, ilim);
-                for (int t = 1; t <= ilim; ++t) f[i + t - 1] = fseg[t];
+    }
+    //  Put P(A,A) density into array PTOT2
+    chrge_for_MOZYME(ptot.data(), qe.data(), numat, iorbs.data());
+    if (mode == -1) {
+        for (int kk = 1; kk <= mpack; ++kk) f[kk] = -f[kk];
+    }
+    l = 0;
+    for (ii = 1; ii <= numat; ++ii) {
+        q[ii] = tore[nat[ii]] - qe[ii];
+        i = nijbo[ii][ii];
+        iab = iorbs[ii];
+        m = 0;
+        for (j = 1; j <= iab; ++j)
+            for (k = 1; k <= iab; ++k) {
+                m = m + 1;
+                jk = std::min(j, k);
+                kj = k + j - jk;
+                ptot2[ii][m] = ptot[i + (kj * (kj - 1)) / 2 + jk];
+            }
+    }
+    kr = 0;
+    {
+        // Precompute calci/calcj lookup tables: bitwise-identical values to
+        // the original sequential ired/jred cursors, but without loop-carried
+        // state, so the atom-pair loop can be parallelized.
+        int ired = 1;
+        for (int ii = 1; ii <= numat; ++ii) {
+            bool ci = (kopt[ired] == ii);
+            if (ci && ired < numat) ++ired;
+            if (mode == 0) ci = true;
+            calci_tab[ii] = ci ? 1 : 0;
+            calcj_tab[ii].assign(ii, 0);      // jj in 1..ii-1
+            int jred = 1;
+            for (int jj = 1; jj <= ii - 1; ++jj) {
+                bool cj = (kopt[jred] == jj);
+                if (cj && jred < numat) ++jred;
+                calcj_tab[ii][jj] = cj ? 1 : 0;
             }
         }
     }
+    const bool fz2n_par = direct && std::getenv("MOPAC_FZ2N_OMP") != nullptr;
+    if (fz2n_par) {
+        // Parallel path: each thread accumulates into a private Fock copy,
+        // then a deterministic serial reduction merges them (paper C2).
+        int nt = omp_get_max_threads();
+        std::vector<std::vector<double>> fpriv(nt, std::vector<double>(mpack + 1, 0.0));
+#pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
+            double* fw = fpriv[tid].data();
+            int kr_loc = 0, krinc_loc = 0;
+            std::fill(tl_wjloc.begin(), tl_wjloc.end(), 0.0);
+            std::fill(tl_e1b, tl_e1b + 46, 0.0);
+            std::fill(tl_e2a, tl_e2a + 46, 0.0);
+            std::fill(tl_pja, tl_pja + 17, 0.0);
+            std::fill(tl_pjb, tl_pjb + 17, 0.0);
+#pragma omp for schedule(dynamic)
+            for (int ii = 1; ii <= numat; ++ii) {
+                if (iorbs[ii] == 0) continue;
+                const bool calci = calci_tab[ii] != 0;
+                for (int jj = 1; jj <= ii - 1; ++jj)
+                    fz2n_pair(ii, jj, calci, calcj_tab[ii][jj] != 0, fw,
+                              kr_loc, krinc_loc, ptot, ptot2, qe);
+            }
+        }
+        for (int t = 0; t < nt; ++t)
+            for (int q = 1; q <= mpack; ++q) f[q] += fpriv[t][q];
+    } else {
+        // Serial path: original loop-carried order (kr advances atom-pair by
+        // atom-pair; diagonal fock1 segments interleaved per atom).
+        for (int ii = 1; ii <= numat; ++ii) {
+            const bool calci = calci_tab[ii] != 0;
+            int iab = iorbs[ii];
+            if (iab != 0) {
+                for (int jj = 1; jj <= ii - 1; ++jj)
+                    fz2n_pair(ii, jj, calci, calcj_tab[ii][jj] != 0, f.data(),
+                              kr, fz2n_krinc, ptot, ptot2, qe);
+                if (!direct) {
+                    int i = nijbo[ii][ii] + 1;
+                    int ilim = (iab * (iab + 1)) / 2;
+                    std::vector<double> fseg(ilim + 1), pseg(ilim + 1);
+                    for (int t = 1; t <= ilim; ++t) {
+                        fseg[t] = f[i + t - 1];
+                        pseg[t] = ptot[i + t - 1];
+                    }
+                    std::vector<std::vector<double>> w2(ilim + 1,
+                                                        std::vector<double>(ilim + 1, 0.0));
+                    for (int row = 1; row <= ilim; ++row)
+                        for (int col = 1; col <= ilim; ++col)
+                            w2[row][col] = w[kr + (col - 1) * ilim + (row - 1) + 1];
+                    fock1_for_MOZYME(fseg, pseg, w2, kr, iab, ilim);
+                    for (int t = 1; t <= ilim; ++t) f[i + t - 1] = fseg[t];
+                }
+            }
+        }
+    }
+
     if (direct) {
         kr = 0;
         ired = 1;

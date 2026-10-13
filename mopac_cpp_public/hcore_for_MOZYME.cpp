@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -387,6 +389,29 @@ void hcore_for_MOZYME() {
     (void)qdenet;
   }
   kr = kr - 1;
+  {
+    // Probe: MKVHEX env gate — dump h (packed) and w[1..kr] in hex for
+    // bitwise comparison against the Fortran build (paper §MOZYME).
+    const char* mkv = std::getenv("MKVHEX");
+    if (mkv && mkv[0] != '\0') {
+      std::FILE* fp = std::fopen("mkv_cxx_hw.txt", "w");
+      if (fp) {
+        std::fprintf(fp, "MPACK=%d KR=%d KRNAX=%d NORBS=%d NUMAT=%d ENUCLR=%a\n",
+                     mpack, kr, krmax, norbs, numat, enuclr);
+        for (int q = 1; q <= mpack; ++q) {
+          unsigned long long b;
+          std::memcpy(&b, &h[q], 8);
+          std::fprintf(fp, "MKV-H %d=%016llX\n", q, b);
+        }
+        for (int q = 1; q <= kr; ++q) {
+          unsigned long long b;
+          std::memcpy(&b, &w[q], 8);
+          std::fprintf(fp, "MKV-W %d=%016llX\n", q, b);
+        }
+        std::fclose(fp);
+      }
+    }
+  }
   if (debug) {
     std::fprintf(stdout, "\n\n          ONE-ELECTRON MATRIX FROM HCORE\n");
     if (mode == -1)

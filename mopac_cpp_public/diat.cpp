@@ -10,6 +10,56 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#define NOMINMAX
+#include <windows.h>
+#undef NOMINMAX
+extern double libm_exp(double);
+
+// ---- Intel Fortran pow bridge (bit-exact with ifx X**N) ----
+// Loads libmmd.dll (Intel math library) and calls __powr8i4, the exact
+// runtime entry ifx emits for X**N.  This matches the golden Fortran build
+// bit-for-bit instead of MSVC std::pow.
+typedef double (*fpw_fn)(double, int);
+static fpw_fn g_fpw = nullptr;
+static bool g_fpw_init = false;
+extern "C" double fpw_ftn(double x, int n) {
+    if (!g_fpw_init) {
+        g_fpw_init = true;
+        HMODULE h = LoadLibraryA("D:\\mopac\\libmmd.dll");
+        if (h) g_fpw = (fpw_fn)GetProcAddress(h, "__powr8i4");
+        FILE* pf = fopen("D:\\mopac\\fpw_bridge.txt", "a");
+        if (pf) {
+            fprintf(pf, "init h=%p fn=%p\n", (void*)h, (void*)g_fpw);
+            fclose(pf);
+        }
+    }
+    double r;
+    if (g_fpw) r = g_fpw(x, n);
+    else r = std::pow(x, n);
+    return r;
+}
+
+// ---- Intel Fortran exp bridge (bit-exact with ifx exp) ----
+// libmmd.dll exports "exp" (== __libm_exp) which is the same Intel scalar
+// exp implementation the golden Fortran build links statically.
+typedef double (*fexp_fn)(double);
+static fexp_fn g_fexp = nullptr;
+static bool g_fexp_init = false;
+extern "C" double exp_ftn(double x) {
+    if (!g_fexp_init) {
+        g_fexp_init = true;
+        HMODULE h = LoadLibraryA("D:\\mopac\\libmmd.dll");
+        if (h) g_fexp = (fexp_fn)GetProcAddress(h, "exp");
+        FILE* pf = fopen("D:\\mopac\\fexp_bridge.txt", "a");
+        if (pf) {
+            fprintf(pf, "init h=%p fn=%p\n", (void*)h, (void*)g_fexp);
+            fclose(pf);
+        }
+    }
+    if (g_fexp) return g_fexp(x);
+    return libm_exp(x);  // fallback
+}
+
 
 #include "bfn.h"
 #include "coe.h"
@@ -63,57 +113,57 @@ void diat2(int na, double esa, double epa, double r12, int nb, double esb,
     switch (ii) {
     case 1: {  // first row - first row
         set_fn(esa, esb, na, nb, rab, ii);
-        S(s, 1, 1, 1) = 0.25 * std::sqrt(std::pow(sa * sb * rab * rab, 3)) *
+        S(s, 1, 1, 1) = 0.25 * std::sqrt(fpw_ftn(sa * sb * rab * rab, 3)) *
                         (a[3] * b[1] - b[3] * a[1]);
         return;
     }
     case 2: {  // first row - second row
         set_fn(esa, esb, na, nb, rab, ii);
-        double rab4 = std::pow(rab, 4) * 0.125;
-        double w = std::sqrt(sa * sa * sa * std::pow(sb, 5)) * rab4;
+        double rab4 = fpw_ftn(rab, 4) * 0.125;
+        double w = std::sqrt(fpw_ftn(sa, 3) * fpw_ftn(sb, 5)) * rab4;
         S(s, 1, 1, 1) = std::sqrt(1.0 / 3.0);
         S(s, 1, 1, 1) = w * S(s, 1, 1, 1) *
                         (a[4] * b[1] - b[4] * a[1] + a[3] * b[2] - b[3] * a[2]);
         if (na > 1) set_fn(epa, esb, na, nb, rab, ii);
         if (nb > 1) set_fn(esa, epb, na, nb, rab, ii);
-        w = std::sqrt(sa * sa * sa * std::pow(sb, 5)) * rab4;
+        w = std::sqrt(fpw_ftn(sa, 3) * fpw_ftn(sb, 5)) * rab4;
         S(s, isp, ips, 1) =
             w * (a[3] * b[1] - b[3] * a[1] + a[4] * b[2] - b[4] * a[2]);
         return;
     }
     case 3: {  // first row - third row
         set_fn(esa, esb, na, nb, rab, ii);
-        double rab4 = std::pow(rab, 5) * 0.0625;
-        double w = std::sqrt(sa * sa * sa * std::pow(sb, 7) / 22.5) * rab4;
+        double rab4 = fpw_ftn(rab, 5) * 0.0625;
+        double w = std::sqrt(fpw_ftn(sa, 3) * fpw_ftn(sb, 7) / 22.5) * rab4;
         S(s, 1, 1, 1) =
             w * (a[5] * b[1] - b[5] * a[1] + 2.0 * (a[4] * b[2] - b[4] * a[2]));
         if (na > 1) set_fn(epa, esb, na, nb, rab, ii);
         if (nb > 1) set_fn(esa, epb, na, nb, rab, ii);
-        w = std::sqrt(sa * sa * sa * std::pow(sb, 7) / 7.5) * rab4;
+        w = std::sqrt(fpw_ftn(sa, 3) * fpw_ftn(sb, 7) / 7.5) * rab4;
         S(s, isp, ips, 1) = w * (a[4] * (b[1] + b[3]) - b[4] * (a[1] + a[3]) +
                                  b[2] * (a[3] + a[5]) - a[2] * (b[3] + b[5]));
         return;
     }
     case 4: {  // second row - second row
         set_fn(esa, esb, na, nb, rab, ii);
-        double rab4 = std::pow(rab, 5) * 0.0625;
-        double w = std::sqrt(std::pow(sa * sb, 5)) * rab4;
+        double rab4 = fpw_ftn(rab, 5) * 0.0625;
+        double w = std::sqrt(fpw_ftn(sa * sb, 5)) * rab4;
         S(s, 1, 1, 1) = w * (a[5] * b[1] + b[5] * a[1] - 2.0 * a[3] * b[3]) / 3.0;
         set_fn(esa, epb, na, nb, rab, ii);
         if (na > nb) set_fn(epa, esb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 5)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 5)) * rab4;
         const double rt3 = 1.0 / std::sqrt(3.0);
         double d = a[4] * (b[1] - b[3]) - a[2] * (b[3] - b[5]);
         double e = b[4] * (a[1] - a[3]) - b[2] * (a[3] - a[5]);
         S(s, isp, ips, 1) = w * rt3 * (d + e);
         set_fn(epa, esb, na, nb, rab, ii);
         if (na > nb) set_fn(esa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 5)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 5)) * rab4;
         d = a[4] * (b[1] - b[3]) - a[2] * (b[3] - b[5]);
         e = b[4] * (a[1] - a[3]) - b[2] * (a[3] - a[5]);
         S(s, ips, isp, 1) = w * rt3 * (d - e);
         set_fn(epa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 5)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 5)) * rab4;
         S(s, 2, 2, 1) = -w * (b[3] * (a[5] + a[1]) - a[3] * (b[5] + b[1]));
         S(s, 2, 2, 2) = 0.5 * w *
                         (a[5] * (b[1] - b[3]) - b[5] * (a[1] - a[3]) -
@@ -122,27 +172,27 @@ void diat2(int na, double esa, double epa, double r12, int nb, double esb,
     }
     case 5: {  // second row - third row
         set_fn(esa, esb, na, nb, rab, ii);
-        double rab6 = std::pow(rab, 6) * 0.03125 / std::sqrt(7.5);
-        double w = std::sqrt(std::pow(sa, 5) * std::pow(sb, 7)) * rab6;
+        double rab6 = fpw_ftn(rab, 6) * 0.03125 / std::sqrt(7.5);
+        double w = std::sqrt(fpw_ftn(sa, 5) * fpw_ftn(sb, 7)) * rab6;
         const double rt3 = 1.0 / std::sqrt(3.0);
         S(s, 1, 1, 1) = w * (a[6] * b[1] + a[5] * b[2] -
                              2.0 * (a[4] * b[3] + a[3] * b[4]) + a[2] * b[5] +
                              a[1] * b[6]) / 3.0;
         set_fn(esa, epb, na, nb, rab, ii);
         if (na > nb) set_fn(epa, esb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa, 5) * std::pow(sb, 7)) * rab6;
+        w = std::sqrt(fpw_ftn(sa, 5) * fpw_ftn(sb, 7)) * rab6;
         S(s, isp, ips, 1) = w * rt3 *
                             (a[6] * b[2] + a[5] * b[1] -
                              2.0 * (a[4] * b[4] + a[3] * b[3]) + a[2] * b[6] +
                              a[1] * b[5]);
         set_fn(epa, esb, na, nb, rab, ii);
         if (na > nb) set_fn(esa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa, 5) * std::pow(sb, 7)) * rab6;
+        w = std::sqrt(fpw_ftn(sa, 5) * fpw_ftn(sb, 7)) * rab6;
         S(s, ips, isp, 1) = -w * rt3 *
                             (a[5] * (2.0 * b[3] - b[1]) - b[5] * (2.0 * a[3] - a[1]) -
                              a[2] * (b[6] - 2.0 * b[4]) + b[2] * (a[6] - 2.0 * a[4]));
         set_fn(epa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa, 5) * std::pow(sb, 7)) * rab6;
+        w = std::sqrt(fpw_ftn(sa, 5) * fpw_ftn(sb, 7)) * rab6;
         S(s, 2, 2, 1) = -w * (b[4] * (a[1] + a[5]) - a[4] * (b[1] + b[5]) +
                               b[3] * (a[2] + a[6]) - a[3] * (b[2] + b[6]));
         S(s, 2, 2, 2) = 0.5 * w *
@@ -153,14 +203,14 @@ void diat2(int na, double esa, double epa, double r12, int nb, double esb,
     }
     case 6: {  // third row - third row
         set_fn(esa, esb, na, nb, rab, ii);
-        double rab4 = std::pow(rab, 7) / 480.0;
-        double w = std::sqrt(std::pow(sa * sb, 7)) * rab4;
+        double rab4 = fpw_ftn(rab, 7) / 480.0;
+        double w = std::sqrt(fpw_ftn(sa * sb, 7)) * rab4;
         const double rt3 = 1.0 / std::sqrt(3.0);
         S(s, 1, 1, 1) =
             w * (a[7] * b[1] - 3.0 * (a[5] * b[3] - a[3] * b[5]) - a[1] * b[7]) / 3.0;
         set_fn(esa, epb, na, nb, rab, ii);
         if (na > nb) set_fn(epa, esb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 7)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 7)) * rab4;
         double d = a[6] * (b[1] - b[3]) - 2.0 * a[4] * (b[3] - b[5]) +
                    a[2] * (b[5] - b[7]);
         double e = b[6] * (a[1] - a[3]) - 2.0 * b[4] * (a[3] - a[5]) +
@@ -168,14 +218,14 @@ void diat2(int na, double esa, double epa, double r12, int nb, double esb,
         S(s, isp, ips, 1) = w * rt3 * (d - e);
         set_fn(epa, esb, na, nb, rab, ii);
         if (na > nb) set_fn(esa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 7)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 7)) * rab4;
         d = a[6] * (b[1] - b[3]) - 2.0 * a[4] * (b[3] - b[5]) +
             a[2] * (b[5] - b[7]);
         e = b[6] * (a[1] - a[3]) - 2.0 * b[4] * (a[3] - a[5]) +
             b[2] * (a[5] - a[7]);
         S(s, ips, isp, 1) = -w * rt3 * ((-d) - e);
         set_fn(epa, epb, na, nb, rab, ii);
-        w = std::sqrt(std::pow(sa * sb, 7)) * rab4;
+        w = std::sqrt(fpw_ftn(sa * sb, 7)) * rab4;
         d = a[3] * (b[7] + b[3] + b[3]) - a[5] * (b[1] + b[5] + b[5]) -
             b[5] * a[1] + a[7] * b[3];
         S(s, 2, 2, 1) = -w * d;
@@ -216,7 +266,7 @@ double ss_overlap(int na, int nb, int la1, int lb1, int m1,
     double p = (ua + ub) * r * 0.5, b = (ua - ub) * r * 0.5;
     double quo = 1.0 / p;
     std::vector<double> af(20, 0.0), bf(20, 0.0);
-    af[0] = quo * std::exp(-p);
+    af[0] = quo * exp_ftn(-p);
     for (int n = 1; n <= 19; ++n) af[n] = n * quo * af[n - 1] + af[0];
     bfn(b, bf.data());  // bfn writes bf[1..13]
     double sum = 0.0;

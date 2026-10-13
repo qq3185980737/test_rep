@@ -4,12 +4,18 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
 
 #include "funcon_C.h"
 #include "molkst_C.h"
 #include "parameters_C.h"
 
 using namespace parameters_C;
+
+extern "C" double fpw_ftn(double, int);  // Intel pow bridge (bit-exact with ifx X**N)
+extern "C" double exp_ftn(double);       // Intel exp bridge (bit-exact with ifx exp)
 
 void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
     r = r * funcon_C::a0;
@@ -46,40 +52,42 @@ void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
         abond = alpb[ni][nj];
         if (abond < 1e-6) abond = 1.2;
         double scale;
+        double t1 = 0.0;
         if (!molkst_C::method_mndod) {
             if (molkst_C::method_pm6 || molkst_C::method_pm7) {
-                scale = 1.0 + 2.0 * fff * exp(-abond * (r + 0.0003 * r * r * r * r * r * r));
+                scale = 1.0 + 2.0 * fff * exp_ftn(-abond * (r + 0.0003 * fpw_ftn(r, 6)));
+                t1 = 2.0 * fff * exp_ftn(-abond * (r + 0.0003 * fpw_ftn(r, 6)));
                 int i = std::max(ni, nj);
                 int j = std::min(ni, nj);
                 if (j == 1) {
                     if (i == 6 || i == 7) {
-                        scale = 1.0 + 2.0 * fff * exp(-abond * r * r);
+                        scale = 1.0 + 2.0 * fff * exp_ftn(-abond * r * r);
                     } else if (i == 8) {
-                        scale = 1.0 + 2.0 * fff * exp(-abond * r * r) -
-                                par3 * exp(-par4 * r * 2);
+                        scale = 1.0 + 2.0 * fff * exp_ftn(-abond * r * r) -
+                                par3 * exp_ftn(-par4 * r * 2);
                     }
                 } else if (j == 6 && i == 6) {
-                    scale = scale + par1 * exp(-par2 * r);
+                    scale = scale + par1 * exp_ftn(-par2 * r);
                 } else if (j == 8 && i == 14) {
                     double ax = 1.0;
                     (void)ax;
-                    scale = scale - 0.7e-3 * exp(-(r - 2.9) * (r - 2.9));
+                    scale = scale - 0.7e-3 * exp_ftn(-(r - 2.9) * (r - 2.9));
                 }
             } else {
                 if (molkst_C::method_am1 &&
                     ((ni == 42 && nj == 1) || (ni == 1 && nj == 42))) {
-                    scale = 1.0 + r * 2.0 * fff * exp(-abond * r);
+                    scale = 1.0 + r * 2.0 * fff * exp_ftn(-abond * r);
                 } else {
-                    scale = 1.0 + 2.0 * fff * exp(-abond * r);
+                    scale = 1.0 + 2.0 * fff * exp_ftn(-abond * r);
                 }
             }
         } else {
             if (ni == nj) {
-                scale = 1.0 + 2.0 * exp(-abond * r);
+                scale = 1.0 + 2.0 * exp_ftn(-abond * r);
             } else if (nj == 11 || nj == 12 || nj == 13) {
-                scale = 1.0 + exp(-abond * r) + exp(-alp[ni] * r);
+                scale = 1.0 + exp_ftn(-abond * r) + exp_ftn(-alp[ni] * r);
             } else {
-                scale = 1.0 + exp(-abond * r) + exp(-alp[nj] * r);
+                scale = 1.0 + exp_ftn(-abond * r) + exp_ftn(-alp[nj] * r);
             }
         }
         enuclr = enuc * scale;
@@ -132,7 +140,8 @@ void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
         double ax = r / (pow((double)ni, 0.3333) + pow((double)nj, 0.3333));
         if (ax < 3.0) {
             scale = 1e-8 / pow(ax, 12);
-            enuclr += std::min(scale, 1e5);
+            double lj_term = std::min(scale, 1e5);
+            enuclr += lj_term;
         }
     }
 }

@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
+extern double libm_exp(double);
+extern "C" double fpw_ftn(double, int);   // Intel pow bridge (bit-exact with ifx X**N)
+extern "C" double exp_ftn(double);        // Intel exp bridge (bit-exact with ifx exp)
 namespace overlaps_C {
     thread_local int isp=0, ips=0;
     thread_local double sa=0, sb=0;
@@ -13,7 +16,7 @@ namespace overlaps_C {
 }
 static void aintgs(double x, int k) {
     using namespace overlaps_C;
-    double c=std::exp(-x);
+    double c=exp_ftn(-x);
     a[1]=c/x;
     for (int i=1;i<=k;++i) a[i+1]=(a[i]*i+c)/x;
 }
@@ -33,13 +36,14 @@ static void bintgs(double x, int k) {
         double y=0.0;
         for (int m=io;m<=last;++m) {
             double xf=(m!=0)?fact[m]:1.0;
-            y=y+std::pow(-x,m)*(2*((m+i+1)%2))/(xf*(m+i+1));
+            // F90 uses (-x)**m (Intel pow via __powr8i4), NOT a chained product.
+            y=y+fpw_ftn(-x, m)*(2*((m+i+1)%2))/(xf*(m+i+1));
         }
         b[i+1]=y;
     }
     goto lfin;
   l40:
-    { double expx=std::exp(x), expmx=1.0/expx;
+    { double expx=exp_ftn(x), expmx=1.0/expx;
       b[1]=(expx-expmx)/x;
       for (int i=1;i<=k;++i) {
           double sgn=(i%2==0)?1.0:-1.0;

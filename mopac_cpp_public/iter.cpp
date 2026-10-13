@@ -604,6 +604,12 @@ L600:
         }
     }
     ++nscf;
+    if (std::getenv("ITERPROBE") != nullptr) {
+        std::fprintf(stderr,
+                     "ITERPROBE nscf=%d niter=%d icalcn=%d numcal=%d "
+                     "escf=%.6f\n",
+                     nscf, niter, icalcn, numcal, escf);
+    }
     if(allcon && std::abs(bshift-4.44)<1e-7){
         camkin=false; allcon=false; newdg=false; bshift=-10; okpuly=false;
     }

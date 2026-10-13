@@ -6,6 +6,7 @@
 #include "molkst_C.h"
 #include <cmath>
 #include <algorithm>
+extern double libm_exp(double);
 using namespace common_arrays_C;
 using namespace parameters_C;
 using namespace funcon_C;
@@ -103,7 +104,7 @@ void nddo_to_point(double* wbits, double* e1bits, double* e2bits,
         to_point(r, dummy, const_);
     } else {
         if (r < 3.0) return;
-        const_ = std::exp(-0.025 * (r - 3.0) * (r - 3.0));
+        const_ = libm_exp(-0.025 * (r - 3.0) * (r - 3.0));
     }
     double wbits_p[2026] = {0}, e1bits_p[46] = {0}, e2bits_p[46] = {0}, enubit_p = 0;
     int kb = 0;
