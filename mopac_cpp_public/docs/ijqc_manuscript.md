@@ -159,7 +159,7 @@ During the preparation of this work the authors used AI-assisted tools to assist
 
 ## Data and code availability
 
-The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`); the software is described in detail in ref. 10.
+The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at `https://github.com/qq3185980737/MOPAC-CPP` (directory `mopac_cpp_public`); the software is described in detail in ref. 10.
 
 
 ## References

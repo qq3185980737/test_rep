@@ -29,13 +29,13 @@ MOPAC2016 is one of the most widely used semiempirical molecular-orbital program
 | | |
 |---|---|
 | Current code version | v1.1.0 |
-| Permanent link to code/repository used for this code version | `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`) |
+| Permanent link to code/repository used for this code version | `https://github.com/qq3185980737/MOPAC-CPP` (directory `mopac_cpp_public`) |
 | Code Ocean compute capsule | (to be added at acceptance) |
 | Legal Code License | MIT License |
 | Code versioning system used | git |
 | Software code languages, tools, and services used | C++17; MSVC 2022 (x64); Intel MKL 2025.3 (dsyevd/dgemm/BLAS kernels); optional: OpenCL (ICD loader + `opencl.lib`), compile-time `MOPAC_USE_OPENCL` |
 | Compilation requirements, operating environments & dependencies | Windows x64; MSBuild/`mopac_cpp.sln`; Intel MKL (static link), SSE2 baseline; optional OpenCL runtime/ICD loader when the `MOPAC_USE_OPENCL` path is enabled |
-| If available Link to developer documentation/manual | `https://github.com/qq3185980737/test_rep/blob/main/mopac_cpp_public/README.md` |
+| If available Link to developer documentation/manual | `https://github.com/qq3185980737/MOPAC-CPP/blob/main/mopac_cpp_public/README.md` |
 | Support email for questions | liuyang123@stu.sjzu.edu.cn |
 
 ---
@@ -163,7 +163,7 @@ This work has been financially supported by the Basic Scientific Research Projec
 
 ## Code availability
 
-The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`). MOPAC-CPP is a derivative work of MOPAC2016: the reference Fortran source is the official MOPAC2016 source code, archived in the openmopac/mopac-archive repository (BSD-3-Clause); the current open-source MOPAC release is numerically identical to MOPAC2016 (per the official FAQ) and is described in its JOSS release paper. The provenance and license status of the upstream source are documented in `UPSTREAM_NOTICE.md` in the repository. The C++ translation itself is licensed under the MIT license (see `LICENSE`). All 349 input decks with the 349 recorded C++ outputs and the 327 Fortran `.arc` summaries used in the verification reported here are included in the repository (`regression/`); a permanent Zenodo archive with a DOI will be registered upon acceptance. No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain (the optional OpenCL path additionally requires an OpenCL runtime/ICD loader).
+The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at `https://github.com/qq3185980737/MOPAC-CPP` (directory `mopac_cpp_public`). MOPAC-CPP is a derivative work of MOPAC2016: the reference Fortran source is the official MOPAC2016 source code, archived in the openmopac/mopac-archive repository (BSD-3-Clause); the current open-source MOPAC release is numerically identical to MOPAC2016 (per the official FAQ) and is described in its JOSS release paper. The provenance and license status of the upstream source are documented in `UPSTREAM_NOTICE.md` in the repository. The C++ translation itself is licensed under the MIT license (see `LICENSE`). All 349 input decks with the 349 recorded C++ outputs and the 327 Fortran `.arc` summaries used in the verification reported here are included in the repository (`regression/`); a permanent Zenodo archive with a DOI will be registered upon acceptance. No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain (the optional OpenCL path additionally requires an OpenCL runtime/ICD loader).
 
 ## CRediT authorship contribution statement
 

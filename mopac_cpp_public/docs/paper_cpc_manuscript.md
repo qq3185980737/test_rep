@@ -24,7 +24,7 @@ Migration of legacy Fortran scientific codes to modern languages is accelerating
 
 **CPC Library link to program files:** (to be added by Technical Editor)
 
-**Developer's repository link:** `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`)
+**Developer's repository link:** `https://github.com/qq3185980737/MOPAC-CPP` (directory `mopac_cpp_public`)
 
 **Code Ocean capsule:** (to be added by Technical Editor)
 
