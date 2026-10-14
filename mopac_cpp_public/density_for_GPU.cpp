@@ -15,6 +15,19 @@
 #endif
 #include <omp.h>
 
+#ifdef MOPAC_USE_OPENCL
+#include "opencl_accel.h"
+// Optional GPU offload (opt-in, off by default).  The accelerator is
+// initialised once; if no usable OpenCL device is found it stays inert and
+// the CPU paths below run unchanged (bitwise reference behaviour).
+static OpenCLAccel& ocl_accel() {
+    static OpenCLAccel a;
+    static bool tried = false;
+    if (!tried) { tried = true; a.init(); }
+    return a;
+}
+#endif
+
 namespace {
 inline int pack_idx(int i, int j) {  // upper triangle, Fortran packed (1-based i<=j)
     return j * (j - 1) / 2 + i;      // pp(pack_idx(i,j)) is P(i,j); caller uses pp[pack_idx-1]
@@ -84,6 +97,24 @@ void density_for_GPU(double* c, double fract, int ndubl, int nsingl,
                         ci[k] = c[(size_t)(nl11 - 1 + k) * norbs + (i - 1)];
                 }
             }
+#ifdef MOPAC_USE_OPENCL
+            if (ocl_accel().available()) {
+                // Opt-in GPU path: same upper-triangle rank-2 update, different
+                // reduction order (see opencl_accel.h for the bitwise caveat).
+                // cT2/cT1 are row-major n x k copies built above.
+                std::vector<double> xmat((size_t)norbs * (size_t)norbs, 0.0);
+                if (ocl_accel().rank2_update(norbs, k2, cT2.data(), 2.0 * sign,
+                                             k1, cT1.data(), frac * sign, xmat.data())) {
+                    for (int j = 1; j <= norbs; ++j)
+                        for (int i = 1; i <= j; ++i) {
+                            double v = xmat[(size_t)(i - 1) * norbs + (j - 1)];
+                            pp[pack_idx(i, j)] = (i == j) ? v + cst : v;
+                        }
+                    break;
+                }
+                // GPU failure: fall back to the CPU loop below.
+            }
+#endif
 #pragma omp parallel for schedule(static) collapse(2)
             for (int j = 1; j <= norbs; ++j)
                 for (int i = 1; i <= j; ++i) {
@@ -107,6 +138,26 @@ void density_for_GPU(double* c, double fract, int ndubl, int nsingl,
         }
         case 4:
         case 5: {  // syrk path: xmat = occ*c(:,1:ndubl)*c(:,1:ndubl)^T
+#ifdef MOPAC_USE_OPENCL
+            if (ocl_accel().available()) {
+                // Opt-in GPU path: upper-triangle DSYRK with a row-major copy of
+                // c's first ndubl columns; reduction order differs (see header).
+                std::vector<double> xmat((size_t)norbs * (size_t)norbs, 0.0);
+                if (ndubl > 0) {
+                    std::vector<double> cT((size_t)norbs * (size_t)ndubl);
+                    for (int i = 0; i < norbs; ++i)
+                        for (int k = 0; k < ndubl; ++k)
+                            cT[(size_t)i * ndubl + k] = c[(size_t)k * norbs + i];
+                    if (!ocl_accel().syrk_upper(norbs, ndubl, occ, cT.data(), xmat.data()))
+                        goto syrk_cpu;  // GPU failure -> CPU fallback
+                }
+                for (int j = 1; j <= norbs; ++j)
+                    for (int i = 1; i <= j; ++i)
+                        pp[pack_idx(i, j)] = xmat[(size_t)(i - 1) * norbs + (j - 1)];
+                break;
+            }
+syrk_cpu:
+#endif
             std::vector<double> xmat(norbs * norbs, 0.0);
 #if 1 // MKL dsyrk: match official density_for_GPU.F90 iopc=4/5 path
             // c is column-major (LAPACK output; column = MO).  Serial code fills
