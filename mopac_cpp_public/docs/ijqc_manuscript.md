@@ -34,9 +34,11 @@ We answer this question in the context of MOPAC-CPP, a complete C++17 translatio
 
 In the NDDO-based semiempirical methods, the RHF SCF cycle solves, at each iteration,
 
-**F** C = **S** C **ε**,  (1)
+$$
+\mathbf{F}\,\mathbf{C} = \mathbf{S}\,\mathbf{C}\,\boldsymbol{\varepsilon},  \qquad (1)
+$$
 
-where **F** is the Fock matrix, **S** the overlap matrix, **C** the coefficient matrix, and **ε** the diagonal orbital energies. The density matrix is **P** = C_occ C_occᵀ, where C_occ contains the occupied columns of **C**, and the cycle is iterated until the density and energy are self-consistent (subject to the PULAY/DIIS accelerator when enabled ⁹).
+where **F** is the Fock matrix, **S** the overlap matrix, **C** the coefficient matrix, and **ε** the diagonal orbital energies. The density matrix is **P** = $\mathbf{C}_{\mathrm{occ}}\,\mathbf{C}_{\mathrm{occ}}^{\mathrm{T}}$, where C_occ contains the occupied columns of **C**, and the cycle is iterated until the density and energy are self-consistent (subject to the PULAY/DIIS accelerator when enabled ⁹).
 
 For closed-shell calculations on organic molecules with n ≈ 50–500 orbitals, the diagonalization of **F** is a significant fraction of the per-iteration cost, and its numerical result — in particular the *sign* and *composition* of eigenvectors inside near-degenerate subspaces — feeds directly into the density matrix and hence into the next Fock matrix.
 
