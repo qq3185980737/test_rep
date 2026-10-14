@@ -71,7 +71,6 @@ keyword and the `MOPAC_FULL_DIAG` variable are equivalent and interchangeable.
 |---|---|
 | `MOPAC_DSPAR`, `MOPAC_DSPAR_NB` | FBDR deterministic parallel Fock reduction (NB buckets; NB=1 ≡ serial) |
 | `MOPAC_GAB` | GAB deterministic degenerate-basis choice in the EF optimizer |
-| `EFPROBE`, `HESSPROBE` | non-intrusive diagnostic dumps (no numerical-path change when unset) |
 | `MOPAC_ULPPERT` | ±1-ULP perturbation injection (first EF cycle only; research use) |
 
 With all variables unset the binary is bitwise identical to the official path.
@@ -81,6 +80,7 @@ With all variables unset the binary is bitwise identical to the official path.
 - `tests/` — input decks for the paper's validation molecules (eighteen small
   molecules, the C₁₂H₂₆ ULP-scan family, C₄₀H₈₂/C₈₀H₁₆₂/C₁₂₀H₂₄₂ performance
   set, COSMO regression molecules, and the FBDR/GAB test drivers).
+- `tests/unit/` — per-module unit tests (one `test_*.cpp` per translated module).
 - `run_test/` — auxiliary analysis scripts (trajectory, energy, and distance
   parsers; ULP-scan and COSMO regressions) together with run inputs and
   reference outputs.
