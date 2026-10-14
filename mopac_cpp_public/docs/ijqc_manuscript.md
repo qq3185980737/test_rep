@@ -166,7 +166,7 @@ The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all 
 [1] W. Thiel, Wiley Interdiscip. Rev.: Comput. Mol. Sci. 2014, 4, 145.
 [2] J. J. P. Stewart, J. Mol. Model. 2008, 14, 499.
 [3] J. J. P. Stewart, J. Comput.-Aided Mol. Des. 1990, 4, 1.
-[4] J. J. P. Stewart, MOPAC2016, https://doi.org/10.5281/zenodo.6511958 (accessed: October 2026).
+[4] J. E. Moussa, J. J. P. Stewart, MOPAC: An open-source semiempirical molecular orbital program, J. Open Source Softw. 2026, 11(119), 8025. https://doi.org/10.21105/joss.08025; software archive: https://doi.org/10.5281/zenodo.6511958 (accessed: October 2026).
 [5] J. J. P. Stewart, J. Mol. Model. 2013, 19, 1.
 [6] J. J. P. Stewart, J. Mol. Model. 2007, 13, 1173.
 [7] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, J. Am. Chem. Soc. 1985, 107, 3902.
