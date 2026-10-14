@@ -67,6 +67,7 @@ The package implements the full MOPAC2016 feature set:
 - C++17, MSVC 2022 (x64), SSE2 baseline; build via the provided `mopac_cpp.sln` or MSBuild.
 - Intel MKL (2025.3, static) for `dsyevd`/`dgemm`/BLAS kernels — the same kernel family used by the reference binary, which is part of why bitwise fidelity is attainable on the default path.
 - Single-threaded by default (`OMP_NUM_THREADS=1; MKL_NUM_THREADS=1`) for bitwise-comparable runs.
+- Optional OpenCL offload for the density rank-update kernels (compile-time `MOPAC_USE_OPENCL`, opt-in, experimental): when enabled, the `density_for_GPU` iopc=2/3 and 4/5 paths may run on an OpenCL GPU device; this path is excluded from the bitwise contract and falls back to the CPU path on device failure. Usage and measured results are documented in `docs/OPENCL_ACCEL.md`.
 
 **Input/output.** MOPAC-CPP reads the classic MOPAC keyword deck: one or more keywords on the first line(s) (`PM7 1SCF GEO-OK`), a title line, and a geometry block in Z-matrix, XYZ, or PDB form. The full keyword set is implemented and documented in `KEYWORDS.md` (generated from the same keyword tables as the reference program), so existing MOPAC input decks run unchanged. Output is the classic MOPAC text format (header, `FINAL HEAT OF FORMATION`, population analysis, geometry, property blocks) so downstream parsers continue to work; trajectory and property exports are additionally available in plain XYZ and CSV form for modern toolchains. All files are plain text, which keeps the program scriptable and diff-friendly for regression testing.
 
