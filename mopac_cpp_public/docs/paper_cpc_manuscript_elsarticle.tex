@@ -55,7 +55,7 @@ bitwise reproducibility \sep Fortran-to-C++ migration \sep semiempirical quantum
 
 \textbf{Programming language:} C++17
 
-\textbf{Supplementary material:} full C++17 translation (374 translation units plus headers; the 679 Fortran source files are consolidated into these translation units), regression inputs and recorded outputs, and the FBDR/GAB gate implementations; GAMESS input/output files and atomization-energy reduction scripts are available from the authors on request.
+\textbf{Supplementary material:} full C++17 translation (380 translation units plus headers; the 679 Fortran source files are consolidated into these translation units), regression inputs and recorded outputs, and the FBDR/GAB gate implementations; GAMESS input/output files and atomization-energy reduction scripts are available from the authors on request.
 
 \textbf{Nature of problem (approx. 50--250 words):} MOPAC2016 is a widely used semiempirical quantum-chemistry package whose source consists of 679 Fortran files (~120,000 lines). Migrating such legacy codes to a modern language --- by hand or by LLM agents --- is increasingly common, yet standard validation only checks nominal numeric agreement, which cannot distinguish translation errors from intentional changes and cannot certify bitwise equivalence across runs, platforms, or thread counts. A second, independent problem is numerical non-reproducibility: parallel reductions reorder floating-point additions, and optimizers that project a gradient onto a (near-)degenerate eigenbasis are sensitive to the arbitrary basis returned by the eigensolver. Both mechanisms silently change scientific results. Methods that make a migrated code bitwise verifiable and numerically deterministic are required.
 
@@ -256,7 +256,7 @@ We perturbed 44 positions of the initial EF state by $\pm$1 ULP --- a step to th
 
 
 \subsection{3.3 Degenerate-basis sensitivity}
-For C12H26 (and symmetric molecules generally), the EF Hessian has a 6-dimensional near-degenerate subspace (|$\lambda$| < 1e-6, rigid-body modes). Systematic variation of the basis choice:
+For C12H26 (and symmetric molecules generally), the EF Hessian has a 6-dimensional near-degenerate subspace (|$\lambda$| < 10$^{-6}$, rigid-body modes). Systematic variation of the basis choice:
 
 \begin{table}[htbp]
 \centering
@@ -490,7 +490,7 @@ This work was supported by the Basic Scientific Research Project for Higher Educ
 
 \section{Data availability}
 
-The C++17 translation, its regression inputs and recorded outputs, and the FBDR/GAB gate implementations are provided in the public repository linked in the Program Summary. GAMESS v2024.2.1 inputs and outputs and the atomization-energy reduction scripts are available from the authors on request; all reduced data appear in the tables and figures.
+The C++17 translation, its released regression corpus (349 inputs with recorded C++/Fortran outputs, \texttt{regression/}), and the FBDR/GAB gate implementations are provided in the public repository linked in the Program Summary. GAMESS v2024.2.1 atom-basis inputs are included (\texttt{regression/abinitio}); the full per-molecule GAMESS input/output set and the atomization-energy reduction scripts are available from the authors on request; all reduced data appear in the tables and Appendix A.
 
 
 

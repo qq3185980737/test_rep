@@ -60,7 +60,7 @@ The divide-and-conquer algorithm proceeds by splitting the tridiagonal form of *
 
 ### 2.4 The FULLDIAG gate in MOPAC-CPP
 
-MOPAC-CPP is a 1-based, line-auditable C++17 translation of the 679-file MOPAC2016 source ⁸. Its default SCF path is bitwise identical to a local Intel-ifort rebuild of the official MOPAC2016 source (verified on 320/320 released-regression inputs and on 18 small molecules in single-point mode, with geometry-optimization trajectories identical within the verification build pair). The exact-diagonalization mode is exposed as an opt-in gate:
+MOPAC-CPP is a 1-based, line-auditable C++17 translation of the 679-file MOPAC2016 source ⁸. Its default SCF path is bitwise identical to a local Intel-ifort rebuild of the official MOPAC2016 source (verified on 320/320 released-corpus inputs and on 18 small molecules in single-point mode, with geometry-optimization trajectories identical within the verification build pair). The exact-diagonalization mode is exposed as an opt-in gate:
 
 - input keyword: `PM7 FULLDIAG 1SCF` (or any deck containing `FULLDIAG`), or
 - environment variable: `set MOPAC_FULL_DIAG=1`
@@ -73,7 +73,7 @@ The implementation replaces only the eigen-decomposition call inside the SCF loo
 
 ### 3.1 Fidelity of the default path
 
-With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-regression single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. EF-optimized trajectories are bitwise identical only within a fixed build pair; across builds they are members of a 1-ULP sensitivity band (e.g., the O₂ (UHF) trajectory bifurcates to a different state minimum on the current reference rebuild; ref. 8, §3.1). All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
+With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-corpus single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. EF-optimized trajectories are bitwise identical only within a fixed build pair; across builds they are members of a 1-ULP sensitivity band (e.g., the O₂ (UHF) trajectory bifurcates to a different state minimum on the current reference rebuild; ref. 8, §3.1). All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
 
 ### 3.2 Energy difference on non-degenerate systems
 

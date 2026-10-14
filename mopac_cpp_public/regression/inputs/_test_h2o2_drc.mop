@@ -1,0 +1,7 @@
+PM7 DRC CYCLES=500
+H2 + O2 end-on collision DRC (H2 attacking O2)
+
+O 0.0 0.0 0.0
+O 0.0 0.0 1.30
+H 0.0 0.0 1.90
+H 0.0 0.0 2.64
