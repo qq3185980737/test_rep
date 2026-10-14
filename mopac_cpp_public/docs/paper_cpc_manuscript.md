@@ -46,7 +46,7 @@ Migration of legacy Fortran scientific codes to modern languages is accelerating
 
 ## 1. Introduction
 
-The migration of legacy scientific codes to modern languages is a large and growing engineering activity. Hand migration is laborious, and the accelerating use of LLM agents for code translation ³ makes automated validation more urgent than ever: the translation must be shown to preserve not only nominal output but also numerical behavior, bit for bit, so that downstream scientific conclusions remain valid. Yet standard validation practice stops at "the outputs agree to within tolerance", which cannot distinguish translation errors from intentional changes, and cannot certify bitwise equivalence for codes whose results must be reproducible across runs, platforms, or thread counts. The broader reproducibility problem is well recognized in computational science ⁴,⁵,⁶,⁷; the specific challenge of certifying a *migration* is that the bar must be raised from nominal agreement to bitwise semantics, because semiempirical and numerical methods sit on an accumulated floating-point cascade whose small perturbations are physically meaningful ⁸,⁹.
+The migration of legacy scientific codes to modern languages is a large and growing engineering activity. Hand migration is laborious, and the accelerating use of LLM agents for code translation ³ makes automated validation more urgent than ever: the translation must be shown to preserve not only nominal output but also numerical behavior, bit for bit, so that downstream scientific conclusions remain valid. Yet standard validation practice stops at "the outputs agree to within tolerance", which cannot distinguish translation errors from intentional changes, and cannot certify bitwise equivalence for codes whose results must be reproducible across runs, platforms, or thread counts. The broader reproducibility problem is well recognized in computational science ⁴⁻⁷; the specific challenge of certifying a *migration* is that the bar must be raised from nominal agreement to bitwise semantics, because semiempirical and numerical methods sit on an accumulated floating-point cascade whose small perturbations are physically meaningful ⁸⁻⁹.
 
 This paper addresses the full question: *how does one certify, bit by bit, that a language migration preserves the numerical semantics of the original program, and what algorithm-level behavior does such certification expose?* We answer it with a complete, 1-based reimplementation of MOPAC2016 ¹,¹⁰ — a widely used semiempirical molecular-orbital package ⁸ — in C++17, together with a layered verification pipeline, a floating-point (ULP) attribution protocol, and two deterministic numerical methods that arose directly from the verification work.
 
@@ -124,7 +124,7 @@ Given a residual difference at level L1/L2, the protocol decides its cause:
 
 Because both the bucket assignment and the merge order are fixed and independent of the OpenMP runtime, the output is deterministically independent of thread count and scheduling — **Determinism theorem**: FBDR output is independent of the parallel configuration; for NB=1 it is bitwise equal to the serial path.
 
-**Error bound.** Under the IEEE-754 binary64 standard model ²⁶ with $\varepsilon = 2^{-53}$, let $x = \sum_i a_i$ be a serial Fock component. Using the standard forward-error model (Higham ²⁸,²⁹; Muller et al. ³⁰), each bucket partial sum s_b satisfies the same bound as the corresponding serial subsequence, and the fixed-order merge adds at most $\gamma_{N_B-1}\,\sum_b |s_b|$; hence
+**Error bound.** Under the IEEE-754 binary64 standard model ²⁶ with $\varepsilon = 2^{-53}$, let $x = \sum_i a_i$ be a serial Fock component. Using the standard forward-error model (Higham ²⁸⁻²⁹; Muller et al. ³⁰), each bucket partial sum s_b satisfies the same bound as the corresponding serial subsequence, and the fixed-order merge adds at most $\gamma_{N_B-1}\,\sum_b |s_b|$; hence
 
 $$
 |\hat{x}_{\mathrm{FBDR}} - x| \;\leq\; \gamma_{N-1}\,\sum_i |a_i| \;+\; \gamma_{N_B-1}\,\sum_b |s_b|, \qquad \gamma_n = \frac{n\,\varepsilon}{1-n\,\varepsilon}
@@ -154,30 +154,30 @@ All results were obtained with the Release build (MSVC 2022, SSE2, MKL 2025.3) o
 
 **Eighteen small molecules, single-point mode (bitwise, reproducible).** PM7 restricted Hartree–Fock (RHF) and unrestricted Hartree–Fock (UHF, open-shell species): NH₃, HF, HCl, CO, N₂, CO₂, CH₂O, CH₃OH, H₂O, CH₄, SO₂, H₂S, PH₃, SiH₄, CH₃SH, CH₃Cl, O₂ (UHF triplet), CH₃ (UHF doublet) — every fixed-geometry single-point (1SCF) FINAL HEAT is bitwise identical to the reference (Table 2), and this holds on both the verification build pair and the current reference rebuild: 8/8 re-runnable inputs are bitwise, and 320/320 paired non-EF inputs across the released regression suite have zero exceptions — all on the RHF/UHF diagonalization path (the linear-scaling MOZYME path is not part of this set; see the explicit exception at the end of this section). The SCF diagonalization path uses a fixed Jacobi-rotation eigensolver with a 10⁻¹⁸ threshold that reproduces the reference bitwise.
 
-**Geometry optimization (build-pair values; EF trajectories are build-sensitive).** Table 2 lists the EF-optimized FINAL HEAT values measured during the verification campaign, at which both executables followed identical trajectories (Δ = 0.00000 in every row). Optimization trajectories are, however, chaotic at the 1-ULP level (§3.2): they are reproducible within a fixed build pair but not across builds. Re-running the eight re-usable optimization inputs of this set against the current reference rebuild (a probe-cleaned rebuild of the same Fortran source) confirms this: PH₃ remains bitwise identical; CH₃, CH₃Cl, H₂S, and SiH₄ differ by ≤6×10⁻⁵ kcal/mol with identical EF cycle counts; CH₃SH differs by 1.5×10⁻³ kcal/mol; SO₂ differs by 4×10⁻⁴ kcal/mol (5 vs 7 cycles); and O₂ (UHF) bifurcates to a distinct electronic-state minimum 22.8 kcal/mol away (3 vs 4 cycles) — every case a member of the ULP-sensitivity band of §3.2, not a translation error. The SCF layer at any fixed geometry is bitwise exact on the RHF/UHF diagonalization path (§2.2, cross single-point experiments). The validation set covers the parameterized chemistry of PM7 along four independent axes — elements (nine: H, C, N, O, F, Cl, S, P, Si), point groups (linear D∞h/C∞v, planar D3h, tetrahedral Td, pyramidal C3v, bent C2v, and low-symmetry Cs), spin type (closed-shell RHF and open-shell UHF), and computation paths (single point, geometry optimization, CI, DRC, multi-Hamiltonian) — so that bitwise agreement is demonstrated across the dimension combinations most likely to exercise distinct code paths (e.g., S/P/Si introduce d-orbitals and their NDDO integrals ¹⁶; UHF exercises the two-spin Fock/density pipeline).
+**Geometry optimization (build-pair values; EF trajectories are build-sensitive).** Table 2 lists the EF-optimized FINAL HEAT values measured during the verification campaign, at which both executables followed identical trajectories (Δ = 0.00000 in every row). Optimization trajectories are, however, chaotic at the 1-ULP level (§3.2): they are reproducible within a fixed build pair but not across builds. Re-running the eight re-usable optimization inputs of this set against the current reference rebuild (a probe-cleaned rebuild of the same Fortran source) confirms this: PH₃ remains bitwise identical; CH₃, CH₃Cl, H₂S, and SiH₄ differ by ≤6×10⁻⁵ kcal/mol with identical EF cycle counts; CH₃SH differs by 1.5×10⁻³ kcal/mol; SO₂ differs by 4×10⁻⁴ kcal/mol (5 vs 7 cycles); and O₂ (UHF) bifurcates to a distinct electronic-state minimum 22.8 kcal/mol away (3 vs 4 cycles) — every case a member of the ULP-sensitivity band of §3.2, not a translation error. The SCF layer at any fixed geometry is bitwise exact on the RHF/UHF diagonalization path (§2.2, cross single-point experiments). The validation set covers the parameterized chemistry of PM7 along four independent axes — elements (nine: H, C, N, O, F, Cl, S, P, Si), point groups (linear D_{∞h}/C_{∞v}, planar D_{3h}, tetrahedral T_{d}, pyramidal C_{3v}, bent C_{2v}, and low-symmetry C_{s}), spin type (closed-shell RHF and open-shell UHF), and computation paths (single point, geometry optimization, CI, DRC, multi-Hamiltonian) — so that bitwise agreement is demonstrated across the dimension combinations most likely to exercise distinct code paths (e.g., S/P/Si introduce d-orbitals and their NDDO integrals ¹⁶; UHF exercises the two-spin Fock/density pipeline).
 
 **Table 2 — Bitwise fidelity of the C++ port against the reference MOPAC2016 rebuild (PM7; FINAL HEAT in kcal/mol; single-point rows are reproducible on the current builds, EF-optimized rows are verification-build-pair values, see §3.1).**
 
 | Molecule (point group) | FINAL HEAT reference (1SCF) | FINAL HEAT C++ (1SCF) | Δ (1SCF) | FINAL HEAT reference (EF-opt, build pair) | FINAL HEAT C++ (EF-opt, build pair) | Δ (EF-opt) |
 |---|---|---|---|---|---|---|
-| NH₃ (C3v) | −0.41198 | −0.41198 | 0.00000 | −4.26013 | −4.26013 | 0.00000 |
+| NH₃ (C_{3v}) | −0.41198 | −0.41198 | 0.00000 | −4.26013 | −4.26013 | 0.00000 |
 | HF (C∞v) | −61.65307 | −61.65307 | 0.00000 | −61.93557 | −61.93557 | 0.00000 |
 | HCl (C∞v) | −20.48449 | −20.48449 | 0.00000 | −20.48607 | −20.48607 | 0.00000 |
 | CO (C∞v) | −18.15324 | −18.15324 | 0.00000 | −18.30777 | −18.30777 | 0.00000 |
-| N₂ (D∞h) | 33.88810 | 33.88810 | 0.00000 | 32.99046 | 32.99046 | 0.00000 |
-| CO₂ (D∞h) | −84.42002 | −84.42002 | 0.00000 | −84.51541 | −84.51541 | 0.00000 |
-| CH₂O (Cs) | −25.12692 | −25.12692 | 0.00000 | −25.54306 | −25.54306 | 0.00000 |
-| CH₃OH (Cs) | −18.16185 | −18.16185 | 0.00000 | −48.93811 | −48.93811 | 0.00000 |
-| H₂O (C2v) | −57.72226 | −57.72226 | 0.00000 | −57.79940 | −57.79940 | 0.00000 |
-| CH₄ (Td) | −14.39932 | −14.39932 | 0.00000 | −14.40390 | −14.40390 | 0.00000 |
-| SO₂ (C2v) | −63.95992 | −63.95992 | 0.00000 | −65.19914 | −65.19914 | 0.00000 |
-| H₂S (C2v) | −3.18683 | −3.18683 | 0.00000 | −3.51398 | −3.51398 | 0.00000 |
-| PH₃ (C3v) | 35.50238 | 35.50238 | 0.00000 | −3.35833 | −3.35833 | 0.00000 |
-| SiH₄ (Td) | 13.48510 | 13.48510 | 0.00000 | 12.84914 | 12.84914 | 0.00000 |
-| CH₃SH (Cs) | 59.32692 | 59.32692 | 0.00000 | −4.77799 | −4.77799 | 0.00000 |
-| CH₃Cl (C3v) | −16.49884 | −16.49884 | 0.00000 | −16.53531 | −16.53531 | 0.00000 |
-| O₂ (D∞h, UHF triplet) | 7.16250 | 7.16250 | 0.00000 | 25.68941 | 25.68941 | 0.00000 |
-| CH₃ (D3h, UHF doublet) | 28.46454 | 28.46454 | 0.00000 | 27.96994 | 27.96994 | 0.00000 |
+| N₂ (D_{∞h}) | 33.88810 | 33.88810 | 0.00000 | 32.99046 | 32.99046 | 0.00000 |
+| CO₂ (D_{∞h}) | −84.42002 | −84.42002 | 0.00000 | −84.51541 | −84.51541 | 0.00000 |
+| CH₂O (C_{s}) | −25.12692 | −25.12692 | 0.00000 | −25.54306 | −25.54306 | 0.00000 |
+| CH₃OH (C_{s}) | −18.16185 | −18.16185 | 0.00000 | −48.93811 | −48.93811 | 0.00000 |
+| H₂O (C_{2v}) | −57.72226 | −57.72226 | 0.00000 | −57.79940 | −57.79940 | 0.00000 |
+| CH₄ (T_{d}) | −14.39932 | −14.39932 | 0.00000 | −14.40390 | −14.40390 | 0.00000 |
+| SO₂ (C_{2v}) | −63.95992 | −63.95992 | 0.00000 | −65.19914 | −65.19914 | 0.00000 |
+| H₂S (C_{2v}) | −3.18683 | −3.18683 | 0.00000 | −3.51398 | −3.51398 | 0.00000 |
+| PH₃ (C_{3v}) | 35.50238 | 35.50238 | 0.00000 | −3.35833 | −3.35833 | 0.00000 |
+| SiH₄ (T_{d}) | 13.48510 | 13.48510 | 0.00000 | 12.84914 | 12.84914 | 0.00000 |
+| CH₃SH (C_{s}) | 59.32692 | 59.32692 | 0.00000 | −4.77799 | −4.77799 | 0.00000 |
+| CH₃Cl (C_{3v}) | −16.49884 | −16.49884 | 0.00000 | −16.53531 | −16.53531 | 0.00000 |
+| O₂ (D_{∞h}, UHF triplet) | 7.16250 | 7.16250 | 0.00000 | 25.68941 | 25.68941 | 0.00000 |
+| CH₃ (D_{3h}, UHF doublet) | 28.46454 | 28.46454 | 0.00000 | 27.96994 | 27.96994 | 0.00000 |
 
 *Table 2 note: Δ = C++ − reference, kcal/mol. The 1SCF columns were re-verified on the current builds (release regression suite, 320/320 RHF/UHF diagonalization-path paired non-EF inputs bitwise identical, zero exceptions; 317 of the 349 released decks are 1SCF single points, `regression/`): all rows reproduce exactly. The EF-optimized columns are the verification-build-pair values; EF trajectories are 1-ULP chaotic (§3.2) and therefore build-sensitive — on the current reference rebuild the eight re-runnable optimization inputs fall inside the ULP-sensitivity band (PH₃ bitwise; four molecules ≤6×10⁻⁵ kcal/mol; CH₃SH 1.5×10⁻³; SO₂ 5→7 cycles, 4×10⁻⁴; O₂ 3→4 cycles, bifurcation to a distinct state minimum, 22.8 kcal/mol), while the C₁₂H₂₆ 256/272-step pair and the C₁₆H₃₄ bifurcation (§3.2) reproduce exactly. GAB on/off comparisons are in Table 4.*
 
@@ -190,7 +190,7 @@ All results were obtained with the Release build (MSVC 2022, SSE2, MKL 2025.3) o
 
 **C12H26 optimization.** The C++ port's optimization run follows a 272-step trajectory (FINAL HEAT −66.77720, gradient norm ‖g‖ = 0.97589); the reference terminates at 256 steps (−67.36683, ‖g‖ = 0.87603). The trajectories already separate at the second EF cycle (ΔE ≈ 0.5 kcal/mol at cycle 2) and converge to distinct points 0.59 kcal/mol apart; both outcomes are members of the ULP-sensitivity band established in §3.2. The divergence is attributed to 1-ULP-scale scalar floating-point rounding in gradient assembly (summation order and integer-power lowering by the two compilers), not to a translation defect (§2.2); the SCF layer itself is verified bitwise identical at fixed geometry on the RHF/UHF diagonalization path by cross single-point experiments (§3.2).
 
-**Explicit exception: the MOZYME linear-scaling path (stress input).** MOZYME (localized-orbital, linear-scaling SCF ¹⁹) is not part of the RHF/UHF diagonalization-path contract above, yet its large-scale ULP behavior is informative. On a deliberately compressed 143-centre alkane-like stress deck (40 C + 103 H; the input generator's "exact tetrahedral" geometry places 39 H–H pairs below 0.8 Å, and the reference's Lewis analysis flags the deck with a non-physical CHARGE = +97 and a "very large heat" CHECK warning), a MOZYME 1SCF run achieves the SCF field on both executables, but the electronic energies differ by 0.0073 eV (0.168 kcal/mol in FINAL HEAT; ΔEE × 23.0605 kcal mol⁻¹ eV⁻¹ ≈ 0.168, a relative difference ≈ 6×10⁻⁷). Probe instrumentation localized the seed to the two-center core Hamiltonian: 13 of the 16,928 packed entries of h differ by exactly 1 ULP, all on C–C pairs, tracing to the exponential (diat2) evaluated by the two compilers' math libraries (MSVC vs. Intel ifort). The 1-ULP seed propagates through the MOZYME Fock and density pipeline (781 Fock entries and 860 density entries within 1–48 ULP of each other) and is amplified over the long SCF iteration (170 iterations in the reference vs. 182 in the C++ port). This is the same class of compiler-level rounding chaos quantified in §3.2, now observed on the linear-scaling path: it does not indicate a translation defect, and the MOZYME path is excluded from the bitwise contract of this paper. Short MOZYME runs (fewer than ~10 iterations) show no amplification and agree to printed precision.
+**Explicit exception: the MOZYME linear-scaling path (stress input).** MOZYME (localized-orbital, linear-scaling SCF ¹⁹) is not part of the RHF/UHF diagonalization-path contract above, yet its large-scale ULP behavior is informative. On a deliberately compressed 143-centre alkane-like stress deck (40 C + 103 H; the input generator's "exact tetrahedral" geometry places 39 H–H pairs below 0.8 Å, and the reference's Lewis analysis flags the deck with a non-physical CHARGE = +97 and a "very large heat" CHECK warning), a MOZYME 1SCF run achieves the SCF field on both executables, but the electronic energies differ by 0.0073 eV (0.168 kcal/mol in FINAL HEAT; ΔE × 23.0605 kcal mol⁻¹ eV⁻¹ ≈ 0.168, a relative difference ≈ 6×10⁻⁷). Probe instrumentation localized the seed to the two-center core Hamiltonian: 13 of the 16,928 packed entries of h differ by exactly 1 ULP, all on C–C pairs, tracing to the exponential (diat2) evaluated by the two compilers' math libraries (MSVC vs. Intel ifort). The 1-ULP seed propagates through the MOZYME Fock and density pipeline (781 Fock entries and 860 density entries within 1–48 ULP of each other) and is amplified over the long SCF iteration (170 iterations in the reference vs. 182 in the C++ port). This is the same class of compiler-level rounding chaos quantified in §3.2, now observed on the linear-scaling path: it does not indicate a translation defect, and the MOZYME path is excluded from the bitwise contract of this paper. Short MOZYME runs (fewer than ~10 iterations) show no amplification and agree to printed precision.
 
 ### 3.2 ULP trajectory sensitivity
 
@@ -231,22 +231,22 @@ We validated GAB (§2.5) on 24 molecules covering all common point groups, compa
 | Benzene C₆H₆ (D6h) | 22.95692 | 5 | ✓ |
 | Ethane C₂H₆ (D3d) | −18.19673 | 6 | ✓ |
 | Ethylene C₂H₄ (D2h) | 13.85554 | 6 | ✓ |
-| Acetylene C₂H₂ (D∞h) | 57.13711 | 6 | ✓ |
-| CO₂ (D∞h) | −84.51541 | 3 | ✓ |
-| N₂ (D∞h) | 32.99046 | 4 | ✓ |
+| Acetylene C₂H₂ (D_{∞h}) | 57.13711 | 6 | ✓ |
+| CO₂ (D_{∞h}) | −84.51541 | 3 | ✓ |
+| N₂ (D_{∞h}) | 32.99046 | 4 | ✓ |
 | HF / HCl / CO (C∞v) | −61.93557 / −20.48607 / −18.30777 | 4/3/3 | ✓ |
-| CH₄ (Td) | −14.40390 | 3 | ✓ |
-| NH₃ (C3v) | −4.26013 | 5 | ✓ |
-| H₂O (C2v) | −57.79940 | 3 | ✓ |
-| CH₂O / CH₃OH (Cs) | −25.54306 / −48.93811 | 6/8 | ✓ |
-| SO₂ (C2v) | −65.19914 | 5 | ✓ |
-| H₂S (C2v) | −3.51398 | 4 | ✓ |
-| PH₃ (C3v) | −3.35833 | 9 | ✓ |
-| SiH₄ (Td) | 12.84914 | 5 | ✓ |
-| CH₃SH (Cs) | −4.77799 | 17 | ✓ |
-| CH₃Cl (C3v) | −16.53531 | 3 | ✓ |
-| O₂ (D∞h, UHF triplet) | 25.68941 | 3 | ✓ |
-| CH₃ (D3h, UHF doublet) | 27.96994 | 5 | ✓ |
+| CH₄ (T_{d}) | −14.40390 | 3 | ✓ |
+| NH₃ (C_{3v}) | −4.26013 | 5 | ✓ |
+| H₂O (C_{2v}) | −57.79940 | 3 | ✓ |
+| CH₂O / CH₃OH (C_{s}) | −25.54306 / −48.93811 | 6/8 | ✓ |
+| SO₂ (C_{2v}) | −65.19914 | 5 | ✓ |
+| H₂S (C_{2v}) | −3.51398 | 4 | ✓ |
+| PH₃ (C_{3v}) | −3.35833 | 9 | ✓ |
+| SiH₄ (T_{d}) | 12.84914 | 5 | ✓ |
+| CH₃SH (C_{s}) | −4.77799 | 17 | ✓ |
+| CH₃Cl (C_{3v}) | −16.53531 | 3 | ✓ |
+| O₂ (D_{∞h}, UHF triplet) | 25.68941 | 3 | ✓ |
+| CH₃ (D_{3h}, UHF doublet) | 27.96994 | 5 | ✓ |
 
 *Table 4 note: the 24-molecule validation was measured on the verification build pair (as in Table 2). GAB (§2.5) activates only when the EF Hessian contains a near-degenerate block with m ≥ 2 and ‖g_D‖ > 1e-12; molecules whose optimizer never enters such a block satisfy "GAB identical" trivially, because both modes then execute the same code path. On the current builds, C₁₂H₂₆ re-verifies the GAB on/off comparison bitwise (−66.77720, 272 steps with and without `MOPAC_GAB`), and the reference trajectories are the 1-ULP build-sensitive values of Table 2/§3.2 (e.g., the O₂ UHF row above is the verification-build-pair value; on the current reference rebuild O₂ bifurcates to a distinct state minimum, §3.1).*
 
