@@ -310,7 +310,6 @@ bool OpenCLAccel::selftest() {
 OpenCLAccel::OpenCLAccel() : impl_(nullptr), ok_(false), cu_(0), clock_(0) {}
 OpenCLAccel::~OpenCLAccel() {}
 bool OpenCLAccel::init(const std::string&) { return false; }
-const std::string& OpenCLAccel::device_name() const { static const std::string s("(OpenCL disabled)"); return s; }
 bool OpenCLAccel::gemm(int, const double*, const double*, double*) { return false; }
 bool OpenCLAccel::syrk_upper(int, int, double, const double*, double*) { return false; }
 bool OpenCLAccel::rank2_update(int, int, const double*, double, int, const double*, double, double*) { return false; }

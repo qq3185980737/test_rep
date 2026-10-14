@@ -14,8 +14,11 @@ for large-molecule workloads, offloading the density rank-k updates and the
 symmetric rank update (`density_for_GPU` iopc=2/3 and iopc=4/5) can be faster
 than the CPU path.  The module is shipped so that such machines can try it
 without touching the default bitwise path.  On iGPUs such as the AMD 780M
-measured here, FP64 throughput is too low to beat the CPU, so the module
-correctly reports `available()` and the program keeps the CPU path.
+measured here, FP64 throughput is too low to beat the CPU: if enabled on
+such a part, `init()` succeeds and the program does use the GPU path (which
+is slower than the CPU), so the module is aimed at discrete-GPU machines
+with strong FP64.  On machines without a suitable device the module reports
+`available()==false` and the CPU path is used unchanged.
 
 ## Files
 
