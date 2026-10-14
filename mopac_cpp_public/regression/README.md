@@ -36,8 +36,7 @@ Hence the "320/320 released-regression paired non-EF inputs, zero exceptions"
 statement in the manuscripts refers to the 320 paired non-EF inputs
 reproduced bitwise (317 of the 349 released decks are 1SCF single points).
 The comparison is reproduced by
-`cmp_corpus.py` in this directory (run `python cmp_corpus.py` after
-regenerating outputs into `out_cpp/`).
+`cmp_corpus.py` in this directory (run `python cmp_corpus.py`).
 
 ## Provenance
 
