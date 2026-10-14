@@ -1602,16 +1602,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                         ++ij;
                     }
             rsp(rsp_in.data(), nvar, rsp_root.data(), rsp_vec.data());
-            if (std::getenv("EFGHEX")) {
-                std::fprintf(stderr, "RSPIN-C\n");
-                for (int qi2 = 0; qi2 < 20; ++qi2) {
-                    unsigned char* ph = (unsigned char*)&rsp_in[qi2];
-                    std::fprintf(stderr, "RSPIN-C %d=", qi2);
-                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", ph[q]);
-                    std::fprintf(stderr, "\n");
-                }
-                std::fflush(stderr);
-            }
                 for (i = 1; i <= nvar; ++i) {
                     eigval[i] = rsp_root[i - 1];
                     for (j = 1; j <= nvar; ++j)
@@ -1722,19 +1712,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                              &grad[1], 1);
                 if (std::abs(eigval[i]) == 0.0) fx[i] = 0.0;
             }
-            if (std::getenv("EFGHEX")) {
-                std::fprintf(stderr, "EFX-C nstep=%d\n", nstep);
-                for (int qi2 = 1; qi2 <= nvar; ++qi2) {
-                    unsigned char* pf = (unsigned char*)&fx[qi2];
-                    std::fprintf(stderr, "EFX-C fx%d=", qi2);
-                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pf[q]);
-                    std::fprintf(stderr, " ev%d=", qi2);
-                    unsigned char* pe = (unsigned char*)&eigval[qi2];
-                    for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pe[q]);
-                    std::fprintf(stderr, "\n");
-                }
-                std::fflush(stderr);
-            }
             for (;;) {
                 formd(eigval, fx, nvar, dmax, ddmin, lts, lorjk, rrscal, donr,
                       u, d, vmode);
@@ -1771,31 +1748,11 @@ void ef(std::vector<double>& xparam, double& funct) {
                     }
                 } else {
                     for (i = 1; i <= nvar; ++i) d[i] = d[i] * cos_const;
-                    if (std::getenv("EFGHEX")) {
-                        std::fprintf(stderr, "EFD-C nstep=%d\n", nstep);
-                        for (int qi2 = 1; qi2 <= 5 && qi2 <= nvar; ++qi2) {
-                            unsigned char* pd = (unsigned char*)&d[qi2];
-                            std::fprintf(stderr, "EFD-C d%d=", qi2);
-                            for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pd[q]);
-                            std::fprintf(stderr, "\n");
-                        }
-                        std::fflush(stderr);
-                    }
                     for (i = 1; i <= nvar; ++i) {
                         xparam[i] = xparam[i] + d[i];
                         k = loc[1][i];
                         l = loc[2][i];
                         geo[l][k] = xparam[i];
-                    }
-                    if (std::getenv("EFGHEX")) {
-                        std::fprintf(stderr, "EFX2-C nstep=%d\n", nstep);
-                        for (int qi2 = 1; qi2 <= nvar; ++qi2) {
-                            unsigned char* px = (unsigned char*)&xparam[qi2];
-                            std::fprintf(stderr, "EFX2-C x%d=", qi2);
-                            for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", px[q]);
-                            std::fprintf(stderr, "\n");
-                        }
-                        std::fflush(stderr);
                     }
                     if (ndep != 0) symtry();
                     depre = 0.0;
@@ -1814,13 +1771,6 @@ void ef(std::vector<double>& xparam, double& funct) {
                     for (i = 1; i <= nvar; ++i) grad[i] = 0.0;
                     compfg(xparam, true, funct, true, grad, true);
                     if (moperr) goto L1100;
-                    if (std::getenv("EFGHEX")) {
-                        unsigned char* pb = (unsigned char*)&funct;
-                        std::fprintf(stderr, "EFG-C%d funct=", nstep);
-                        for (int q = 7; q >= 0; --q) std::fprintf(stderr, "%02X", pb[q]);
-                        std::fprintf(stderr, "\n");
-                        std::fflush(stderr);
-                    }
                     deact = funct - olde;
                     if (depre == 0.0) {
                         std::printf(" CALCULATION IS TERMINATED TO AVOID ZERO DIVIDE\n");

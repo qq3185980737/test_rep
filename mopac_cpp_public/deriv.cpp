@@ -248,18 +248,6 @@ void deriv(const std::vector<std::vector<double>>& geo,
     }
     step = precis ? 0.5 / step : 1.0 / step;
     for (int i = 1; i <= nvar; ++i) gradnt[i] *= step;
-    if (getenv("GPROBE")) {
-        FILE* pf = fopen("D:\\mopac\\cxx_gradprobe.txt", "a");
-        if (pf) {
-            fprintf(pf, "GRAD-CXX nvar=%d\n", nvar);
-            for (int i = 1; i <= nvar; ++i) {
-                uint64_t u = 0; memcpy(&u, &gradnt[i], 8);
-                fprintf(pf, "%016llX%s", (unsigned long long)u,
-                        (i % 4 == 0 || i == nvar) ? "\n" : " ");
-            }
-            fclose(pf);
-        }
-    }
         if (geochk) {
             sum = dot3(&gradnt[1], &gradnt[1], nvar);
             if (sum < 2.0 &&

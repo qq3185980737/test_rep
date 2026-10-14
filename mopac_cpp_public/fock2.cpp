@@ -468,18 +468,6 @@ void fock2(std::vector<double>& f, const std::vector<double>& ptot,
             for (int b = 1; b <= ilim; ++b)
                 for (int a = 1; a <= ilim; ++a)
                     wsub[a + (b - 1) * ilim] = w[kk + (a - 1) + (b - 1) * ilim + 1];
-            if (getenv("F1PROBE") && ii == 13) {
-                static FILE* _f1p = nullptr;
-                if (!_f1p) _f1p = fopen("D:\\mopac\\cxx_f1probe.txt", "a");
-                unsigned long long u; std::memcpy(&u, &f[1326], 8);
-                fprintf(_f1p, "F1PRE ii=13 f51=%016llX\n", u);
-                fprintf(_f1p, "WSUB-CXX ii=13\n");
-                for (int a = 1; a <= 100; ++a) {
-                    std::memcpy(&u, &wsub[a], 8);
-                    fprintf(_f1p, "%016llX\n", u);
-                }
-                fflush(_f1p);
-            }
             fock1dorbs(f, ptot, p, molkst_C::mpack, wsub, kk, ia, ib, ilim);
         }
     }

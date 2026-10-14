@@ -27,11 +27,6 @@ extern "C" double fpw_ftn(double x, int n) {
         g_fpw_init = true;
         HMODULE h = LoadLibraryA("D:\\mopac\\libmmd.dll");
         if (h) g_fpw = (fpw_fn)GetProcAddress(h, "__powr8i4");
-        FILE* pf = fopen("D:\\mopac\\fpw_bridge.txt", "a");
-        if (pf) {
-            fprintf(pf, "init h=%p fn=%p\n", (void*)h, (void*)g_fpw);
-            fclose(pf);
-        }
     }
     double r;
     if (g_fpw) r = g_fpw(x, n);
@@ -50,11 +45,6 @@ extern "C" double exp_ftn(double x) {
         g_fexp_init = true;
         HMODULE h = LoadLibraryA("D:\\mopac\\libmmd.dll");
         if (h) g_fexp = (fexp_fn)GetProcAddress(h, "exp");
-        FILE* pf = fopen("D:\\mopac\\fexp_bridge.txt", "a");
-        if (pf) {
-            fprintf(pf, "init h=%p fn=%p\n", (void*)h, (void*)g_fexp);
-            fclose(pf);
-        }
     }
     if (g_fexp) return g_fexp(x);
     return libm_exp(x);  // fallback
