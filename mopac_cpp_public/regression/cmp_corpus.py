@@ -1,12 +1,20 @@
 # -*- coding: utf-8 -*-
-"""B4: compare FINAL HEAT between C++ run1 outputs and Fortran ftn .arc summaries."""
+"""Compare FINAL HEAT values between the recorded C++ outputs (out_cpp/) and
+the Fortran .arc summaries (out_ftn/) of the released regression corpus.
+
+Run from anywhere: the directories are resolved relative to this script.
+Expected result on the archived corpus: 327 paired inputs, 320 bitwise
+identical, 7 EF-optimization value mismatches (documented 1-ULP build
+sensitivity), 22 inputs without a Fortran .arc counterpart.
+"""
 import re
 import os
 import glob
 import json
 
-CXX_DIR = r"D:\mopac\_full_cmp\run1"
-FTN_DIR = r"D:\mopac\_full_cmp\ftn"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+CXX_DIR = os.path.join(_HERE, "out_cpp")
+FTN_DIR = os.path.join(_HERE, "out_ftn")
 
 HEAT_RE_OUT = re.compile(r"final heat of formation\s*=\s*([-+\d.]+)", re.IGNORECASE)
 HEAT_RE_ARC = re.compile(r"heat of formation\s*=\s*([-+\d.]+)", re.IGNORECASE)

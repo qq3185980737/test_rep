@@ -29,13 +29,13 @@ MOPAC2016 is one of the most widely used semiempirical molecular-orbital program
 | | |
 |---|---|
 | Current code version | v1.1.0 |
-| Permanent link to code/repository used for this code version | https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`) |
+| Permanent link to code/repository used for this code version | `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`) |
 | Code Ocean compute capsule | (to be added at acceptance) |
 | Legal Code License | MIT License |
 | Code versioning system used | git |
 | Software code languages, tools, and services used | C++17; MSVC 2022 (x64); Intel MKL 2025.3 (dsyevd/dgemm/BLAS kernels) |
 | Compilation requirements, operating environments & dependencies | Windows x64; MSBuild/`mopac_cpp.sln`; Intel MKL (static link), SSE2 baseline |
-| If available Link to developer documentation/manual | https://github.com/qq3185980737/test_rep/blob/main/mopac_cpp_public/README.md |
+| If available Link to developer documentation/manual | `https://github.com/qq3185980737/test_rep/blob/main/mopac_cpp_public/README.md` |
 | Support email for questions | liuyang123@stu.sjzu.edu.cn |
 
 ---
@@ -84,7 +84,7 @@ In prose: **FBDR** (`MOPAC_DSPAR` / `MOPAC_DSPAR_NB`) makes parallel Fock-matrix
 
 ### 2.5 Testing
 
-Hundreds of unit tests (`test_*.cpp`) cover individual translated functions; a released-corpus corpus (320 inputs) verifies end-to-end single-point behavior; `run_test/` contains executable integration cases, including molecular-dynamics runs.
+Hundreds of unit tests (`test_*.cpp`) cover individual translated functions; a released regression corpus (349 inputs; 320/320 paired non-EF inputs bitwise identical, 317 of them 1SCF single points) verifies end-to-end behavior; `run_test/` contains executable integration cases, including molecular-dynamics runs.
 
 ## 3. Illustrative examples
 
@@ -142,7 +142,7 @@ With FBDR enabled, the Fock-matrix reduction is partitioned into fixed buckets w
 
 **Audience value.** MOPAC-CPP lets existing MOPAC users switch to a modern C++ codebase with unchanged inputs and outputs, gives developers a clean embeddable library, and provides educators and researchers a complete, tested example of a verified 120k-line migration.
 
-**Maintainability and community.** The repository ships the full build configuration, hundreds of unit tests, an end-to-end regression corpus (320 released inputs), and documentation (`README.md`, `KEYWORDS.md`, build and verification guides), so that a new contributor can rebuild, test, and audit the entire package without external services. The MIT license and the explicit file correspondence (the 679 Fortran source files are consolidated into 374 C++ translation units plus headers, each documenting its source module) lower the barrier for domain experts to review or extend the code, and the reproducibility gates are isolated behind dedicated keywords and environment variables, keeping the default path stable across releases.
+**Maintainability and community.** The repository ships the full build configuration, hundreds of unit tests, an end-to-end regression corpus (349 inputs; 320/320 paired non-EF inputs bitwise identical), and documentation (`README.md`, `KEYWORDS.md`, build and verification guides), so that a new contributor can rebuild, test, and audit the entire package without external services. The MIT license and the explicit file correspondence (the 679 Fortran source files are consolidated into 380 C++ translation units plus headers, each documenting its source module) lower the barrier for domain experts to review or extend the code, and the reproducibility gates are isolated behind dedicated keywords and environment variables, keeping the default path stable across releases.
 
 ## 5. Conclusions
 
@@ -162,7 +162,7 @@ This work has been financially supported by the Basic Scientific Research Projec
 
 ## Code availability
 
-The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at https://github.com/qq3185980737/test_rep (directory `mopac_cpp_public`). MOPAC-CPP is a derivative work of MOPAC2016: the current OpenMOPAC releases are distributed under the Apache License 2.0, while the 2016 archive used for this translation carries no license file of its own — the provenance and license status of the upstream source are documented in `UPSTREAM_NOTICE.md` in the repository. The C++ translation itself is licensed under the MIT license (see `LICENSE`). All input decks and recorded outputs used in the verification reported here are included in the repository; a permanent Zenodo archive with a DOI will be registered upon acceptance (the DOI 10.5281/zenodo.6511958 cited in the text refers to the reference MOPAC2016 archive, not to MOPAC-CPP). No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain.
+The MOPAC-CPP source code, test suite, verification scripts, and documentation are publicly available under the MIT license at `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`). MOPAC-CPP is a derivative work of MOPAC2016: the current OpenMOPAC releases are distributed under the Apache License 2.0, while the 2016 archive used for this translation carries no license file of its own — the provenance and license status of the upstream source are documented in `UPSTREAM_NOTICE.md` in the repository. The C++ translation itself is licensed under the MIT license (see `LICENSE`). All 349 input decks with the 349 recorded C++ outputs and the 327 Fortran `.arc` summaries used in the verification reported here are included in the repository (`regression/`); a permanent Zenodo archive with a DOI will be registered upon acceptance (the DOI 10.5281/zenodo.6511958 cited in the text refers to the reference MOPAC2016 archive, not to MOPAC-CPP). No commercial dependencies are required beyond the documented MSVC/Intel MKL toolchain.
 
 ## CRediT authorship contribution statement
 
@@ -183,4 +183,4 @@ The MOPAC-CPP source code, test suite, verification scripts, and documentation a
 [11] P. Valero-Lara, W. F. Godoy, J. Gonzalez, A. Huante, H. Gauthier-Chaparro, J. Gonzalez, LLM-driven Fortran-to-C/C++ portability for parallel scientific codes, in: Proceedings of the 2025 IEEE International Conference on eScience (eScience), IEEE, 2025.
 [12] M. W. Schmidt et al., General atomic and molecular electronic structure system (GAMESS), J. Comput. Chem. 14 (1993) 1347–1363. https://doi.org/10.1002/jcc.540140112
 [13] Y. Liu, X. Wang, Bitwise-reproducibility verification and deterministic numerical methods for scientific-software migration, with a full MOPAC2016 (Fortran to C++) case study, Comput. Phys. Commun. 2026, submitted.
-[14] Y. Liu, X. Wang, State selection in near-degenerate SCF eigenspaces: exact versus pseudo diagonalization in a bitwise-verified MOPAC2016 port, Int. J. Quantum Chem., submitted (2026).
+[14] Y. Liu, X. Wang, Pseudo- versus exact diagonalization in semiempirical SCF calculations: a performance–robustness–fidelity trade-off study on the MOPAC2016 C++ translation, Int. J. Quantum Chem., submitted (2026).

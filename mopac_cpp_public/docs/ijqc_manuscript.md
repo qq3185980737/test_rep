@@ -16,6 +16,8 @@ Semiempirical methods such as PM7 solve the self-consistent-field (SCF) problem 
 
 Replacing the pairwise-rotation (pseudo-)eigensolver of a bitwise-faithful MOPAC2016 C++ translation with an opt-in LAPACK divide-and-conquer diagonalization costs only ≈2×10⁻⁴ kcal/mol on non-degenerate systems, selects a different, slightly lower SCF state on near-degenerate regular alkanes after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT) while the default path preserves the reference state selection, and accelerates large single points by 2.1–3.6×, quantifying a three-way fidelity–robustness–performance trade-off.
 
+![Graphical table of contents](ijqc_gtoc.png)
+
 ## 1. Introduction
 
 Semiempirical quantum-chemical methods ¹ remain indispensable for large systems and for dynamics and screening applications where first-principles methods are prohibitively expensive ². Their computational core is the self-consistent-field (SCF) procedure: given a Fock matrix **F**, the density matrix is built from the occupied eigenvectors of **F**, and the process is iterated to self-consistency. The cost and numerical behavior of the SCF iteration therefore depend critically on the eigensolver.
@@ -73,7 +75,7 @@ The implementation replaces only the eigen-decomposition call inside the SCF loo
 
 ### 3.1 Fidelity of the default path
 
-With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-corpus single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. EF-optimized trajectories are bitwise identical only within a fixed build pair; across builds they are members of a 1-ULP sensitivity band (e.g., the O₂ (UHF) trajectory bifurcates to a different state minimum on the current reference rebuild; ref. 8, §3.1). All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
+With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-corpus paired non-EF inputs with zero exceptions (317 of the 349 released decks are 1SCF single points; the corpus is archived under `regression/` in the repository); FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. EF-optimized trajectories are bitwise identical only within a fixed build pair; across builds they are members of a 1-ULP sensitivity band (e.g., the O₂ (UHF) trajectory bifurcates to a different state minimum on the current reference rebuild; ref. 8, §3.1). All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
 
 ### 3.2 Energy difference on non-degenerate systems
 
@@ -155,7 +157,7 @@ During the preparation of this work the authors used AI-assisted tools to assist
 
 ## Data and code availability
 
-The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at https://github.com/qq3185980737/test_rep (mopac_cpp_public); the software is described in detail in ref. 10.
+The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at `https://github.com/qq3185980737/test_rep` (directory `mopac_cpp_public`); the software is described in detail in ref. 10.
 
 
 ## References
