@@ -34,7 +34,7 @@ MOPAC2016 is one of the most widely used semiempirical molecular-orbital program
 | Legal Code License | MIT License |
 | Code versioning system used | git |
 | Software code languages, tools, and services used | C++17; MSVC 2022 (x64); Intel MKL 2025.3 (dsyevd/dgemm/BLAS kernels); optional: OpenCL (ICD loader + `opencl.lib`), compile-time `MOPAC_USE_OPENCL` |
-| Compilation requirements, operating environments & dependencies | Windows x64; MSBuild/`mopac_cpp.sln`; Intel MKL (static link), SSE2 baseline; optional OpenCL runtime/ICD loader when the `MOPAC_USE_OPENCL` path is enabled |
+| Compilation requirements, operating environments & dependencies | Windows x64; MSBuild/`MOPAC_Cpp.sln`; Intel MKL (static link), SSE2 baseline; optional OpenCL runtime/ICD loader when the `MOPAC_USE_OPENCL` path is enabled |
 | If available Link to developer documentation/manual | `https://github.com/qq3185980737/MOPAC-CPP/blob/main/mopac_cpp_public/README.md` |
 | Support email for questions | liuyang123@stu.sjzu.edu.cn |
 
@@ -64,7 +64,7 @@ The package implements the full MOPAC2016 feature set:
 
 ### 2.3 Implementation and dependencies
 
-- C++17, MSVC 2022 (x64), SSE2 baseline; build via the provided `mopac_cpp.sln` or MSBuild.
+- C++17, MSVC 2022 (x64), SSE2 baseline; build via the provided `MOPAC_Cpp.sln` or MSBuild.
 - Intel MKL (2025.3, static) for `dsyevd`/`dgemm`/BLAS kernels — the same kernel family used by the reference binary, which is part of why bitwise fidelity is attainable on the default path.
 - Single-threaded by default (`OMP_NUM_THREADS=1; MKL_NUM_THREADS=1`) for bitwise-comparable runs.
 - Optional OpenCL offload for the density rank-update kernels (compile-time `MOPAC_USE_OPENCL`, opt-in, experimental): when enabled, the `density_for_GPU` iopc=2/3 and 4/5 paths may run on an OpenCL GPU device; this path is excluded from the bitwise contract and falls back to the CPU path on device failure. Usage and measured results are documented in `docs/OPENCL_ACCEL.md`.
