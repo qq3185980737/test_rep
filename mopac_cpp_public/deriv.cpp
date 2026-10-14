@@ -15,6 +15,8 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+
+extern "C" double fpw_ftn(double, int);  // Intel pow bridge (bit-exact with ifx X**N)
 #include <string>
 #include <vector>
 
@@ -157,9 +159,9 @@ void deriv(const std::vector<std::vector<double>>& geo,
                  std::fabs(fract) > 1e-20) ||
                 ci;
         idelta = -7;
-        change[0] = std::pow(10.0, idelta);
-        change[1] = std::pow(10.0, idelta);
-        change[2] = std::pow(10.0, idelta);
+        change[0] = fpw_ftn(10.0, idelta);
+        change[1] = fpw_ftn(10.0, idelta);
+        change[2] = fpw_ftn(10.0, idelta);
     }
     if (nvar == 0) return;
 
@@ -246,6 +248,18 @@ void deriv(const std::vector<std::vector<double>>& geo,
     }
     step = precis ? 0.5 / step : 1.0 / step;
     for (int i = 1; i <= nvar; ++i) gradnt[i] *= step;
+    if (getenv("GPROBE")) {
+        FILE* pf = fopen("D:\\mopac\\cxx_gradprobe.txt", "a");
+        if (pf) {
+            fprintf(pf, "GRAD-CXX nvar=%d\n", nvar);
+            for (int i = 1; i <= nvar; ++i) {
+                uint64_t u = 0; memcpy(&u, &gradnt[i], 8);
+                fprintf(pf, "%016llX%s", (unsigned long long)u,
+                        (i % 4 == 0 || i == nvar) ? "\n" : " ");
+            }
+            fclose(pf);
+        }
+    }
         if (geochk) {
             sum = dot3(&gradnt[1], &gradnt[1], nvar);
             if (sum < 2.0 &&

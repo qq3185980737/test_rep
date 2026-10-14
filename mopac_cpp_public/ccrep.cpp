@@ -95,13 +95,13 @@ void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
         double scale;
         if (molkst_C::method_pm6 || molkst_C::method_pm7) {
             if ((ni > 56 && ni < 72) || (nj > 56 && nj < 72)) {
-                scale = 10.0 * exp(-3.0 * r);
+                scale = 10.0 * exp_ftn(-3.0 * r);
             } else {
-                scale = 10.0 * exp(-2.18 * r);
+                scale = 10.0 * exp_ftn(-2.18 * r);
             }
         } else {
-            double eni = exp(-alpni * r);
-            double enj = exp(-alpnj * r);
+            double eni = exp_ftn(-alpni * r);
+            double enj = exp_ftn(-alpnj * r);
             scale = eni + enj;
             int nt = ni + nj;
             if (nt == 8 || nt == 9) {
@@ -116,9 +116,9 @@ void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
     int i;
     if (molkst_C::method_pm6 || molkst_C::method_pm7) {
         double ax = guess2[ni][1] * (r - guess3[ni][1]) * (r - guess3[ni][1]);
-        if (ax < 25.0) scale += tore[ni] * tore[nj] / r * guess1[ni][1] * exp(-ax);
+        if (ax < 25.0) scale += tore[ni] * tore[nj] / r * guess1[ni][1] * exp_ftn(-ax);
         ax = guess2[nj][1] * (r - guess3[nj][1]) * (r - guess3[nj][1]);
-        if (ax < 25.0) scale += tore[ni] * tore[nj] / r * guess1[nj][1] * exp(-ax);
+        if (ax < 25.0) scale += tore[ni] * tore[nj] / r * guess1[nj][1] * exp_ftn(-ax);
         i = (abond > 1e-4) ? 0 : 4;
     } else {
         i = 4;
@@ -127,12 +127,12 @@ void ccrep(int ni, int nj, double& r, double gab, double& enuclr) {
     for (int ig = 1; ig <= i; ++ig) {
         if (std::abs(guess1[ni][ig]) > 0.0) {
             double ax = guess2[ni][ig] * (r - guess3[ni][ig]) * (r - guess3[ni][ig]);
-            if (ax <= 25.0) scale += tore[ni] * tore[nj] / r * guess1[ni][ig] * exp(-ax);
+            if (ax <= 25.0) scale += tore[ni] * tore[nj] / r * guess1[ni][ig] * exp_ftn(-ax);
         }
         if (std::abs(guess1[nj][ig]) <= 0.0) continue;
         double ax = guess2[nj][ig] * (r - guess3[nj][ig]) * (r - guess3[nj][ig]);
         if (ax > 25.0) continue;
-        scale += tore[ni] * tore[nj] / r * guess1[nj][ig] * exp(-ax);
+        scale += tore[ni] * tore[nj] / r * guess1[nj][ig] * exp_ftn(-ax);
     }
     enuclr += scale;
 

@@ -308,6 +308,18 @@ L250:
     if (getenv("ITPROBE")) {
         static FILE* _it0=nullptr;
         if(!_it0) _it0=fopen("D:\\mopac\\cxx_itprobe.txt","a");
+        fprintf(_it0,"HH-CXX niter=%d", niter);
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&h[(ii*(ii+1))/2],8);
+            fprintf(_it0," %016llX", u);
+        }
+        fprintf(_it0,"\n");
+        fprintf(_it0,"PA-CXX niter=%d", niter);
+        for(int ii=1; ii<=norbs; ++ii){
+            unsigned long long u; std::memcpy(&u,&pa[(ii*(ii+1))/2],8);
+            fprintf(_it0," %016llX", u);
+        }
+        fprintf(_it0,"\n");
         fprintf(_it0,"ITF0 niter=%d", niter);
         for(int ii=1; ii<=norbs; ++ii){
             unsigned long long u; std::memcpy(&u,&f[(ii*(ii+1))/2],8);
