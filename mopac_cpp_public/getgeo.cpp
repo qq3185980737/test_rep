@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -128,11 +129,38 @@ void getgeo(int iread, std::vector<int>& labels,
     std::string ele, string(120, ' ');
     int label = 0;
     double sum = 0.0;
+    bool is_cart4 = false;   // set when the current line is a 4-field Cartesian line
+    std::map<std::string, std::string> zm_vars;
     int ndmy = 0;
     bool solid = false;
     bool leadsp = true;
     std::string turn;
     bool done = false;
+    // Pre-scan the geometry records for symbolic Z-matrix variables
+    // (definition lines such as "R=0.957 A=104.5"; atoms lines then use R/A).
+    // Matches the reference executable behavior.
+    for (size_t gi = getdat_line_idx; gi < getdat_lines.size(); ++gi) {
+        std::string gl = getdat_lines[gi];
+        upcase(gl, (int)len_trim(gl));
+        if (gl.find('=') == std::string::npos) continue;
+        size_t sp = gl.find(' ');
+        std::string tok0 = gl.substr(0, sp == std::string::npos ? gl.size() : sp);
+        if (tok0.find('=') == std::string::npos) continue;   // not a definition line
+        size_t pos = 0, n = gl.size();
+        while (pos < n) {
+            while (pos < n && gl[pos] == ' ') pos++;
+            if (pos >= n) break;
+            size_t eq = gl.find('=', pos);
+            if (eq == std::string::npos || eq >= n) break;
+            std::string nm = gl.substr(pos, eq - pos);
+            size_t vs = eq + 1;
+            while (vs < n && gl[vs] == ' ') vs++;
+            size_t ve = vs;
+            while (ve < n && gl[ve] != ' ') ve++;
+            if (nm.size() <= 12 && vs < n) zm_vars[nm] = gl.substr(vs, ve - vs);
+            pos = ve;
+        }
+    }
     while (!done) {
         if (getdat_line_idx >= getdat_lines.size()) { done = true; break; }
         if (natoms > (int)geo[1].size() - 2 || natoms > 100000) {
@@ -248,6 +276,38 @@ void getgeo(int iread, std::vector<int>& labels,
             txtatm[natoms + 1] = " ";
         }
         upcase(line, ltl);
+        // ---- symbolic Z-matrix variables ----
+        {
+            size_t eq = line.find('=');
+            if (eq != std::string::npos && eq < (size_t)ltl) {
+                size_t sp0 = line.find(' ');
+                std::string tok0 = line.substr(0, sp0 == std::string::npos ? (size_t)ltl : sp0);
+                if (tok0.find('=') != std::string::npos) {
+                    continue;   // variable definition line: not an atom
+                }
+            }
+            // Substitute previously defined variables (uppercased names).
+            if (!zm_vars.empty()) {
+                bool changed = false;
+                for (const auto& kv : zm_vars) {
+                    const std::string& nm = kv.first;
+                    if (nm.empty()) continue;
+                    size_t p = 0;
+                    while ((p = line.find(nm, p)) != std::string::npos) {
+                        bool pre = (p == 0 || line[p - 1] == ' ');
+                        bool post = (p + nm.size() >= (size_t)ltl || line[p + nm.size()] == ' ');
+                        if (pre && post) {
+                            line.replace(p, nm.size(), kv.second);
+                            p += kv.second.size();
+                            changed = true;
+                        } else {
+                            p += nm.size();
+                        }
+                    }
+                }
+                if (changed) ltl = len_trim(line);
+            }
+        }
         for (int k = 0; k < 10; ++k) istart[k + 1] = len_trim(line) + 1;
         leadsp = true;
         nvalue = 0;
@@ -390,12 +450,21 @@ void getgeo(int iread, std::vector<int>& labels,
             lopt[1][natoms] = 1;
             lopt[2][natoms] = 1;
             lopt[3][natoms] = 1;
+            is_cart4 = true;   // 4-field Cartesian line: NA/NB/NC must stay 0
         } else {
-            geo[1][natoms] = reada(line, istart[2]);
-            geo[2][natoms] = reada(line, istart[4]);
-            geo[3][natoms] = reada(line, istart[6]);
+            is_cart4 = false;
+            // Z-matrix input.  The reference executable (local ifort rebuild of
+            // MOPAC2016) parses Gaussian-style Z-matrix lines:
+            //     Element  NA  R  NB  Angle  NC  Dihedral
+            // i.e. connectivity in fields 2/4/6 and geometry in fields 3/5/7.
+            // Optimisation flags are not read from the line (lopt = 0); an
+            // alphabetic character in a flag position (fields 4/6/8) makes the
+            // geometry faulty, matching the reference behavior.
+            geo[1][natoms] = reada(line, istart[3]);
+            geo[2][natoms] = reada(line, istart[5]);
+            geo[3][natoms] = reada(line, istart[7]);
             if (!mini && ircdrc) {
-                turn = line.substr(istart[3] - 1, 1);
+                turn = line.substr(istart[4] - 1, 1);
                 if (turn == "T") {
                     lopt[1][natoms] = 1;
                     if (lturn) {
@@ -405,15 +474,15 @@ void getgeo(int iread, std::vector<int>& labels,
                 } else {
                     lopt[1][natoms] = 0;
                 }
-                turn = line.substr(istart[5] - 1, 1);
+                turn = line.substr(istart[6] - 1, 1);
                 lopt[2][natoms] = (turn == "T") ? 1 : 0;
-                turn = line.substr(istart[7] - 1, 1);
+                turn = line.substr(istart[8] - 1, 1);
                 lopt[3][natoms] = (turn == "T") ? 1 : 0;
             } else {
-                lopt[1][natoms] = (int)(reada(line, istart[3]) + 0.5);
-                lopt[2][natoms] = (int)(reada(line, istart[5]) + 0.5);
-                lopt[3][natoms] = (int)(reada(line, istart[7]) + 0.5);
-                for (int i = 3; i <= 7; i += 2) {
+                lopt[1][natoms] = 0;
+                lopt[2][natoms] = 0;
+                lopt[3][natoms] = 0;
+                for (int i = 4; i <= 8; i += 2) {
                     char ch1 = line[istart[i] - 1];
                     if (!(ch1 >= icapa && ch1 <= icapz && natoms > 1)) continue;
                     iserr = 1;
@@ -441,11 +510,16 @@ void getgeo(int iread, std::vector<int>& labels,
                 leadsp = (line[i - 1] == ' ');
             }
         }
-        sum = reada(line, istart[8]);
-        int i = (int)line.substr(istart[8] - 1).find(' ') + istart[8];
-        if (line.substr(istart[8] - 1, i - istart[8] + 1).find('.') != std::string::npos) sum = 0.0;
+        if (is_cart4) {
+            sum = 0.0;   // Cartesian line: no connectivity fields
+        } else {
+            sum = reada(line, istart[2]);
+            int i = (int)line.substr(istart[2] - 1).find(' ') + istart[2];
+            if (line.substr(istart[2] - 1, i - istart[2] + 1).find('.') != std::string::npos) sum = 0.0;
+        }
         na[natoms] = (int)(sum + 0.5);
         if (natoms == 1) na[1] = 0;
+        if (natoms > 1 && !is_cart4 && na[natoms] == 0 && !lmop) iserr = 1;
         if (lmop && natoms == 2) {
             na[2] = 1;
         } else if (lmop && natoms == 3 && na[3] == 0) {
@@ -455,8 +529,8 @@ void getgeo(int iread, std::vector<int>& labels,
             geo[3][3] = 0.0;
             lopt[3][3] = 0;
         } else if (na[natoms] > 0) {
-            nb[natoms] = (int)(reada(line, istart[9]) + 0.5);
-            nc[natoms] = (int)(reada(line, istart[10]) + 0.5);
+            nb[natoms] = (int)(reada(line, istart[4]) + 0.5);
+            nc[natoms] = (int)(reada(line, istart[6]) + 0.5);
             geo[2][natoms] = geo[2][natoms] * 1.7453292519943e-2;
             geo[3][natoms] = geo[3][natoms] * 1.7453292519943e-2;
         }
@@ -495,6 +569,16 @@ void getgeo(int iread, std::vector<int>& labels,
             }
             // Must be Gaussian geometry input.
             for (int i = 2; i <= natoms; ++i) {
+                if (na[i] == 0) {
+                    // Z-matrix atom without a valid connectivity reference
+                    // (matches the reference executable: "GEOMETRY IS FAULTY").
+                    std::fprintf(stdout, " GEOMETRY IS FAULTY.  GEOMETRY READ IN IS\n");
+                    atmass[1] = -1.0;
+                    nat[1] = 0;
+                    geout(iw);
+                    mopend("GEOMETRY IS FAULTY");
+                    return;
+                }
                 for (int k = 1; k <= 3; ++k) {
                     int jj = (int)(geo[k][i] + 0.5);
                     if (std::fabs(geo[k][i] - jj) <= 1.e-5) continue;

@@ -534,7 +534,6 @@ void run_mopac() {
       goto LendBody;                  // F90: go to 100
     }
     if (maxtxt == 26) compare_txtatm(moperr, moperr);
-    std::fprintf(stderr, "RMB-DBG after-read moperr=%d errtxt=[%s] mozyme=%d\n", (int)moperr, errtxt.c_str(), (int)mozyme); std::fflush(stderr);
     if (moperr) {
       if (keywrd.find(" GEO-OK") != std::string::npos) {
         moperr = false;
@@ -551,7 +550,6 @@ void run_mopac() {
     setup_mopac_arrays(1, 2);
     iseps = (keywrd.find(" EPS=") != std::string::npos);
     if (moperr) goto LendBody;        // F90: goto 100
-    std::fprintf(stderr, "RMB-DBG2 post-setup moperr=%d errtxt=[%s] nvar=%d latom=%d\n", (int)moperr, errtxt.c_str(), nvar, latom); std::fflush(stderr);
     nw.resize(numat + 1);   // 1-based indices nw[1..numat]
     l = 1;
     for (i = 1; i <= numat; ++i) {
@@ -616,7 +614,6 @@ void run_mopac() {
     // Dispatch to the requested calculation type
     //
     if (std::getenv("MOZRUN")) { std::fprintf(stderr, "MOZRUN-C dispatch\n"); std::fflush(stderr); }
-    std::fprintf(stderr, "RMB-DISP dispatch keywrd=[%s]\n", keywrd.c_str()); std::fflush(stderr);
     if (keywrd.find(" SADDLE") != std::string::npos) {
       to_screen(" Transition state geometry calculated using SADDLE");
       react1();    } else if (keywrd.find(" STEP1") != std::string::npos) {
