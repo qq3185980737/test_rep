@@ -22,10 +22,11 @@ deterministic methods (FBDR, GAB) described therein.
   (H, C, N, O, F, Cl, S, P, Si) and both closed-shell RHF and open-shell UHF —
   and across SCF, configuration-interaction, dynamic-reaction-coordinate, and
   multi-Hamiltonian (PM7/PM6/RM1) trajectories.
-- **The reference is the official MOPAC2016 binary** (Intel ifort + MKL, Windows x64),
-  built from the original 2016 Fortran sources. The C++ translation is validated
-  against it; it is *not* validated against later MOPAC releases (v22/v23), whose
-  outputs differ.
+- **The reference is the official MOPAC2016 source** (Intel ifort + MKL, Windows
+  x64), archived in the `openmopac/mopac-archive` repository (directory
+  `2016_MOPAC2016`). The C++ translation is validated against it; the current
+  open-source MOPAC release is numerically identical to MOPAC2016 (official FAQ).
+  Provenance, licensing, and citation details: see `UPSTREAM_NOTICE.md`.
 
 ## Build
 
@@ -34,9 +35,9 @@ deterministic methods (FBDR, GAB) described therein.
   (`dgemm`), and related BLAS/LAPACK calls
 - Build configuration: `x64/Release` (SSE2, LTCG)
 
-Open `mopac_cpp.sln` and build the `mopac` project, or use MSBuild:
+Open `MOPAC_Cpp.sln` and build the `mopac` project, or use MSBuild:
 
-    msbuild mopac_cpp.sln /p:Configuration=Release /p:Platform=x64
+    msbuild MOPAC_Cpp.sln /p:Configuration=Release /p:Platform=x64
 
 ## Run
 
@@ -60,9 +61,10 @@ variable:
     set MOPAC_FULL_DIAG=1
     mopac.exe <input>.mop
 
-Both paths converge to mathematically equivalent optimized geometries
-(NIST-verified: hexadecane ΔHf = -90.18 kcal/mol vs exp. -89.60), while the
-default path keeps bitwise fidelity to the Fortran reference. The `FULLDIAG`
+Both paths keep bitwise fidelity to the Fortran reference in single-point mode;
+EF-optimized geometries agree with the reference within the ULP-sensitivity band
+of the manuscript (e.g., hexadecane ΔHf = −90.18 kcal/mol vs exp. −89.60), while
+the default path keeps bitwise fidelity to the Fortran reference. The `FULLDIAG`
 keyword and the `MOPAC_FULL_DIAG` variable are equivalent and interchangeable.
 
 ## Reproducibility gates (all default OFF)
@@ -103,7 +105,7 @@ own terms.
 
 ## Citation
 
-(placeholder — to be completed on publication)
+(Citation to be completed upon publication of the manuscript.)
 
     @article{...,
       title  = {Bitwise-Reproducibility Verification and Deterministic Numerical
