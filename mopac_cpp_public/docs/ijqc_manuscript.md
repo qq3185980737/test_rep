@@ -10,9 +10,9 @@
 
 ## Abstract
 
-Semiempirical methods such as PM7 solve the self-consistent-field (SCF) problem by repeated diagonalization of the Fock matrix. The reference MOPAC2016 implementation uses a pairwise-rotation (Jacobi) eigensolver as its default SCF path, whereas modern LAPACK divide-and-conquer solvers are substantially faster. We study this trade-off in MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016: the official pseudo-diagonalization path is preserved bit-for-bit, and an exact-diagonalization gate (FULLDIAG) is added. On non-degenerate systems the two paths differ by only ≈2×10⁻⁴ kcal/mol in the single-point energy; on near-degenerate regular alkanes the exact path selects a different, slightly lower SCF state after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT), while the default pseudo path preserves the reference state selection; on a large alkane single point the exact path is 2.1–3.6× faster (single to eight threads). This defines a three-way fidelity–robustness–performance trade-off.
+Semiempirical methods such as PM7 solve the self-consistent-field (SCF) problem by repeated diagonalization of the Fock matrix. The reference MOPAC2016 implementation uses a pairwise-rotation (Jacobi) eigensolver as its default SCF path, whereas modern LAPACK divide-and-conquer solvers are substantially faster. We study this trade-off in MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016: the official pseudo-diagonalization path is preserved bit-for-bit, and an exact-diagonalization gate (FULLDIAG) is added. On non-degenerate systems the two paths differ by only ≈2×10⁻⁴ kcal/mol in the single-point energy; on near-degenerate regular alkanes the exact path selects a different, slightly lower SCF state after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT), while the default pseudo path preserves the reference state selection; on a large alkane single point the exact path is 2.1× faster single-threaded and up to 3.6× with 8 threads (≈1.5× from the eigensolver replacement at equal thread counts). This defines a three-way fidelity–robustness–performance trade-off.
 
-## Graphical table of contents (75 words, for submission)
+## Graphical table of contents
 
 Replacing the pairwise-rotation (pseudo-)eigensolver of a bitwise-faithful MOPAC2016 C++ translation with an opt-in LAPACK divide-and-conquer diagonalization costs only ≈2×10⁻⁴ kcal/mol on non-degenerate systems, selects a different, slightly lower SCF state on near-degenerate regular alkanes after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT) while the default path preserves the reference state selection, and accelerates large single points by 2.1–3.6×, quantifying a three-way fidelity–robustness–performance trade-off.
 
@@ -73,17 +73,17 @@ The implementation replaces only the eigen-decomposition call inside the SCF loo
 
 ### 3.1 Fidelity of the default path
 
-With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-regression single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
+With the FULLDIAG gate off, MOPAC-CPP reproduces the local Intel-ifort rebuild of the official MOPAC2016 source bit-for-bit on the nominal path: 320/320 released-regression single-point inputs with zero exceptions; FINAL HEAT of formation bitwise identical on 18 small molecules in single-point mode, and on the same molecules in EF-optimized mode within the verification build pair ⁸. EF-optimized trajectories are bitwise identical only within a fixed build pair; across builds they are members of a 1-ULP sensitivity band (e.g., the O₂ (UHF) trajectory bifurcates to a different state minimum on the current reference rebuild; ref. 8, §3.1). All fidelity statements below refer to the *default* path; enabling FULLDIAG is an explicit, documented departure from bitwise parity.
 
 ### 3.2 Energy difference on non-degenerate systems
 
-On a C₈₀H₁₆₂ PM7 RHF single point (PULAY-accelerated, 482 basis functions; C: 4 AOs × 80, H: 1 AO × 162), the single-point energy computed with FULLDIAG differs from the pseudo-diagonalization result by ≈2×10⁻⁴ kcal/mol — at the level of floating-point rounding and far below the PM7 method error (≈±5–10 kcal/mol against experiment). For comparison, on the 50-atom alkane C₁₆H₃₄ the default (pseudo) path optimizes to ΔHf = −90.18 kcal/mol vs. the NIST experimental value −89.60 kcal/mol (PM7 method error −0.58, within the method's expected accuracy band); FULLDIAG was validated in single-point mode on the same molecule (state-selection difference only, see §3.3), and its geometry-optimization endpoint was not separately measured in this study.
+On a C₈₀H₁₆₂ PM7 RHF single point (PULAY-accelerated, 482 basis functions; C: 4 AOs × 80, H: 1 AO × 162), the single-point energy computed with FULLDIAG differs from the pseudo-diagonalization result by ≈2×10⁻⁴ kcal/mol — at the level of floating-point rounding and far below the PM7 method error (≈±5–10 kcal/mol against experiment). For comparison, on the 50-atom alkane C₁₆H₃₄ the default (pseudo) path optimizes to ΔHf = −90.18 kcal/mol vs. the NIST experimental value −89.60 kcal/mol. This EF trajectory lies inside the 1-ULP chaos band quantified in the companion paper (ref. 8, §3.2): the reference rebuild terminates at −90.925 kcal/mol, so the PM7-vs-experiment deviation spans −0.58 … −1.33 kcal/mol, both within the method's expected accuracy band; FULLDIAG was validated in single-point mode on the same molecule (state-selection difference only, see §3.3), and its geometry-optimization endpoint was not separately measured in this study.
 
 The ≈2×10⁻⁴ kcal/mol deviation should be read against the intrinsic error of the PM7 method itself: against the NIST reference values, PM7 atomization energies carry a mean absolute error of ≈6.7 kcal/mol, so the eigensolver-induced deviation is smaller than the method error by roughly four orders of magnitude. The eigensolver substitution is therefore numerically negligible at the level of chemical accuracy, while remaining exactly quantifiable — a property that the bitwise verification pipeline of the translation ⁸ makes possible, since the baseline (pseudo path) itself is bitwise reproducible to the reference rebuild.
 
 ### 3.3 Near-degenerate state selection: the alkane series (1SCF mode)
 
-All measurements in this section use the 1SCF mode (the SCF stops after a single iteration). This isolates the eigensolver's state-selection behavior: with a single iteration the C++ port and the reference rebuild are bitwise identical on the default path (§3.1), so any deviation caused by enabling FULLDIAG is attributable to the eigensolver replacement alone — without the additional trajectory sensitivity that fully converged SCF iterations exhibit on near-degenerate systems (compiler-level ULP chaos; see the companion methodology paper, ref. ⁸, §3.2). Regular-geometry alkanes with many equivalent methylene units have near-degenerate orbital spectra, which stress the state-selection behavior of any eigensolver. The state-selection gap scales with the degree of near-degeneracy along the alkane series: on the 38-atom C₁₂H₂₆ the two paths agree to ≈1×10⁻⁵ kcal/mol (weak near-degeneracy; the two eigensolvers select the same SCF state); on the 50-atom C₁₆H₃₄ they select *different SCF states after the first iteration* — the pseudo path reproduces the reference Fortran 1SCF single-point FINAL HEAT bitwise at this geometry (i.e., it selects the same state as the reference build), while FULLDIAG selects a state whose 1SCF single-point FINAL HEAT is 0.23 kcal/mol lower; on the 122-atom C₄₀H₈₂ (all-trans regular conformation) the gap grows to 0.47 kcal/mol, and on the 242-atom C₈₀H₁₆₂ PULAY-accelerated single point it shrinks to ≈2×10⁻⁴ kcal/mol (PULAY stabilizes the density extrapolation, reducing the sensitivity to the eigenvector basis). The 1SCF FINAL HEAT values serve strictly as equality and state-selection carriers between the two paths: with a single SCF iteration they are not converged heats of formation (the converged PM7 heat of formation of C₁₆H₃₄ is ≈ −90 kcal/mol, §3.2; NIST experimental value −89.60), and only the *relative* difference between the two diagonalization paths is claimed. The difference is *which* SCF state the single iteration selects, governed by the eigenvector composition inside the (near-)degenerate subspace — a basis-selection effect of the eigensolver, not a convergence failure of either solver.
+All measurements in this section use the 1SCF mode (the SCF stops after a single iteration). This isolates the eigensolver's state-selection behavior: with a single iteration the C++ port and the reference rebuild are bitwise identical on the default path (§3.1), so any deviation caused by enabling FULLDIAG is attributable to the eigensolver replacement alone — without the additional trajectory sensitivity that fully converged SCF iterations exhibit on near-degenerate systems (compiler-level ULP chaos; see the companion methodology paper, ref. ⁸, §3.2). Regular-geometry alkanes with many equivalent methylene units have near-degenerate orbital spectra, which stress the state-selection behavior of any eigensolver. The state-selection gap scales with the degree of near-degeneracy along the alkane series: on the 38-atom C₁₂H₂₆ the two paths agree to ≈1×10⁻⁵ kcal/mol (weak near-degeneracy; the two eigensolvers select the same SCF state); on the 50-atom C₁₆H₃₄ they select *different SCF states after the first iteration* — the pseudo path reproduces the reference Fortran 1SCF single-point FINAL HEAT bitwise at this geometry (i.e., it selects the same state as the reference build), while FULLDIAG selects a state whose 1SCF single-point FINAL HEAT is 0.23 kcal/mol lower; on the 122-atom C₄₀H₈₂ (all-trans regular conformation) the gap grows to 0.47 kcal/mol, and on the 242-atom C₈₀H₁₆₂ single point — a non-degenerate system (see the summary table in §3.5) — it shrinks to ≈2×10⁻⁴ kcal/mol, the two paths selecting the same SCF state and the residual being floating-point rounding. The 1SCF FINAL HEAT values serve strictly as equality and state-selection carriers between the two paths: with a single SCF iteration they are not converged heats of formation (the converged PM7 heat of formation of C₁₆H₃₄ is ≈ −90 kcal/mol, §3.2; NIST experimental value −89.60), and only the *relative* difference between the two diagonalization paths is claimed. The difference is *which* SCF state the single iteration selects, governed by the eigenvector composition inside the (near-)degenerate subspace — a basis-selection effect of the eigensolver, not a convergence failure of either solver.
 
 The gap is also Hamiltonian-dependent: the same regular-geometry alkanes computed with PM6 (the other NDDO Hamiltonian shipped by the package) show pseudo/full differences of only ≈7.5×10⁻⁴ kcal/mol (C₁₂H₂₆) and ≈3.8×10⁻⁴ kcal/mol (C₁₆H₃₄) — i.e., for this PM6 parameter set the two eigensolvers select the same SCF state to within rounding. The state-selection shift is therefore not an intrinsic property of the exact eigensolver, but a joint function of the near-degeneracy of the Fock spectrum and of the Hamiltonian's parameterization: the PM7 alkane HOMO–LUMO gaps are close enough that the two eigensolvers pick different (near-degenerate) states, while the PM6 gaps at the same geometries are not. This widens the evidence base for the trade-off and marks the effect as system- and method-specific rather than universal.
 
@@ -91,7 +91,7 @@ The practical consequence is a genuine trade-off: the exact path is faster and n
 
 ### 3.4 Performance
 
-On C₈₀H₁₆₂ PULAY single point (the workload of §3.2), the exact path is **2.1×** faster with a single MKL thread and **3.6×** faster with 8 OpenMP threads, both relative to the single-thread pseudo-path baseline, reflecting `dsyevd`'s cache-blocked divide-and-conquer efficiency versus the Jacobi sweeper's O(n³) rotation schedule. The gap grows with matrix size, as the pseudo path's per-iteration rotation work scales poorly relative to BLAS-3 kernels.
+On C₈₀H₁₆₂ PULAY single point (the workload of §3.2), the exact path is **2.1×** faster than the pseudo path with a single MKL thread, and **3.6×** faster with 8 OpenMP threads relative to the single-thread pseudo-path baseline. At equal thread counts the eigensolver replacement alone contributes ≈1.5× (8 threads: 1.891 s vs 2.913 s); the remainder of the 3.6× is the OpenMP thread scaling (≈2.3×) that the pseudo path itself enjoys. The gap grows with matrix size, as the pseudo path's per-iteration rotation work scales poorly relative to BLAS-3 kernels.
 
 ### 3.5 Summary of the trade-off
 
@@ -99,7 +99,7 @@ Both paths converge on all molecules tested; the differences are the single-poin
 
 | System | Energy diff (exact vs pseudo) | State selection | Speed (exact vs pseudo) |
 |---|---|---|---|
-| C₈₀H₁₆₂ (non-degenerate, PULAY) | ≈2×10⁻⁴ kcal/mol | equivalent | 2.1× (1 thread) / 3.6× (8 threads) |
+| C₈₀H₁₆₂ (non-degenerate, PULAY) | ≈2×10⁻⁴ kcal/mol | equivalent | 2.1× (1 thread) / 3.6× (8 threads, incl. ≈2.3× OpenMP scaling) |
 | C₁₂H₂₆ (38 atoms, 1SCF) | ≈1×10⁻⁵ kcal/mol | equivalent | — |
 | C₁₆H₃₄ (50 atoms, 1SCF) | 0.23 kcal/mol | different (lower) SCF state | — |
 | C₄₀H₈₂ (122 atoms, 1SCF) | 0.47 kcal/mol | different (lower) SCF state | — |
@@ -124,7 +124,7 @@ The study is a worked example of a more general principle: in a faithfully trans
 ### 4.3 Limitations
 
 - The near-degenerate state-selection cases (C₁₆H₃₄, C₄₀H₈₂) are reported for specific regular alkanes; a broader survey of systems with (near-)degenerate spectra is left to future work.
-- Performance numbers are single-platform (Windows x64, MSVC 2022, Intel MKL 2025.3); relative gains are expected to carry to other platforms, but absolute times do not.
+- Performance numbers are single-platform (Windows x64, AMD Ryzen 7 7840HS, 8 cores/16 threads; MSVC 2022, Intel MKL 2025.3; the FULLDIAG performance builds use /arch:AVX512); relative gains are expected to carry to other platforms, but absolute times do not.
 - FULLDIAG changes the numerical path; users requiring bit-for-bit parity with archived MOPAC2016 outputs must keep the default gate off.
 
 ### 4.4 Relation to other semiempirical implementations and a general substitution protocol
@@ -135,15 +135,27 @@ The study also documents a general protocol for kernel substitution in legacy sc
 
 ## 5. Conclusions
 
-We characterized the pseudo- versus exact-diagonalization trade-off in semiempirical SCF calculations using MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016. The exact LAPACK path costs ≈2×10⁻⁴ kcal/mol on non-degenerate systems, selects a different, slightly lower SCF state on near-degenerate regular alkanes after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT) while the default path preserves the reference state selection, and is 2.1–3.6× faster on a large PULAY-accelerated single point. The opt-in gate design preserves the default path's bitwise fidelity, providing a template for performance upgrades in reproducible scientific software.
+We characterized the pseudo- versus exact-diagonalization trade-off in semiempirical SCF calculations using MOPAC-CPP, a bitwise-faithful C++17 translation of MOPAC2016. The exact LAPACK path costs ≈2×10⁻⁴ kcal/mol on non-degenerate systems, selects a different, slightly lower SCF state on near-degenerate regular alkanes after the first SCF iteration (0.2–0.5 kcal/mol in 1SCF single-point FINAL HEAT) while the default path preserves the reference state selection, and is 2.1× (single-threaded) to 3.6× (8 threads, including OpenMP scaling) faster on a large PULAY-accelerated single point. The opt-in gate design preserves the default path's bitwise fidelity, providing a template for performance upgrades in reproducible scientific software.
 
 ## Acknowledgements
 
 This work has been financially supported by the Basic Scientific Research Project for Higher Education Institutions (Project No. LJ212610153014) of Liaoning Provincial Department of Education.
 
+## Conflict of interest
+
+The authors declare no conflict of interest.
+
+## Author contributions
+
+Yang Liu: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing – original draft, Visualization. Xun Wang: Conceptualization, Supervision, Resources, Funding acquisition, Writing – review & editing.
+
+## Declaration of generative AI and AI-assisted technologies in the writing process
+
+During the preparation of this work the authors used AI-assisted tools to assist with code translation, drafting, and language editing. After using these tools, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
+
 ## Data and code availability
 
-The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at https://github.com/qq3185980737/test_rep (mopac_cpp_public).
+The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all input decks used in this study are available in the public repository (MIT license) at https://github.com/qq3185980737/test_rep (mopac_cpp_public); the software is described in detail in ref. 10.
 
 
 ## References
@@ -154,5 +166,6 @@ The MOPAC-CPP source code, the FULLDIAG implementation, the test suite, and all 
 [5] J. J. P. Stewart, J. Mol. Model. 2013, 19, 1.
 [6] J. J. P. Stewart, J. Mol. Model. 2007, 13, 1173.
 [7] M. J. S. Dewar, E. G. Zoebisch, E. F. Healy, J. J. P. Stewart, J. Am. Chem. Soc. 1985, 107, 3902.
-[8] Y. Liu, X. Wang, MOPAC-CPP: a bitwise-reproducible C++17 translation of the MOPAC2016 semiempirical molecular-orbital package, SoftwareX 2026, submitted.
+[8] Y. Liu, X. Wang, Bitwise-reproducibility verification and deterministic numerical methods for scientific-software migration, with a full MOPAC2016 (Fortran to C++) case study, Comput. Phys. Commun. 2026, submitted.
 [9] P. Pulay, Chem. Phys. Lett. 1980, 73, 393.
+[10] Y. Liu, X. Wang, MOPAC-CPP: a bitwise-reproducible C++17 translation of the MOPAC2016 semiempirical molecular-orbital package, SoftwareX 2026, submitted.
