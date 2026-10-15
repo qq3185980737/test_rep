@@ -1,0 +1,23 @@
+ 
+**                          MOPAC (16.013)        Days remaining 123         **
+********************************************************************************
+Preparing to read the following MOPAC file: 
+D:\mopac\_full_cmp\cur\_mx_opt_pm7_h2o_o.mop
+EFG-C1 funct=C04CE4ED4B1FCC80
+EFG-C1 g1=BFFF9173AED76063
+EFG-C1 g2=C00346805914940C
+EFG-C1 g3=3E6B85A9933FFFFF
+EFG-C1 g4=3FF5FAC7BFCBC11C
+EFG-C1 g5=3FEDE65423E3800A
+EFG-C1 g6=3E5B5464A8FFFFFF
+EFG-C1 g7=3FE32D5760B79227
+EFG-C1 g8=3FF799D66CD38620
+EFG-C1 g9=3E5B5B97EBFFFFFF
+EFM-C mxstep=2000 nstep=1 iprnt=3
+EFM-C mxstep=2000 nstep=2 iprnt=3
+ Job: D:\mopac\_full_cmp\cur\_mx_opt_pm7_h2o_o
+Final heat of formation =        -57.79850 kcal/mol
+GRADIENT NORM           =          0.93108
+
+
+MOPAC Job: "D:\mopac\_full_cmp\cur\_mx_opt_pm7_h2o_o.mop" ended normally on Wed Oct 14 13:21:25 2026

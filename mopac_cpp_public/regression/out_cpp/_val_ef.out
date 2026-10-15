@@ -1,0 +1,26 @@
+ 
+**                          MOPAC (16.013)        Days remaining 123         **
+********************************************************************************
+Preparing to read the following MOPAC file: 
+D:\mopac\_full_cmp\cur\_val_ef.mop
+EFG-C1 funct=C00DA19FDBB55800
+EFG-C1 g1=BE7E133B9A8A3CE5
+EFG-C1 g2=BFD67D7EB727A5F9
+EFG-C1 g3=4034B8745453B739
+EFG-C1 g4=3E644E8DD6D495A4
+EFG-C1 g5=4010FC142F5C8630
+EFG-C1 g6=C01BF34143405408
+EFG-C1 g7=C00B53812BFC53DF
+EFG-C1 g8=BFFF4DD734B2E640
+EFG-C1 g9=C01B7EA7FA6160FD
+EFG-C1 g10=400B538114731BEE
+EFM-C mxstep=2000 nstep=1 iprnt=3
+EFM-C mxstep=2000 nstep=2 iprnt=3
+EFM-C mxstep=2000 nstep=3 iprnt=3
+EFM-C mxstep=2000 nstep=4 iprnt=3
+ Job: D:\mopac\_full_cmp\cur\_val_ef
+Final heat of formation =         -4.25998 kcal/mol
+GRADIENT NORM           =          0.54630
+
+
+MOPAC Job: "D:\mopac\_full_cmp\cur\_val_ef.mop" ended normally on Wed Oct 14 13:22:23 2026

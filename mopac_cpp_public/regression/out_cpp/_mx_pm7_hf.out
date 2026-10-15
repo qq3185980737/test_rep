@@ -1,0 +1,12 @@
+ 
+**                          MOPAC (16.013)        Days remaining 123         **
+********************************************************************************
+Preparing to read the following MOPAC file: 
+D:\mopac\_full_cmp\cur\_mx_pm7_hf.mop
+ Single point calculation
+ Job: D:\mopac\_full_cmp\cur\_mx_pm7_hf
+Final heat of formation =        -61.65307 kcal/mol
+GRADIENT NORM           =          0.00000
+
+
+MOPAC Job: "D:\mopac\_full_cmp\cur\_mx_pm7_hf.mop" ended normally on Wed Oct 14 13:21:48 2026
