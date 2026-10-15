@@ -24,6 +24,20 @@
     <ProjectName>MOPAC_Cpp</ProjectName>
     <ProjectGuid>{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}</ProjectGuid>
   </PropertyGroup>
+  <PropertyGroup Label="Intel MKL">
+    <!--
+      MKL location is configurable. Resolution order:
+        1. /p:MklRoot=<path> on the msbuild command line (manual MKL installs)
+        2. the MKLROOT environment variable (set by the Intel oneAPI installer)
+        3. fallback path (developer machine)
+      The compiler OpenMP runtime import library (libiomp5md.lib) is looked up
+      next to MKLROOT (oneAPI layout); if absent, a fallback is used.
+    -->
+    <MklRoot Condition="'$(MklRoot)'=='' and '$(MKLROOT)'!=''">$(MKLROOT)</MklRoot>
+    <MklRoot Condition="'$(MklRoot)'==''">D:\Download\intel_api\mkl\2025.3</MklRoot>
+    <MklCompilerLib Condition="'$(MklCompilerLib)'=='' and Exists('$(MklRoot)\..\..\compiler\latest\windows\compiler\lib\intel64')">$(MklRoot)\..\..\compiler\latest\windows\compiler\lib\intel64</MklCompilerLib>
+    <MklCompilerLib Condition="'$(MklCompilerLib)'==''">D:\Download\intel_api\2025.3\lib</MklCompilerLib>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -99,7 +113,7 @@
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MklRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -107,7 +121,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(MklRoot)\lib;$(MklCompilerLib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;svml_dispmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/DEBUG %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -122,7 +136,7 @@
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MklRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 /arch:AVX512 /openmp %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -132,7 +146,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>D:\Download\intel_api\mkl\2025.3\lib;D:\Download\intel_api\2025.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(MklRoot)\lib;$(MklCompilerLib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>mkl_intel_lp64.lib;mkl_intel_thread.lib;mkl_core.lib;libiomp5md.lib;svml_dispmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -162,7 +176,7 @@
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>D:\Download\intel_api\mkl\2025.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MklRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>

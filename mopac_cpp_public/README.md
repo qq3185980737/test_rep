@@ -39,6 +39,28 @@ Open `MOPAC_Cpp.sln` and build the `mopac` project, or use MSBuild:
 
     msbuild MOPAC_Cpp.sln /p:Configuration=Release /p:Platform=x64
 
+### Obtaining Intel MKL (required for the default build)
+
+The project links Intel MKL 2025.3 statically. The MKL location is resolved
+automatically, in this order:
+
+1. `msbuild /p:MklRoot=C:\path\to\mkl\2025.3` — explicit override;
+2. the `MKLROOT` environment variable, set automatically when you install
+   Intel oneAPI (e.g. `C:\Program Files (x86)\Intel\oneAPI\mkl\2025.3`);
+3. a fallback path baked into the project file (the authors' build machine).
+
+The OpenMP runtime import library (`libiomp5md.lib`) is looked up next to
+`MKLROOT` (oneAPI layout); if your layout differs, override with
+`/p:MklCompilerLib=<path>`.
+
+### Runtime
+
+The release binary depends on `libiomp5md.dll` (Intel OpenMP runtime) and the
+MSVC runtime. If the DLL is not already on `PATH`, copy it next to `mopac.exe`
+from your Intel oneAPI installation, e.g.
+
+    copy "C:\Program Files (x86)\Intel\oneAPI\compiler\latest\windows\compiler\lib\intel64\libiomp5md.dll" mopac.exe_dir\
+
 ## Run
 
     OMP_NUM_THREADS=1
