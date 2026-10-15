@@ -17,6 +17,10 @@ verification reported in the manuscripts (`docs/paper_cpc_manuscript.md`,
   (Intel ifort/ifx, the verification build pair) for the same inputs
   (the remaining 22 inputs are MD/DRC trajectories that do not produce an
   `.arc` summary).
+- `abinitio/` — GAMESS v2024.2.1 input decks and recorded outputs for the
+  CCSD(T)/CBS atomization-energy benchmark of the CPC manuscript
+  (Tables A.2 and A.3: 10 molecules + 6 atoms, cc-pVTZ / cc-pVQZ),
+  together with the `run_job.csh` wrapper used to run them under WSL.
 
 ## Bitwise comparison result
 

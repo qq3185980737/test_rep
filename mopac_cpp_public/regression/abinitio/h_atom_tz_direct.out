@@ -1,0 +1,21 @@
+ YOU MUST ASSIGN GENERIC NAME INPUT WITH A SETENV.
+ EXECUTION OF GAMESS TERMINATED -ABNORMALLY- AT 03:30:55 07-OCT-2026    
+ STEP CPU TIME =     0.00 TOTAL CPU TIME =          0.0 (      0.0 MIN)
+ TOTAL WALL CLOCK TIME=          0.0 SECONDS, CPU UTILIZATION IS     6.90%
+At line 69 of file util.f (unit = 7)
+Fortran runtime error: Specified UNIT in FLUSH is not connected
+
+Error termination. Backtrace:
+#0  0x7f9a5d97c960 in ???
+#1  0x7f9a5d97d4d9 in ???
+#2  0x7f9a5d97e10f in ???
+#3  0x559b70ce22b4 in flshbf_
+	at /root/gamess/object/util.f:69
+#4  0x559b70ce2c6f in abrt_
+	at /root/gamess/object/util.f:704
+#5  0x559b71b31822 in seqopn_
+	at /root/gamess/object/iolib.f:2669
+#6  0x559b70ce04c8 in gamess
+	at /root/gamess/object/gamess.F:653
+#7  0x559b70cd271e in main
+	at /root/gamess/object/gamess.F:505
