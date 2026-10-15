@@ -2,14 +2,12 @@
 
 `mopac_cpp` is a complete, 1-based, bitwise-verified translation of the MOPAC2016
 semiempirical molecular-orbital package (679 Fortran source files, ~120,000 lines)
-into C++17 (MSVC 2022, SSE2, Intel MKL). It accompanies the manuscript
-
-> *Bitwise-Reproducibility Verification and Deterministic Numerical Methods for
-> Scientific-Software Migration, with a Full MOPAC2016 (Fortran to C++) Case Study*
-> (submitted to Computer Physics Communications)
-
-and provides the verification pipeline, the ULP-attribution protocol, and the two
-deterministic methods (FBDR, GAB) described therein.
+into C++17 (MSVC 2022, SSE2, Intel MKL). It is the subject of three companion
+submissions — a software description (SoftwareX), a methodology paper (Computer
+Physics Communications), and a study of exact versus pseudo diagonalization
+(International Journal of Quantum Chemistry) — and provides the verification
+pipeline, the ULP-attribution protocol, and the two deterministic methods
+(FBDR, GAB) described therein.
 
 ## What this is
 
@@ -114,8 +112,8 @@ With all variables unset the binary is bitwise identical to the official path.
   the verification campaign; their inputs and recorded outputs are provided
   under `run_test/`, and the procedures are described in the manuscript.
 
-The GAMESS CCSD(T)/CBS benchmark data cited in the paper are summarized in the
-manuscript (Fig. 3 and §3.5); the full input/output files are available from the
+The GAMESS CCSD(T)/CBS benchmark data cited in the papers are summarized in the
+accompanying manuscripts; the full input/output files are available from the
 authors on request.
 
 ## License
@@ -127,7 +125,18 @@ own terms.
 
 ## Citation
 
-(Citation to be completed upon publication of the manuscript.)
+(Citations to be completed upon publication of the accompanying manuscripts.)
+
+Software description (SoftwareX):
+
+    @article{...,
+      title  = {MOPAC-CPP: a bitwise-reproducible C++17 translation of the
+                MOPAC2016 semiempirical molecular-orbital package},
+      journal = {SoftwareX},
+      year    = {2026}
+    }
+
+Methodology (Computer Physics Communications):
 
     @article{...,
       title  = {Bitwise-Reproducibility Verification and Deterministic Numerical
